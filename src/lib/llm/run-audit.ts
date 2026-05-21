@@ -150,29 +150,31 @@ export async function runAudit(proposalId: string): Promise<void> {
     .eq("id", proposalId);
 
   try {
+    // Limpa runs anteriores; depois insere por lote de prompt, para que o
+    // endpoint de status consiga reportar progresso incremental.
+    await supabase.from("audit_runs").delete().eq("proposal_id", proposalId);
+
     const rows: RunRow[] = [];
     for (const prompt of prompts) {
       const batch = await Promise.all(
         ENGINES.map((engine) => runSingle({ engine, prompt, brandName, competitors })),
       );
       rows.push(...batch);
+      await supabase.from("audit_runs").insert(
+        batch.map((r) => ({
+          proposal_id: proposalId,
+          prompt: r.prompt,
+          engine: r.engine,
+          response: r.response,
+          citations_found: r.analysis.citations_found,
+          brand_position: r.analysis.brand_position,
+          brand_present: r.analysis.brand_present,
+          competitors_mentioned: r.analysis.competitors_mentioned,
+          sentiment_score: r.analysis.sentiment_score,
+          tokens_used: r.tokens,
+        })),
+      );
     }
-
-    await supabase.from("audit_runs").delete().eq("proposal_id", proposalId);
-    await supabase.from("audit_runs").insert(
-      rows.map((r) => ({
-        proposal_id: proposalId,
-        prompt: r.prompt,
-        engine: r.engine,
-        response: r.response,
-        citations_found: r.analysis.citations_found,
-        brand_position: r.analysis.brand_position,
-        brand_present: r.analysis.brand_present,
-        competitors_mentioned: r.analysis.competitors_mentioned,
-        sentiment_score: r.analysis.sentiment_score,
-        tokens_used: r.tokens,
-      })),
-    );
 
     const results = aggregate(rows);
     await supabase

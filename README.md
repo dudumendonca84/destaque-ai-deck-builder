@@ -121,7 +121,7 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 10 | Auditoria GEO 4 motores | ✓ |
 | 11 | Deck público `/proposta/[token]` | ✓ |
 | 12 | DeckContainer + navegação | ✓ |
-| 13 | 18 slides + Slide 4 Live Audit | ✓ |
+| 13 | 18 slides (ficheiros individuais) + Slide 4 Live Audit | ✓ |
 | 14 | Tracking client-side | ✓ |
 | 15 | Dashboard analytics | ✓ |
 | 16 | Download PowerPoint (pptxgenjs) | ✓ |
@@ -135,9 +135,9 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 - `/admin/proposals/[id]/audit` — respostas brutas da auditoria por
   motor, com posição/sentimento.
 - `GET /api/proposals/[token]/download-pptx` — gera um `.pptx` editável
-  via `pptxgenjs` (8 slides: capa, problema, auditoria, motores,
-  concorrentes, metodologia, pricing, CTA) com a paleta da marca e os
-  dados reais da proposta. Botão "Download PowerPoint" no deck público.
+  via `pptxgenjs` espelhando os 18 slides do deck web, com a paleta da
+  marca e os dados reais da proposta. Botão "Download PowerPoint" no
+  deck público.
 - Cron diário `/api/cron/expire-proposals` (ver `vercel.json`) marca
   propostas expiradas. Protegido por `CRON_SECRET`.
 

@@ -12,6 +12,7 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
   const [current, setCurrent] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const enteredAt = useRef<number>(0);
+  const deckOpenedAt = useRef<number>(0);
   const wheelLock = useRef(false);
   const touchStart = useRef<number | null>(null);
   const total = SLIDES.length;
@@ -24,7 +25,7 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
       const seconds = Math.round((Date.now() - enteredAt.current) / 1000);
       if (seconds > 0) {
         trackEvent(deck.token, {
-          event_type: "slide_view",
+          event_type: "slide_viewed",
           slide_number: slideIndex + 1,
           slide_id: SLIDES[slideIndex]?.id,
           duration_seconds: seconds,
@@ -51,9 +52,17 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
   // Abertura do deck + flush final ao fechar/esconder.
   useEffect(() => {
     enteredAt.current = Date.now();
-    trackEvent(deck.token, { event_type: "deck_open" });
+    deckOpenedAt.current = Date.now();
+    trackEvent(deck.token, { event_type: "viewed" });
     const onHide = () => {
-      if (document.visibilityState === "hidden") flushDuration(current);
+      if (document.visibilityState === "hidden") {
+        flushDuration(current);
+        trackEvent(deck.token, {
+          event_type: "exited",
+          slide_number: current + 1,
+          duration_seconds: Math.round((Date.now() - deckOpenedAt.current) / 1000),
+        });
+      }
     };
     document.addEventListener("visibilitychange", onHide);
     window.addEventListener("beforeunload", onHide);

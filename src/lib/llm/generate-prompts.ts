@@ -53,24 +53,31 @@ export type GeneratePromptsResult = {
   source: "claude" | "fallback";
 };
 
+async function attempt(ctx: PromptContext): Promise<string[]> {
+  const { data } = await claudeJson<{ prompts: string[] }>({
+    system: SYSTEM,
+    prompt: buildPrompt(ctx),
+    schema: SCHEMA,
+    maxTokens: 1024,
+  });
+  return (data.prompts ?? [])
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .slice(0, 7);
+}
+
 export async function generatePrompts(ctx: PromptContext): Promise<GeneratePromptsResult> {
   if (!hasAnthropicKey()) {
     return { prompts: fallbackPrompts(ctx), source: "fallback" };
   }
-  try {
-    const { data } = await claudeJson<{ prompts: string[] }>({
-      system: SYSTEM,
-      prompt: buildPrompt(ctx),
-      schema: SCHEMA,
-      maxTokens: 1024,
-    });
-    const prompts = (data.prompts ?? [])
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .slice(0, 7);
-    if (prompts.length >= 3) return { prompts, source: "claude" };
-    return { prompts: fallbackPrompts(ctx), source: "fallback" };
-  } catch {
-    return { prompts: fallbackPrompts(ctx), source: "fallback" };
+  // Tenta até 2 vezes — o parse de JSON pode falhar pontualmente.
+  for (let i = 0; i < 2; i++) {
+    try {
+      const prompts = await attempt(ctx);
+      if (prompts.length >= 3) return { prompts, source: "claude" };
+    } catch {
+      // continua para a tentativa seguinte
+    }
   }
+  return { prompts: fallbackPrompts(ctx), source: "fallback" };
 }

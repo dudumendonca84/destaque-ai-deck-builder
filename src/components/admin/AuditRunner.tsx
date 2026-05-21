@@ -9,9 +9,15 @@ type Props = {
   initialStatus: AuditStatus;
 };
 
+type StatusResponse = {
+  status: AuditStatus;
+  progress_percent: number;
+};
+
 export function AuditRunner({ proposalId, initialStatus }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState<AuditStatus>(initialStatus);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
@@ -19,9 +25,10 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
     try {
       const res = await fetch(`/api/audit/${proposalId}/status`, { cache: "no-store" });
       if (!res.ok) return;
-      const data = (await res.json()) as { audit_status: AuditStatus };
-      setStatus(data.audit_status);
-      if (data.audit_status === "completed" || data.audit_status === "failed") {
+      const data = (await res.json()) as StatusResponse;
+      setStatus(data.status);
+      setProgress(data.progress_percent);
+      if (data.status === "completed" || data.status === "failed") {
         router.refresh();
       }
     } catch {
@@ -29,6 +36,7 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
     }
   }, [proposalId, router]);
 
+  // Idempotência: só dispara /api/audit/start se ainda estiver pending.
   const start = useCallback(async () => {
     setError(null);
     setStatus("running");
@@ -44,6 +52,7 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
         setError(data.error ?? "Falha na auditoria.");
       } else {
         setStatus("completed");
+        setProgress(100);
         router.refresh();
       }
     } catch (e) {
@@ -52,14 +61,13 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
     }
   }, [proposalId, router]);
 
-  // Auto-arranca se estiver pendente; faz polling se estiver a correr.
   useEffect(() => {
     if (status === "pending" && !started.current) {
       started.current = true;
       void start();
     }
     if (status === "running") {
-      const id = setInterval(poll, 4000);
+      const id = setInterval(poll, 3000);
       return () => clearInterval(id);
     }
   }, [status, start, poll]);
@@ -77,7 +85,17 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
     return (
       <div className="audit-banner" data-state="running">
         <span className="pulse-dot" />
-        Auditoria GEO a correr nos 4 motores… isto pode demorar 1-2 minutos.
+        <div style={{ flex: 1 }}>
+          <div style={{ marginBottom: 8 }}>
+            Auditoria GEO a correr nos 4 motores — mantém este separador aberto.
+          </div>
+          <div className="audit-progress">
+            <div className="audit-progress__fill" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+        <span className="mono" style={{ color: "var(--ink-3)" }}>
+          {progress}%
+        </span>
       </div>
     );
   }

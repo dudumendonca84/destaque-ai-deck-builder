@@ -1,5 +1,12 @@
+export type TrackEventType =
+  | "viewed"
+  | "slide_viewed"
+  | "cta_clicked"
+  | "exited"
+  | "download_pptx";
+
 export type TrackEvent = {
-  event_type: string;
+  event_type: TrackEventType;
   slide_number?: number;
   slide_id?: string;
   duration_seconds?: number;
