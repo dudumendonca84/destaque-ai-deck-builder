@@ -123,8 +123,23 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 12 | DeckContainer + navegação | ✓ |
 | 13 | 18 slides + Slide 4 Live Audit | ✓ |
 | 14 | Tracking client-side | ✓ |
-| 15 | Dashboard analytics | — |
-| 16 | Download PowerPoint (pptxgenjs) | — |
+| 15 | Dashboard analytics | ✓ |
+| 16 | Download PowerPoint (pptxgenjs) | ✓ |
+
+## Analytics & PowerPoint
+
+- `/admin/proposals/[id]/analytics` — aberturas, sessões, tempo total e
+  por slide (barras), drop-off (último slide alcançado por sessão) e
+  registo de eventos. Calculado em `lib/analytics/compute.ts` a partir
+  de `proposal_events`.
+- `/admin/proposals/[id]/audit` — respostas brutas da auditoria por
+  motor, com posição/sentimento.
+- `GET /api/proposals/[token]/download-pptx` — gera um `.pptx` editável
+  via `pptxgenjs` (8 slides: capa, problema, auditoria, motores,
+  concorrentes, metodologia, pricing, CTA) com a paleta da marca e os
+  dados reais da proposta. Botão "Download PowerPoint" no deck público.
+- Cron diário `/api/cron/expire-proposals` (ver `vercel.json`) marca
+  propostas expiradas. Protegido por `CRON_SECRET`.
 
 ## Auditoria GEO
 
