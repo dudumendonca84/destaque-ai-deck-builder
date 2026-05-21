@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { fallbackPrompts } from "@/lib/llm/fallback-prompts";
+import { generatePrompts } from "@/lib/llm/generate-prompts";
+
+export const maxDuration = 60;
 
 const schema = z.object({
   business_type: z.string().optional().nullable(),
@@ -17,14 +19,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
 
-  // Step 9 implementa a chamada real a Claude.
-  // Stub: devolve sempre fallback determinístico para o wizard funcionar.
-  const prompts = fallbackPrompts({
+  const result = await generatePrompts({
     business_type: parsed.data.business_type ?? undefined,
     location: parsed.data.location ?? undefined,
     company_name: parsed.data.company_name ?? undefined,
     target_audience: parsed.data.target_audience ?? undefined,
+    competitors: parsed.data.competitors ?? undefined,
   });
 
-  return NextResponse.json({ prompts, source: "fallback" });
+  return NextResponse.json(result);
 }

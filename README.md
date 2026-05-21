@@ -117,11 +117,27 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 6 | Admin shell (sidebar) | ✓ |
 | 7 | CRUD Prospects | ✓ |
 | 8 | Wizard criar Proposta | ✓ |
-| 9 | Geração prompts via Claude | — |
-| 10 | Auditoria GEO 4 motores | — |
-| 11 | Deck público `/proposta/[token]` | — |
-| 12 | DeckContainer + navegação | — |
-| 13 | 18 slides + Slide 4 Live Audit | — |
-| 14 | Tracking client-side | — |
+| 9 | Geração prompts via Claude | ✓ |
+| 10 | Auditoria GEO 4 motores | ✓ |
+| 11 | Deck público `/proposta/[token]` | ✓ |
+| 12 | DeckContainer + navegação | ✓ |
+| 13 | 18 slides + Slide 4 Live Audit | ✓ |
+| 14 | Tracking client-side | ✓ |
 | 15 | Dashboard analytics | — |
 | 16 | Download PowerPoint (pptxgenjs) | — |
+
+## Auditoria GEO
+
+A auditoria corre `prompts × 4 motores` (ChatGPT, Claude, Gemini, Perplexity).
+Para cada resposta, Claude extrai marcas citadas, posição da marca do prospect,
+concorrentes e sentimento. O resultado agregado é gravado em
+`proposals.audit_results`.
+
+- **Sem API keys configuradas** a auditoria corre em modo simulação
+  (`mock-audit.ts`), gerando dados determinísticos — o fluxo completo
+  (wizard → deck) é testável sem credenciais.
+- A auditoria é iniciada pela página de detalhe da proposta
+  (`AuditRunner`, client-driven via `/api/audit/start`), mais robusto em
+  serverless do que um background job verdadeiro.
+- Os motores são consultados directamente (sem grounding/web-search).
+  Para produção, considerar adicionar pesquisa web a cada motor.

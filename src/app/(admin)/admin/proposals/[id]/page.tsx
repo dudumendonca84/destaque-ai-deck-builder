@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
+import { AuditRunner } from "@/components/admin/AuditRunner";
 import { createClient } from "@/lib/supabase/server";
+import type { AuditStatus } from "@/lib/supabase/types";
 
 export const metadata = { title: "Proposta" };
 
@@ -52,9 +54,16 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
         <h1 className="tx-h1" style={{ marginBottom: 12 }}>
           {prospect?.company_name ?? "—"}
         </h1>
-        <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 32 }}>
+        <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24 }}>
           {prospect?.business_type ?? "—"} · {prospect?.location ?? "—"}
         </p>
+
+        <div style={{ marginBottom: 32 }}>
+          <AuditRunner
+            proposalId={proposal.id}
+            initialStatus={proposal.audit_status as AuditStatus}
+          />
+        </div>
 
         <div
           style={{

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Prospect } from "@/lib/supabase/types";
@@ -33,7 +33,19 @@ export function ProposalWizard({
   const router = useRouter();
   const [step, setStep] = useState<StepKey>(0);
   const [prospectId, setProspectId] = useState<string>(initialProspectId ?? "");
-  const [prompts, setPrompts] = useState<string[]>([]);
+  const [prompts, setPrompts] = useState<string[]>(() => {
+    const p = initialProspectId
+      ? prospects.find((x) => x.id === initialProspectId)
+      : undefined;
+    return p
+      ? fallbackPrompts({
+          business_type: p.business_type,
+          location: p.location,
+          company_name: p.company_name,
+          target_audience: p.target_audience,
+        })
+      : [];
+  });
   const [generating, setGenerating] = useState(false);
   const [pricing, setPricing] = useState<Pricing>({
     diagnostico: 4500,
@@ -49,20 +61,21 @@ export function ProposalWizard({
     [prospectId, prospects],
   );
 
-  // Pré-popular prompts via fallback quando o prospect muda — só uma vez.
-  useEffect(() => {
-    if (!prospect) return;
-    if (prompts.length > 0) return;
-    setPrompts(
-      fallbackPrompts({
-        business_type: prospect.business_type,
-        location: prospect.location,
-        company_name: prospect.company_name,
-        target_audience: prospect.target_audience,
-      }),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prospect?.id]);
+  // Seleção de prospect: também pré-popula prompts (fallback) se ainda vazios.
+  function selectProspect(id: string) {
+    setProspectId(id);
+    const p = prospects.find((x) => x.id === id);
+    if (p && prompts.length === 0) {
+      setPrompts(
+        fallbackPrompts({
+          business_type: p.business_type,
+          location: p.location,
+          company_name: p.company_name,
+          target_audience: p.target_audience,
+        }),
+      );
+    }
+  }
 
   const canNext = (() => {
     if (step === 0) return Boolean(prospectId);
@@ -154,7 +167,7 @@ export function ProposalWizard({
             <select
               id="prospect"
               value={prospectId}
-              onChange={(e) => setProspectId(e.target.value)}
+              onChange={(e) => selectProspect(e.target.value)}
             >
               <option value="">— selecionar —</option>
               {prospects.map((p) => (

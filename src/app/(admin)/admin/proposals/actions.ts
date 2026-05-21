@@ -1,11 +1,9 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { newProposalToken } from "@/lib/utils/tokens";
-import { proposalWizardSchema } from "@/lib/validators";
 
 const PAYLOAD = z.object({
   prospect_id: z.string().uuid(),
@@ -50,19 +48,9 @@ export async function createProposal(input: unknown): Promise<CreateProposalResu
     return { ok: false, error: error?.message ?? "Erro a criar proposta." };
   }
 
-  // Fire-and-forget para iniciar auditoria em background (Step 10).
-  // O endpoint /api/audit/start ainda está stub e será implementado depois.
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  try {
-    await fetch(`${appUrl}/api/audit/start`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ proposal_id: data.id }),
-      cache: "no-store",
-    });
-  } catch {
-    // ignorado — pode ser disparado manualmente da página de detalhe.
-  }
+  // A auditoria GEO é iniciada pela página de detalhe (client-driven via
+  // /api/audit/start) — mais robusto em ambiente serverless do que um
+  // fire-and-forget aqui, que seria cancelado quando a action retorna.
 
   revalidatePath("/admin/proposals");
   return { ok: true, id: data.id, token: data.token };
