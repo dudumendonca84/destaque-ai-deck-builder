@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { site } from "@/lib/site";
 
 export const metadata = { title: "Agendar", robots: { index: false } };
 
 export default async function AgendarPage(props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data: proposal } = await supabase
     .from("proposals")
     .select("id")

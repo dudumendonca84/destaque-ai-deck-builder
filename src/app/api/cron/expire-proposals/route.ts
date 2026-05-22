@@ -7,12 +7,10 @@ export const runtime = "nodejs";
 // data de expiração já passou. O Vercel Cron envia o header
 // `Authorization: Bearer <CRON_SECRET>`.
 export async function GET(request: Request) {
+  // Fail closed: sem CRON_SECRET configurado, o endpoint fica fechado.
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
+  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const supabase = createServiceClient();

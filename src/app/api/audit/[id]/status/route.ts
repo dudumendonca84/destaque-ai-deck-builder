@@ -6,6 +6,13 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   const { id } = await ctx.params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const { data, error } = await supabase
     .from("proposals")
     .select("audit_status,audit_started_at,audit_completed_at,audit_results,custom_prompts")

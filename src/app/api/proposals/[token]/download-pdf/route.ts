@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { buildPdf } from "@/lib/pdf/build-deck";
 import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
@@ -18,7 +18,8 @@ function slug(s: string): string {
 
 export async function GET(_request: Request, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
-  const supabase = await createClient();
+  // Service role: público por token (ver migration 003).
+  const supabase = createServiceClient();
 
   const { data: proposalRow } = await supabase
     .from("proposals")

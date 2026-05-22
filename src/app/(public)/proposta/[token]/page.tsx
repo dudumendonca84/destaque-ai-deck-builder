@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { DeckContainer } from "@/components/deck/DeckContainer";
 import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
@@ -14,7 +14,9 @@ export const dynamic = "force-dynamic";
 
 export default async function DeckPage(props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
-  const supabase = await createClient();
+  // Service role: o `anon` não tem acesso à BD (ver migration 003). O
+  // controlo de acesso é o filtro por token, em código de servidor.
+  const supabase = createServiceClient();
 
   const { data: proposalRow } = await supabase
     .from("proposals")
