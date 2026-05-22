@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   setAuditTier,
   saveAuditPrompts,
@@ -17,8 +18,8 @@ const CATEGORY_LABEL: Record<PromptCategory, string> = {
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as PromptCategory[];
 
 const TIER_INFO: Record<AuditTier, { label: string; count: number; calls: number }> = {
-  free: { label: "Auditoria gratuita", count: 5, calls: 100 },
-  diagnostic: { label: "Diagnóstico", count: 30, calls: 600 },
+  free: { label: "Auditoria gratuita", count: 5, calls: 20 },
+  diagnostic: { label: "Diagnóstico", count: 30, calls: 120 },
 };
 
 function localId(): string {
@@ -38,8 +39,10 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
   const [source, setSource] = useState<"claude" | "fallback" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [auditPhase, setAuditPhase] = useState<"idle" | "running" | "done">("idle");
   const [tierPending, startTier] = useTransition();
   const [savePending, startSave] = useTransition();
+  const router = useRouter();
 
   function changeTier(next: AuditTier) {
     if (next === tier || tierPending || generating) return;
@@ -105,14 +108,28 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
     setError(null);
     setSavedMsg(null);
     startSave(async () => {
-      const r = await saveAuditPrompts(proposalId, prompts);
-      if (!r.ok) {
-        setError(r.error);
+      const saved = await saveAuditPrompts(proposalId, prompts);
+      if (!saved.ok) {
+        setError(saved.error);
         return;
       }
-      setSavedMsg(
-        "Prompts confirmados e guardados. O motor de auditoria (Step 10) será ligado a seguir.",
-      );
+      // D2 — confirmar guarda os prompts e corre logo a auditoria.
+      setAuditPhase("running");
+      try {
+        const res = await fetch("/api/audit/start", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ proposal_id: proposalId }),
+        });
+        const data = (await res.json()) as { ok?: boolean; error?: string };
+        if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+        setAuditPhase("done");
+        setSavedMsg("Auditoria concluída — as respostas aparecem abaixo.");
+        router.refresh();
+      } catch (e) {
+        setAuditPhase("idle");
+        setError(`A auditoria falhou. ${e instanceof Error ? e.message : ""}`);
+      }
     });
   }
 
@@ -141,7 +158,7 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
           ))}
         </div>
         <p className="body-s" style={{ color: "var(--ink-3)", margin: 0 }}>
-          {info.count} prompts · 4 motores · 5 runs = {info.calls} chamadas LLM
+          {info.count} prompts × 4 motores = {info.calls} chamadas LLM
         </p>
       </div>
 
@@ -232,13 +249,25 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
               onClick={confirm}
               disabled={!canConfirm || savePending}
             >
-              <span>{savePending ? "A guardar…" : "Confirmar e correr auditoria"}</span>
+              <span>
+                {auditPhase === "running"
+                  ? "A correr auditoria…"
+                  : savePending
+                    ? "A guardar…"
+                    : "Confirmar e correr auditoria"}
+              </span>
               <span className="arrow">→</span>
             </button>
             <span className="body-s" style={{ color: "var(--ink-3)" }}>
               {prompts.length} prompts{hasEmpty ? " · há prompts vazios" : ""}
             </span>
           </div>
+          {auditPhase === "running" && (
+            <div className="audit-banner" data-state="running" style={{ marginTop: 12 }}>
+              <span className="pulse-dot" />
+              Auditoria GEO a correr nos 4 motores — mantém este separador aberto.
+            </div>
+          )}
           {savedMsg && (
             <p className="body-s" style={{ color: "var(--ink-2)", marginTop: 12 }}>
               {savedMsg}

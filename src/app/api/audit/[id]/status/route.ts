@@ -23,8 +23,18 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Progresso: nº de audit_responses gravadas / total esperado (prompts × motores).
-  const expected = (data.custom_prompts?.length ?? 0) * ENGINES.length;
+  // Progresso: nº de audit_responses gravadas / total esperado. Fonte de
+  // verdade dos prompts: audit_runs.prompts (v2); fallback para custom_prompts
+  // nas propostas legacy do wizard.
+  const { data: run } = await supabase
+    .from("audit_runs")
+    .select("prompts")
+    .eq("proposal_id", id)
+    .maybeSingle();
+  const promptCount = Array.isArray(run?.prompts)
+    ? run.prompts.length
+    : (data.custom_prompts?.length ?? 0);
+  const expected = promptCount * ENGINES.length;
   const { count } = await supabase
     .from("audit_responses")
     .select("*", { count: "exact", head: true })
