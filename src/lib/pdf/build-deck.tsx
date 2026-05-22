@@ -22,6 +22,7 @@ const PAPER2 = "#FFFFFF";
 // Fontes built-in do react-pdf (sem ficheiros externos):
 // Times — serif editorial para headlines; Helvetica — corpo e labels.
 const SERIF = "Times-Roman";
+const SERIF_I = "Times-Italic";
 const SANS = "Helvetica";
 const SANS_B = "Helvetica-Bold";
 
@@ -56,7 +57,7 @@ const s = StyleSheet.create({
   leadInk: { fontFamily: SERIF, fontSize: 15, lineHeight: 1.5, color: INK4, marginTop: 18 },
   body: { fontFamily: SANS, fontSize: 11, lineHeight: 1.5, color: INK3 },
 
-  mark: { backgroundColor: AMBER, color: INK },
+  mark: { backgroundColor: AMBER, color: INK, fontFamily: SERIF_I },
 
   center: { flex: 1, justifyContent: "center" },
 
@@ -108,6 +109,11 @@ function Foot({ n }: { n: number }) {
       <Text style={s.footerText}>{String(n).padStart(2, "0")} / 18</Text>
     </View>
   );
+}
+
+/** Palavra-chave realçada a amarelo (equivalente ao .mark do deck web). */
+function Mark({ children }: { children: string }) {
+  return <Text style={s.mark}>{children}</Text>;
 }
 
 /** Página de conteúdo (fundo creme). */
@@ -175,7 +181,13 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             PROPOSTA · GENERATIVE ENGINE OPTIMIZATION
           </Text>
           <Text style={[s.h1, { fontSize: 54 }]}>
-            {deck.customMessage?.trim() || `Proposta para ${deck.companyName}`}
+            {deck.customMessage?.trim() ? (
+              deck.customMessage.trim()
+            ) : (
+              <>
+                Proposta para <Mark>{deck.companyName}</Mark>
+              </>
+            )}
           </Text>
           <Text style={[s.body, { marginTop: 22 }]}>
             destaque.ai · Lisboa ·{" "}
@@ -189,13 +201,19 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       <StatementPage
         n={2}
         eyebrow="O problema"
-        title="A pesquisa mudou de sítio."
+        title={
+          <>
+            A pesquisa mudou de <Mark>sítio</Mark>.
+          </>
+        }
         body="Os teus clientes deixaram de escrever no Google. Perguntam ao ChatGPT, ao Claude, ao Gemini — e a IA responde com nomes."
       />
 
       {/* 03 — O contexto */}
       <ContentPage n={3} eyebrow="O contexto">
-        <Text style={s.h2}>Não é uma tendência. É já.</Text>
+        <Text style={s.h2}>
+          Não é uma tendência. É <Mark>já</Mark>.
+        </Text>
         <View style={[s.row, { marginTop: 36 }]}>
           {[
             ["13%", "da pesquisa global já passa por motores de IA."],
@@ -212,7 +230,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 04 — Auditoria personalizada */}
       <ContentPage n={4} eyebrow={`Auditoria personalizada · ${deck.companyName}`}>
-        <Text style={s.h2}>O que a IA diz sobre ti, hoje.</Text>
+        <Text style={s.h2}>
+          O que a IA diz sobre ti, <Mark>hoje</Mark>.
+        </Text>
         <View style={[s.row, { marginTop: 24 }]}>
           <View style={{ flex: 1.4, paddingRight: 24 }}>
             <Text style={[s.cardLabel, { marginBottom: 10 }]}>PROMPTS AUDITADOS</Text>
@@ -253,7 +273,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 05 — SEO vs GEO */}
       <ContentPage n={5} eyebrow="SEO vs GEO">
-        <Text style={s.h2}>Não substitui o SEO. Sucede-o.</Text>
+        <Text style={s.h2}>
+          Não substitui o SEO. <Mark>Sucede-o</Mark>.
+        </Text>
         <View style={[s.row, { marginTop: 26 }]}>
           {(
             [
@@ -331,7 +353,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 07 — Metodologia */}
       <ContentPage n={7} eyebrow="Metodologia">
-        <Text style={s.h2}>Quatro disciplinas, um sistema.</Text>
+        <Text style={s.h2}>
+          Quatro disciplinas, um <Mark>sistema</Mark>.
+        </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {(
             [
@@ -356,7 +380,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 08 — Fases 1 e 2 */}
       <ContentPage n={8} eyebrow="Fases 1 e 2">
-        <Text style={s.h2}>Diagnóstico e conteúdo.</Text>
+        <Text style={s.h2}>
+          Diagnóstico e <Mark>conteúdo</Mark>.
+        </Text>
         <View style={{ marginTop: 26 }}>
           {(
             [
@@ -384,7 +410,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 09 — Fases 3 e 4 */}
       <ContentPage n={9} eyebrow="Fases 3 e 4">
-        <Text style={s.h2}>Distribuição e medição.</Text>
+        <Text style={s.h2}>
+          Distribuição e <Mark>medição</Mark>.
+        </Text>
         <View style={{ marginTop: 26 }}>
           {(
             [
@@ -412,7 +440,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 10 — Ponto de partida */}
       <ContentPage n={10} eyebrow="Ponto de partida">
-        <Text style={s.h2}>Onde a {deck.companyName} está hoje.</Text>
+        <Text style={s.h2}>
+          Onde a <Mark>{deck.companyName}</Mark> está hoje.
+        </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {[
             ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
@@ -430,7 +460,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 11 — Investimento */}
       <ContentPage n={11} eyebrow="Investimento">
-        <Text style={s.h2}>Três fases, um número claro.</Text>
+        <Text style={s.h2}>
+          Três fases, um <Mark>número claro</Mark>.
+        </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {[
             { name: "Diagnóstico", price: eur(deck.pricing.diagnostico), unit: "one-off" },
@@ -456,7 +488,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 12 — Próximos passos */}
       <ContentPage n={12} eyebrow="A seguir">
-        <Text style={s.h2}>O que acontece a partir daqui.</Text>
+        <Text style={s.h2}>
+          O que acontece <Mark>a partir daqui</Mark>.
+        </Text>
         <View style={{ marginTop: 26 }}>
           {(
             [
@@ -485,7 +519,11 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       <StatementPage
         n={13}
         eyebrow="Apêndices"
-        title="O detalhe, para quem o quer."
+        title={
+          <>
+            O <Mark>detalhe</Mark>, para quem o quer.
+          </>
+        }
         body="As próximas páginas abrem cada fase — entregáveis, duração e investimento."
       />
 
@@ -550,7 +588,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
 
       {/* 17 — Apêndice D · Investimento */}
       <ContentPage n={17} eyebrow="Apêndice D · Investimento">
-        <Text style={s.h2}>Resumo do investimento.</Text>
+        <Text style={s.h2}>
+          Resumo do <Mark>investimento</Mark>.
+        </Text>
         <View style={{ marginTop: 26 }}>
           {(
             [
@@ -578,7 +618,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       <Page size={[960, 540]} style={s.pageInk}>
         <Eyebrow num="18" label="Vamos a isto" ink />
         <View style={s.center}>
-          <Text style={[s.h1, { color: CREAM }]}>Obrigado, {deck.companyName}.</Text>
+          <Text style={[s.h1, { color: CREAM }]}>
+            Obrigado, <Mark>{deck.companyName}</Mark>.
+          </Text>
           <Text style={{ fontFamily: SANS, fontSize: 13, color: AMBER, marginTop: 22 }}>
             destaque.ai · contacto@destaque.ai · Lisboa, Portugal
           </Text>
