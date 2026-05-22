@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DeckContainer } from "@/components/deck/DeckContainer";
 import type { DeckData } from "@/components/deck/types";
-import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
+import type { AuditResults, AuditResponse, Proposal, Prospect } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
   title: "Proposta",
@@ -59,10 +59,10 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
   const prospect = prospectRow as Prospect | null;
 
   const { data: runRows } = await supabase
-    .from("audit_runs")
+    .from("audit_responses")
     .select("*")
     .eq("proposal_id", proposal.id);
-  const auditRuns = (runRows ?? []) as AuditRun[];
+  const auditRuns = (runRows ?? []) as AuditResponse[];
 
   const deck: DeckData = {
     token,

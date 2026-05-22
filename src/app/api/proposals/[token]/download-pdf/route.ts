@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { buildPdf } from "@/lib/pdf/build-deck";
 import type { DeckData } from "@/components/deck/types";
-import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
+import type { AuditResults, AuditResponse, Proposal, Prospect } from "@/lib/supabase/types";
 
 // @react-pdf/renderer precisa do runtime Node.
 export const runtime = "nodejs";
@@ -41,7 +41,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
   const prospect = prospectRow as Prospect | null;
 
   const { data: runRows } = await supabase
-    .from("audit_runs")
+    .from("audit_responses")
     .select("*")
     .eq("proposal_id", proposal.id);
 
@@ -59,7 +59,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     prompts: proposal.custom_prompts ?? [],
     competitors: prospect?.competitors ?? [],
     audit: (proposal.audit_results as AuditResults | null) ?? null,
-    auditRuns: (runRows ?? []) as AuditRun[],
+    auditRuns: (runRows ?? []) as AuditResponse[],
   };
 
   const buffer = await buildPdf(deck);

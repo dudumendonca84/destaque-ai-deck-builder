@@ -121,7 +121,7 @@ function aggregate(rows: RunRow[]): AuditResults {
 
 /**
  * Corre a auditoria GEO completa para uma proposta: prompts × 4 motores.
- * Atualiza audit_status, grava audit_runs e popula audit_results.
+ * Atualiza audit_status, grava audit_responses e popula audit_results.
  */
 export async function runAudit(proposalId: string): Promise<void> {
   const supabase = createServiceClient();
@@ -152,7 +152,7 @@ export async function runAudit(proposalId: string): Promise<void> {
   try {
     // Limpa runs anteriores; depois insere por lote de prompt, para que o
     // endpoint de status consiga reportar progresso incremental.
-    await supabase.from("audit_runs").delete().eq("proposal_id", proposalId);
+    await supabase.from("audit_responses").delete().eq("proposal_id", proposalId);
 
     const rows: RunRow[] = [];
     for (const prompt of prompts) {
@@ -160,7 +160,7 @@ export async function runAudit(proposalId: string): Promise<void> {
         ENGINES.map((engine) => runSingle({ engine, prompt, brandName, competitors })),
       );
       rows.push(...batch);
-      await supabase.from("audit_runs").insert(
+      await supabase.from("audit_responses").insert(
         batch.map((r) => ({
           proposal_id: proposalId,
           prompt: r.prompt,

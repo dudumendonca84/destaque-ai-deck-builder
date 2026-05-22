@@ -25,6 +25,26 @@ export type AuditResults = {
   by_engine: Record<Engine, AuditEngineSummary>;
 };
 
+// Tier da auditoria: 'free' = 5 prompts, 'diagnostic' = 30 prompts.
+export type AuditTier = "free" | "diagnostic";
+
+export type PromptCategory =
+  | "generic_category"
+  | "direct_comparison"
+  | "local_recommendation"
+  | "feature_specific"
+  | "price_comparison";
+
+// Prompt gerado para a auditoria GEO. Persistido em `audit_runs.prompts`.
+export type AuditPrompt = {
+  id: string;
+  text: string;
+  category: PromptCategory;
+  intent: string;
+  generated_by_model: string;
+  generated_at: string;
+};
+
 // Shape inspirada nos tipos gerados pelo `supabase gen types typescript`.
 export type Database = {
   public: {
@@ -102,6 +122,7 @@ export type Database = {
           audit_started_at: string | null;
           audit_completed_at: string | null;
           audit_results: AuditResults | null;
+          audit_tier: AuditTier;
           status: ProposalStatus;
           sent_at: string | null;
           expires_at: string | null;
@@ -123,6 +144,7 @@ export type Database = {
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;
+          audit_tier?: AuditTier;
           status?: ProposalStatus;
           sent_at?: string | null;
           expires_at?: string | null;
@@ -144,6 +166,7 @@ export type Database = {
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;
+          audit_tier?: AuditTier;
           status?: ProposalStatus;
           sent_at?: string | null;
           expires_at?: string | null;
@@ -210,10 +233,11 @@ export type Database = {
           },
         ];
       };
-      audit_runs: {
+      audit_responses: {
         Row: {
           id: string;
           proposal_id: string;
+          audit_run_id: string | null;
           created_at: string;
           prompt: string;
           engine: Engine;
@@ -229,6 +253,7 @@ export type Database = {
         Insert: {
           id?: string;
           proposal_id: string;
+          audit_run_id?: string | null;
           created_at?: string;
           prompt: string;
           engine: Engine;
@@ -244,6 +269,7 @@ export type Database = {
         Update: {
           id?: string;
           proposal_id?: string;
+          audit_run_id?: string | null;
           created_at?: string;
           prompt?: string;
           engine?: Engine;
@@ -264,6 +290,42 @@ export type Database = {
             referencedRelation: "proposals";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "audit_responses_audit_run_id_fkey";
+            columns: ["audit_run_id"];
+            isOneToOne: false;
+            referencedRelation: "audit_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_runs: {
+        Row: {
+          id: string;
+          proposal_id: string;
+          created_at: string;
+          prompts: AuditPrompt[] | null;
+        };
+        Insert: {
+          id?: string;
+          proposal_id: string;
+          created_at?: string;
+          prompts?: AuditPrompt[] | null;
+        };
+        Update: {
+          id?: string;
+          proposal_id?: string;
+          created_at?: string;
+          prompts?: AuditPrompt[] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_runs_v2_proposal_id_fkey";
+            columns: ["proposal_id"];
+            isOneToOne: true;
+            referencedRelation: "proposals";
+            referencedColumns: ["id"];
+          },
         ];
       };
     };
@@ -277,4 +339,5 @@ export type Database = {
 export type Prospect = Database["public"]["Tables"]["prospects"]["Row"];
 export type Proposal = Database["public"]["Tables"]["proposals"]["Row"];
 export type ProposalEvent = Database["public"]["Tables"]["proposal_events"]["Row"];
+export type AuditResponse = Database["public"]["Tables"]["audit_responses"]["Row"];
 export type AuditRun = Database["public"]["Tables"]["audit_runs"]["Row"];

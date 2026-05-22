@@ -1,4 +1,4 @@
-import type { AuditResults, AuditRun, Engine } from "@/lib/supabase/types";
+import type { AuditResults, AuditResponse, Engine } from "@/lib/supabase/types";
 
 export type DeckData = {
   token: string;
@@ -14,7 +14,7 @@ export type DeckData = {
   prompts: string[];
   competitors: string[];
   audit: AuditResults | null;
-  auditRuns: AuditRun[];
+  auditRuns: AuditResponse[];
 };
 
 export type SlideProps = {
@@ -30,6 +30,6 @@ export type SlideDef = {
   Component: React.ComponentType<SlideProps>;
 };
 
-export function runsForEngine(deck: DeckData, engine: Engine): AuditRun[] {
+export function runsForEngine(deck: DeckData, engine: Engine): AuditResponse[] {
   return deck.auditRuns.filter((r) => r.engine === engine);
 }

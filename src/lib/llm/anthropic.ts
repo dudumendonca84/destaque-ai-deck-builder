@@ -60,7 +60,7 @@ export async function claudeJson<T>(opts: {
   prompt: string;
   schema: Record<string, unknown>;
   maxTokens?: number;
-}): Promise<{ data: T; tokens: number }> {
+}): Promise<{ data: T; usage: { input: number; output: number } }> {
   const instruction = `${opts.prompt}
 
 Responde APENAS com um objecto JSON válido que cumpra este JSON Schema, sem texto antes ou depois, sem cercas markdown:
@@ -75,6 +75,6 @@ ${JSON.stringify(opts.schema)}`;
   const raw = textOf(message);
   return {
     data: JSON.parse(extractJson(raw)) as T,
-    tokens: message.usage.input_tokens + message.usage.output_tokens,
+    usage: { input: message.usage.input_tokens, output: message.usage.output_tokens },
   };
 }

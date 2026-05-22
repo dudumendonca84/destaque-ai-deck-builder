@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import type { SlideProps } from "../types";
 import { ENGINES, ENGINE_LABEL, type Engine } from "@/lib/llm/models";
-import type { AuditRun } from "@/lib/supabase/types";
+import type { AuditResponse } from "@/lib/supabase/types";
 
 /** Parte o texto realçando a marca (you) e os concorrentes (comp). */
 function highlight(text: string, brand: string, competitors: string[]) {
@@ -28,7 +28,7 @@ function Excerpt({
   competitors,
   typed,
 }: {
-  run: AuditRun | undefined;
+  run: AuditResponse | undefined;
   brand: string;
   competitors: string[];
   typed: string | null;
@@ -77,7 +77,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
   const competitors = deck.competitors;
 
   const runOf = useMemo(() => {
-    const map = new Map<string, AuditRun>();
+    const map = new Map<string, AuditResponse>();
     for (const r of deck.auditRuns) map.set(`${r.prompt}|${r.engine}`, r);
     return (prompt: string, engine: Engine) => map.get(`${prompt}|${engine}`);
   }, [deck.auditRuns]);

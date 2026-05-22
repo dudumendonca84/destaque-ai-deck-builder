@@ -23,10 +23,10 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Progresso: nº de audit_runs gravados / total esperado (prompts × motores).
+  // Progresso: nº de audit_responses gravadas / total esperado (prompts × motores).
   const expected = (data.custom_prompts?.length ?? 0) * ENGINES.length;
   const { count } = await supabase
-    .from("audit_runs")
+    .from("audit_responses")
     .select("*", { count: "exact", head: true })
     .eq("proposal_id", id);
 

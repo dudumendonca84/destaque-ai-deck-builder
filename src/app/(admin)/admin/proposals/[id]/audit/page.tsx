@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
+import { AuditPromptsEditor } from "@/components/admin/AuditPromptsEditor";
 import { createClient } from "@/lib/supabase/server";
 import { ENGINE_LABEL, type Engine } from "@/lib/llm/models";
 import { pct } from "@/lib/utils/format";
-import type { AuditResults, AuditRun } from "@/lib/supabase/types";
+import type {
+  AuditPrompt,
+  AuditResponse,
+  AuditResults,
+  AuditTier,
+} from "@/lib/supabase/types";
 
 export const metadata = { title: "Auditoria" };
 
@@ -13,7 +19,7 @@ export default async function AuditDetailPage(props: { params: Promise<{ id: str
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id,token,audit_status,audit_results,prospects(company_name)")
+    .select("id,token,audit_status,audit_tier,audit_results,prospects(company_name)")
     .eq("id", id)
     .single();
 
@@ -25,13 +31,20 @@ export default async function AuditDetailPage(props: { params: Promise<{ id: str
       : (proposal.prospects as { company_name?: string } | null)
     )?.company_name ?? proposal.token;
 
-  const { data: runRows } = await supabase
+  const { data: run } = await supabase
     .from("audit_runs")
+    .select("id,prompts")
+    .eq("proposal_id", id)
+    .maybeSingle();
+
+  const { data: responseRows } = await supabase
+    .from("audit_responses")
     .select("*")
     .eq("proposal_id", id)
     .order("engine");
-  const runs = (runRows ?? []) as AuditRun[];
+  const responses = (responseRows ?? []) as AuditResponse[];
   const audit = (proposal.audit_results as AuditResults | null) ?? null;
+  const initialPrompts = ((run?.prompts as AuditPrompt[] | null) ?? []) as AuditPrompt[];
 
   return (
     <>
@@ -47,8 +60,14 @@ export default async function AuditDetailPage(props: { params: Promise<{ id: str
           Auditoria GEO
         </h1>
         <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 28 }}>
-          Estado: <b>{proposal.audit_status}</b> · {runs.length} respostas analisadas
+          Estado: <b>{proposal.audit_status}</b> · {responses.length} respostas analisadas
         </p>
+
+        <AuditPromptsEditor
+          proposalId={id}
+          initialTier={(proposal.audit_tier as AuditTier) ?? "free"}
+          initialPrompts={initialPrompts}
+        />
 
         {audit && (
           <div
@@ -82,14 +101,14 @@ export default async function AuditDetailPage(props: { params: Promise<{ id: str
           </div>
         )}
 
-        {runs.length === 0 ? (
+        {responses.length === 0 ? (
           <div className="card">
             <p className="body-m" style={{ color: "var(--ink-3)", margin: 0 }}>
-              Sem respostas de auditoria. Inicia a auditoria na página da proposta.
+              Sem respostas de auditoria. Confirma os prompts e corre a auditoria.
             </p>
           </div>
         ) : (
-          runs.map((r) => (
+          responses.map((r) => (
             <div className="audit-run" key={r.id}>
               <div className="audit-run__head">
                 <span className="audit-run__engine">
