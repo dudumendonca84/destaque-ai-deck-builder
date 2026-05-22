@@ -21,7 +21,7 @@ export const SLIDE_META: SlideMeta[] = [
   { n: 15, id: "appendix-b", title: "Apêndice B · Sprint" },
   { n: 16, id: "appendix-c", title: "Apêndice C · Retainer" },
   { n: 17, id: "appendix-d", title: "Apêndice D · Investimento" },
-  { n: 18, id: "thank-you", title: "Obrigado" },
+  { n: 18, id: "thank-you", title: "Vamos a isto" },
 ];
 
 export const TOTAL_SLIDES = SLIDE_META.length;

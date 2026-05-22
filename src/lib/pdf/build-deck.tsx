@@ -614,15 +614,12 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 18 — Obrigado */}
+      {/* 18 — Fecho */}
       <Page size={[960, 540]} style={s.pageInk}>
         <Eyebrow num="18" label="Vamos a isto" ink />
         <View style={s.center}>
-          <Text style={[s.h1, { color: CREAM }]}>
-            Obrigado, <Mark>{deck.companyName}</Mark>.
-          </Text>
-          <Text style={{ fontFamily: SANS, fontSize: 13, color: AMBER, marginTop: 22 }}>
-            destaque.ai · contacto@destaque.ai · Lisboa, Portugal
+          <Text style={[s.h1, { color: CREAM, maxWidth: 760 }]}>
+            Vamos pôr a tua marca <Mark>no parágrafo</Mark>.
           </Text>
         </View>
         <View style={s.footer} fixed>

@@ -37,5 +37,5 @@ export const SLIDES: SlideDef[] = [
   { id: "appendix-b", title: "Apêndice B · Sprint", tone: "paper", Component: AppendixB },
   { id: "appendix-c", title: "Apêndice C · Retainer", tone: "paper", Component: AppendixC },
   { id: "appendix-d", title: "Apêndice D · Investimento", tone: "paper", Component: AppendixD },
-  { id: "thank-you", title: "Obrigado", tone: "ink", Component: ThankYou },
+  { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
 ];
