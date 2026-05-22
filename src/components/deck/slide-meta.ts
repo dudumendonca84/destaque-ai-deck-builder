@@ -1,5 +1,5 @@
 // Metadados dos 18 slides — sem "use client", utilizável em Server Components
-// (ex.: dashboard de analytics) e na geração de PowerPoint.
+// (ex.: dashboard de analytics) e na geração de PDF.
 
 export type SlideMeta = { n: number; id: string; title: string };
 

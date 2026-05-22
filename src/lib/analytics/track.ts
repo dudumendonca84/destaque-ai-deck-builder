@@ -3,7 +3,7 @@ export type TrackEventType =
   | "slide_viewed"
   | "cta_clicked"
   | "exited"
-  | "download_pptx";
+  | "download_pdf";
 
 export type TrackEvent = {
   event_type: TrackEventType;

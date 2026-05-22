@@ -158,11 +158,11 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
       <div className="deck-controls" data-tone={slide.tone}>
         <a
           className="deck-controls__btn"
-          href={`/api/proposals/${deck.token}/download-pptx`}
+          href={`/api/proposals/${deck.token}/download-pdf`}
           onClick={() =>
-            trackEvent(deck.token, { event_type: "download_pptx", slide_number: current + 1 })
+            trackEvent(deck.token, { event_type: "download_pdf", slide_number: current + 1 })
           }
-          aria-label="Download PowerPoint"
+          aria-label="Download PDF"
         >
           <Download size={16} strokeWidth={1.6} />
         </a>

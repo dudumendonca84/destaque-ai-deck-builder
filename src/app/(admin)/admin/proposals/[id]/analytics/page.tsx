@@ -91,7 +91,7 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
                 <div className="kpi__value" style={{ fontSize: 30 }}>
                   {fmtDuration(stats.avgSessionSeconds)}
                 </div>
-                <div className="kpi__delta">{stats.downloads} downloads PPTX</div>
+                <div className="kpi__delta">{stats.downloads} downloads PDF</div>
               </div>
             </div>
 

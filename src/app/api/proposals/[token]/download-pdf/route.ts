@@ -1,14 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { buildPptx } from "@/lib/pptx/build-deck";
+import { buildPdf } from "@/lib/pdf/build-deck";
 import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
 
-// pptxgenjs precisa do runtime Node (APIs de Buffer/zip).
+// @react-pdf/renderer precisa do runtime Node.
 export const runtime = "nodejs";
 
 function slug(s: string): string {
-  // NFD separa acentos em marcas combinatórias não-ASCII; o filtro
-  // [^a-zA-Z0-9] remove-as logo a seguir.
   return (
     s
       .normalize("NFD")
@@ -63,14 +61,13 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     auditRuns: (runRows ?? []) as AuditRun[],
   };
 
-  const buffer = await buildPptx(deck);
-  const filename = `proposta-${slug(deck.companyName)}.pptx`;
+  const buffer = await buildPdf(deck);
+  const filename = `proposta-${slug(deck.companyName)}.pdf`;
 
   return new Response(new Uint8Array(buffer), {
     status: 200,
     headers: {
-      "content-type":
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "content-type": "application/pdf",
       "content-disposition": `attachment; filename="${filename}"`,
       "cache-control": "no-store",
     },

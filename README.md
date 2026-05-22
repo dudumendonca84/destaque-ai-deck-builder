@@ -12,7 +12,7 @@ Match visual exacto com [destaque.ai](https://destaque.ai).
 - Framer Motion 11
 - React Hook Form + Zod
 - Resend (email)
-- pptxgenjs (download PowerPoint)
+- @react-pdf/renderer (download PDF)
 - nanoid (tokens de URL)
 
 ## Setup local
@@ -82,7 +82,7 @@ src/
 │   ├── supabase/               # clients + types + middleware helper
 │   ├── llm/                    # geradores e adapters (Step 9+)
 │   ├── analytics/              # tracking client-side (Step 14)
-│   ├── pptx/                   # geração PowerPoint (Step 16)
+│   ├── pdf/                    # geração PDF (Step 16)
 │   └── utils/
 └── middleware.ts               # auth refresh em todas as rotas
 supabase/migrations/            # SQL
@@ -124,9 +124,9 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 13 | 18 slides (ficheiros individuais) + Slide 4 Live Audit | ✓ |
 | 14 | Tracking client-side | ✓ |
 | 15 | Dashboard analytics | ✓ |
-| 16 | Download PowerPoint (pptxgenjs) | ✓ |
+| 16 | Download PDF (@react-pdf/renderer) | ✓ |
 
-## Analytics & PowerPoint
+## Analytics & PDF
 
 - `/admin/proposals/[id]/analytics` — aberturas, sessões, tempo total e
   por slide (barras), drop-off (último slide alcançado por sessão) e
@@ -134,10 +134,10 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
   de `proposal_events`.
 - `/admin/proposals/[id]/audit` — respostas brutas da auditoria por
   motor, com posição/sentimento.
-- `GET /api/proposals/[token]/download-pptx` — gera um `.pptx` editável
-  via `pptxgenjs` espelhando os 18 slides do deck web, com a paleta da
-  marca e os dados reais da proposta. Botão "Download PowerPoint" no
-  deck público.
+- `GET /api/proposals/[token]/download-pdf` — gera um `.pdf` via
+  `@react-pdf/renderer` espelhando os 18 slides do deck (página 16:9,
+  paleta da marca, dados reais da proposta). Botão "Download PDF" no
+  deck público. O PDF é final e renderiza igual em qualquer leitor.
 - Cron diário `/api/cron/expire-proposals` (ver `vercel.json`) marca
   propostas expiradas. Protegido por `CRON_SECRET`.
 

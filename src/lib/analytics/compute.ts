@@ -28,7 +28,7 @@ export type AnalyticsStats = {
 export function computeAnalytics(events: ProposalEvent[]): AnalyticsStats {
   const opens = events.filter((e) => e.event_type === "viewed");
   const views = events.filter((e) => e.event_type === "slide_viewed");
-  const downloads = events.filter((e) => e.event_type === "download_pptx");
+  const downloads = events.filter((e) => e.event_type === "download_pdf");
 
   const sessions = new Set(
     events.map((e) => e.session_id).filter((s): s is string => Boolean(s)),
