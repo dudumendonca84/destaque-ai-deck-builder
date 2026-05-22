@@ -1951,3 +1951,22 @@ em.mark {
   background: var(--accent);
   transition: width 0.5s ease;
 }
+
+/* Admin · enviar proposta */
+.send-proposal {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.send-proposal__msg {
+  font-family: var(--font-mono-jetbrains);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+.send-proposal__msg.is-ok {
+  color: var(--status-active);
+}
+.send-proposal__msg.is-err {
+  color: var(--red);
+}

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { newProposalToken } from "@/lib/utils/tokens";
+import { sendProposalEmail } from "@/lib/email/resend";
+import { site } from "@/lib/site";
 
 const PAYLOAD = z.object({
   prospect_id: z.string().uuid(),
@@ -54,4 +56,57 @@ export async function createProposal(input: unknown): Promise<CreateProposalResu
 
   revalidatePath("/admin/proposals");
   return { ok: true, id: data.id, token: data.token };
+}
+
+export type SendProposalResult = { ok: true; to: string } | { ok: false; error: string };
+
+/** Envia a proposta por email ao prospect e marca o estado como `sent`. */
+export async function sendProposal(proposalId: string): Promise<SendProposalResult> {
+  const supabase = await createClient();
+
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("id,token,status,prospect_id")
+    .eq("id", proposalId)
+    .single();
+
+  if (!proposal) return { ok: false, error: "Proposta não encontrada." };
+
+  const { data: prospect } = await supabase
+    .from("prospects")
+    .select("company_name,contact_name,contact_email")
+    .eq("id", proposal.prospect_id)
+    .single();
+
+  if (!prospect?.contact_email) {
+    return {
+      ok: false,
+      error: "O prospect não tem email de contacto. Adiciona-o na ficha do prospect.",
+    };
+  }
+
+  const base = process.env.NEXT_PUBLIC_PROPOSAL_URL ?? site.url;
+  const proposalUrl = `${base.replace(/\/$/, "")}/proposta/${proposal.token}`;
+
+  try {
+    await sendProposalEmail({
+      to: prospect.contact_email,
+      companyName: prospect.company_name,
+      contactName: prospect.contact_name,
+      proposalUrl,
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Falha no envio." };
+  }
+
+  await supabase
+    .from("proposals")
+    .update({
+      status: proposal.status === "draft" ? "sent" : proposal.status,
+      sent_at: new Date().toISOString(),
+    })
+    .eq("id", proposalId);
+
+  revalidatePath(`/admin/proposals/${proposalId}`);
+  return { ok: true, to: prospect.contact_email };
 }

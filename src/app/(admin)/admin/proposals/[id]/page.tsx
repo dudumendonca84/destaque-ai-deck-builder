@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
 import { AuditRunner } from "@/components/admin/AuditRunner";
+import { SendProposalButton } from "@/components/admin/SendProposalButton";
 import { createClient } from "@/lib/supabase/server";
 import type { AuditStatus } from "@/lib/supabase/types";
 
@@ -106,9 +107,25 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
               Analytics <span>→</span>
             </Link>
           </div>
-          <code style={{ fontFamily: "var(--font-mono-jetbrains)", fontSize: 13 }}>
+          <code
+            style={{
+              fontFamily: "var(--font-mono-jetbrains)",
+              fontSize: 13,
+              display: "block",
+              marginBottom: 16,
+            }}
+          >
             {publicUrl}
           </code>
+          <SendProposalButton
+            proposalId={proposal.id}
+            alreadySent={Boolean(proposal.sent_at)}
+          />
+          {proposal.sent_at && (
+            <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 10 }}>
+              Enviada a {new Date(proposal.sent_at).toLocaleString("pt-PT")}.
+            </p>
+          )}
         </div>
 
         <div className="card">
