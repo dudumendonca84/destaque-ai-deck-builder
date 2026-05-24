@@ -4,7 +4,7 @@ import type { AuditPrompt } from "@/lib/supabase/types";
 import { auditConcurrency, executeAudit, type AuditResponseRow } from "./audit-engine";
 
 /**
- * Corre a auditoria GEO completa de uma proposta: prompts × 4 motores.
+ * Corre a auditoria GEO completa de uma proposta: prompts × motores configurados.
  *
  * Lê os prompts confirmados de `audit_runs.prompts` (Step 9); para propostas
  * legacy do wizard, cai em `proposals.custom_prompts`. Grava `audit_responses`

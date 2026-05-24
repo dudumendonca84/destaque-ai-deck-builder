@@ -5,6 +5,9 @@ import { claudeComplete, hasAnthropicKey } from "./anthropic";
 import { hasOpenAIKey, queryChatGPT } from "./openai";
 import { hasGeminiKey, queryGemini } from "./gemini";
 import { hasPerplexityKey, queryPerplexity } from "./perplexity";
+import { hasMistralKey, queryMistral } from "./mistral";
+import { hasGrokKey, queryGrok } from "./grok";
+import { hasDeepSeekKey, queryDeepSeek } from "./deepseek";
 import { parseCitations } from "./parse-citations";
 import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
 
@@ -12,7 +15,7 @@ import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
 // persistência vive em run-audit.ts; aqui só corremos prompts × motores e
 // agregamos. Testável sem credenciais (cai nos mocks determinísticos).
 
-const DEFAULT_CONCURRENCY = 5;
+const DEFAULT_CONCURRENCY = 8;
 
 /** Nº de prompts processados em paralelo. Configurável via AUDIT_CONCURRENCY. */
 export function auditConcurrency(): number {
@@ -21,18 +24,30 @@ export function auditConcurrency(): number {
 }
 
 function keyAvailable(engine: Engine): boolean {
-  if (engine === "chatgpt") return hasOpenAIKey();
-  if (engine === "claude") return hasAnthropicKey();
-  if (engine === "gemini") return hasGeminiKey();
-  return hasPerplexityKey();
+  switch (engine) {
+    case "chatgpt": return hasOpenAIKey();
+    case "claude": return hasAnthropicKey();
+    case "gemini": return hasGeminiKey();
+    case "perplexity": return hasPerplexityKey();
+    case "mistral": return hasMistralKey();
+    case "grok": return hasGrokKey();
+    case "deepseek": return hasDeepSeekKey();
+  }
 }
 
 async function queryEngine(engine: Engine, prompt: string): Promise<EngineQueryResult> {
-  if (engine === "chatgpt") return queryChatGPT(prompt);
-  if (engine === "gemini") return queryGemini(prompt);
-  if (engine === "perplexity") return queryPerplexity(prompt);
-  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024 });
-  return { response: text, tokens };
+  switch (engine) {
+    case "chatgpt": return queryChatGPT(prompt);
+    case "gemini": return queryGemini(prompt);
+    case "perplexity": return queryPerplexity(prompt);
+    case "mistral": return queryMistral(prompt);
+    case "grok": return queryGrok(prompt);
+    case "deepseek": return queryDeepSeek(prompt);
+    case "claude": {
+      const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024 });
+      return { response: text, tokens };
+    }
+  }
 }
 
 export type AuditResponseRow = {
@@ -145,9 +160,9 @@ export type ExecuteAuditOutput = {
 };
 
 /**
- * Corre todos os prompts × 4 motores com limite de concorrência. `onBatch` é
- * chamado a cada prompt concluído (× 4 motores), permitindo persistência
- * incremental sem acoplar este módulo à base de dados.
+ * Corre todos os prompts × ENGINES.length motores com limite de concorrência.
+ * `onBatch` é chamado a cada prompt concluído (× N motores), permitindo
+ * persistência incremental sem acoplar este módulo à base de dados.
  */
 export async function executeAudit(
   input: ExecuteAuditInput,
@@ -157,7 +172,7 @@ export async function executeAudit(
   const concurrency = Math.max(1, Math.floor(input.concurrency ?? auditConcurrency()));
   const { brandName, competitors } = input;
 
-  // Cada job = um prompt (× 4 motores). runs > 1 repete o prompt.
+  // Cada job = um prompt (× ENGINES.length motores). runs > 1 repete o prompt.
   const jobs: string[] = [];
   for (const prompt of input.prompts) {
     for (let r = 0; r < runs; r++) jobs.push(prompt);

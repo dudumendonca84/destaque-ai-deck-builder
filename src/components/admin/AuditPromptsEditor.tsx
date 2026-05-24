@@ -6,6 +6,7 @@ import {
   setAuditTier,
   saveAuditPrompts,
 } from "@/app/(admin)/admin/proposals/[id]/audit/actions";
+import { ENGINES } from "@/lib/llm/models";
 import type { AuditPrompt, AuditTier, PromptCategory } from "@/lib/supabase/types";
 
 const CATEGORY_LABEL: Record<PromptCategory, string> = {
@@ -17,9 +18,9 @@ const CATEGORY_LABEL: Record<PromptCategory, string> = {
 };
 const CATEGORIES = Object.keys(CATEGORY_LABEL) as PromptCategory[];
 
-const TIER_INFO: Record<AuditTier, { label: string; count: number; calls: number }> = {
-  free: { label: "Auditoria gratuita", count: 5, calls: 20 },
-  diagnostic: { label: "Diagnóstico", count: 30, calls: 120 },
+const TIER_INFO: Record<AuditTier, { label: string; count: number }> = {
+  free: { label: "Auditoria gratuita", count: 5 },
+  diagnostic: { label: "Diagnóstico", count: 30 },
 };
 
 function localId(): string {
@@ -158,7 +159,7 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
           ))}
         </div>
         <p className="body-s" style={{ color: "var(--ink-3)", margin: 0 }}>
-          {info.count} prompts × 4 motores = {info.calls} chamadas LLM
+          {info.count} prompts × {ENGINES.length} motores = {info.count * ENGINES.length} chamadas LLM
         </p>
       </div>
 
@@ -265,7 +266,7 @@ export function AuditPromptsEditor({ proposalId, initialTier, initialPrompts }: 
           {auditPhase === "running" && (
             <div className="audit-banner" data-state="running" style={{ marginTop: 12 }}>
               <span className="pulse-dot" />
-              Auditoria GEO a correr nos 4 motores — mantém este separador aberto.
+              Auditoria GEO a correr nos {ENGINES.length} motores — mantém este separador aberto.
             </div>
           )}
           {savedMsg && (
