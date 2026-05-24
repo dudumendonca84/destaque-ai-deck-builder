@@ -5,7 +5,10 @@ export function hasOpenAIKey(): boolean {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
-export async function queryChatGPT(prompt: string): Promise<EngineQueryResult> {
+export async function queryChatGPT(
+  prompt: string,
+  model: string = OPENAI_MODEL,
+): Promise<EngineQueryResult> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -13,7 +16,7 @@ export async function queryChatGPT(prompt: string): Promise<EngineQueryResult> {
       authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: OPENAI_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     }),

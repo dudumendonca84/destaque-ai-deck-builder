@@ -1,10 +1,17 @@
 import { randomUUID } from "crypto";
 import { claudeJson, hasAnthropicKey } from "../anthropic";
 import { CLAUDE_MODEL } from "../models";
-import type { AuditPrompt, PromptCategory } from "@/lib/supabase/types";
+import type { AuditPrompt, AuditTier, PromptCategory } from "@/lib/supabase/types";
 
-// Geração estruturada dos prompts da auditoria GEO (Step 9). Independente do
-// gerador legacy `generate-prompts.ts`, que continua a servir o wizard.
+// Geração estruturada dos prompts da auditoria GEO (Step 9). Acopla-se ao
+// `references/prompts.md` da skill geo-seo-aeo-master: faz fetch das § 1-3
+// (princípios + categorias + distribuição) e usa-as como contexto canónico.
+// Se o fetch falhar, cai num SYSTEM_FALLBACK que espelha esse conteúdo.
+
+const SKILL_PROMPTS_URL =
+  "https://raw.githubusercontent.com/dudumendonca84/geo-seo-aeo-master/main/skills/geo-seo-aeo-master/references/prompts.md";
+
+const FETCH_TIMEOUT_MS = 3000;
 
 export type AuditPromptContext = {
   company_name?: string | null;
@@ -22,18 +29,71 @@ export const PROMPT_CATEGORIES: PromptCategory[] = [
   "price_comparison",
 ];
 
-const CATEGORY_BRIEF: Record<PromptCategory, string> = {
-  generic_category:
-    "categoria genérica — pergunta ampla sobre o tipo de serviço/produto, sem nomear empresas",
-  direct_comparison: "comparação directa — confronta fornecedores ou soluções entre si",
-  local_recommendation:
-    "recomendação local — pede recomendações para uma geografia específica",
-  feature_specific: "feature específica — foca uma funcionalidade ou capacidade concreta",
-  price_comparison: "comparação de preços — pergunta sobre custos, planos ou orçamento",
+// Distribuição por tier — espelha § 3 do prompts.md da skill. Se a skill
+// evoluir a distribuição, ajustar aqui.
+const TIER_DISTRIBUTION: Record<AuditTier, Record<PromptCategory, number>> = {
+  free: {
+    generic_category: 1,
+    direct_comparison: 1,
+    local_recommendation: 1,
+    feature_specific: 1,
+    price_comparison: 1,
+  },
+  diagnostic: {
+    generic_category: 8,
+    direct_comparison: 8,
+    local_recommendation: 6,
+    feature_specific: 4,
+    price_comparison: 4,
+  },
 };
 
-const SYSTEM =
-  "Ajudas uma agência de Generative Engine Optimization a auditar a visibilidade de um cliente em motores de IA (ChatGPT, Claude, Gemini, Perplexity). Geras perguntas realistas que um decisor B2B escreveria mesmo a um LLM ao avaliar fornecedores.";
+const CATEGORY_BRIEF: Record<PromptCategory, string> = {
+  generic_category:
+    "categoria genérica — pergunta ampla sobre o tipo de serviço/produto, sem nomear empresas; intents: research, pain_point",
+  direct_comparison:
+    "comparação directa — confronta fornecedores/soluções nomeados; intents: comparison, validation, migration",
+  local_recommendation:
+    "recomendação local — recomendações para uma geografia específica; intents: research, validation",
+  feature_specific:
+    "feature específica — foca uma funcionalidade/capacidade concreta; intents: integration, validation",
+  price_comparison:
+    "comparação de preços — custos, planos, orçamento; intents: pricing, comparison",
+};
+
+const SYSTEM_BASE =
+  "Ajudas uma agência de Generative Engine Optimization a auditar a visibilidade de um cliente em motores de IA. Geras perguntas realistas que um decisor B2B escreveria mesmo a um LLM ao avaliar fornecedores.";
+
+const SYSTEM_FALLBACK = `${SYSTEM_BASE}
+
+Princípios (espelho de emergência da skill geo-seo-aeo-master § 1):
+- Persona implícita: CIO, CTO, CFO, Head of CX, VP Sales, Director de Operações, Procurement. Não nomeies a persona — escreve como ela escreveria.
+- Contexto realista: tamanho da empresa, geografia (se relevante), vertical, restrições conhecidas.
+- Intent claro: cada prompt expressa um de — research, comparison, validation, migration, pricing, integration, pain_point.
+- Nunca nomeies a marca do cliente — queremos ver se aparece organicamente.
+- Português europeu (PT-PT) por defeito; PT-BR só se o público-alvo for tipicamente brasileiro.
+- Varia a formulação dentro da mesma categoria.`;
+
+async function loadSkillPrompts(): Promise<string | null> {
+  try {
+    const res = await fetch(SKILL_PROMPTS_URL, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const md = await res.text();
+    const startIdx = md.indexOf("## 1.");
+    if (startIdx === -1) return null;
+    const endIdx = md.indexOf("## 4.");
+    const slice = (endIdx > startIdx ? md.slice(startIdx, endIdx) : md.slice(startIdx)).trim();
+    return slice.length > 0 ? slice : null;
+  } catch {
+    return null;
+  }
+}
+
+function tierFor(count: 5 | 30): AuditTier {
+  return count === 5 ? "free" : "diagnostic";
+}
 
 function contextBlock(ctx: AuditPromptContext): string {
   return `CLIENTE:
@@ -46,20 +106,22 @@ function contextBlock(ctx: AuditPromptContext): string {
   }`;
 }
 
-export function buildAuditPromptRequest(ctx: AuditPromptContext, perCategory: number): string {
-  const total = perCategory * PROMPT_CATEGORIES.length;
-  const cats = PROMPT_CATEGORIES.map((c) => `- ${c}: ${CATEGORY_BRIEF[c]}`).join("\n");
+export function buildAuditPromptRequest(
+  ctx: AuditPromptContext,
+  distribution: Record<PromptCategory, number>,
+): string {
+  const total = Object.values(distribution).reduce((s, n) => s + n, 0);
+  const cats = PROMPT_CATEGORIES.map(
+    (c) => `- ${c}: ${distribution[c]} prompts (${CATEGORY_BRIEF[c]})`,
+  ).join("\n");
   return `${contextBlock(ctx)}
 
-TAREFA: Gera ${total} prompts de auditoria GEO — exactamente ${perCategory} por cada uma destas ${PROMPT_CATEGORIES.length} categorias:
+TAREFA: Gera ${total} prompts de auditoria GEO — exactamente esta distribuição:
 ${cats}
 
-REGRAS:
-- Português europeu (PT-PT). PT-BR só se o público-alvo for tipicamente brasileiro.
-- Cada prompt é uma pergunta natural que um decisor B2B faria mesmo a um LLM ao avaliar fornecedores deste tipo.
-- NÃO menciones a empresa do cliente — queremos ver se aparece organicamente.
-- Varia a formulação; evita prompts quase idênticos.
-- "intent" é uma frase curta que descreve a intenção de compra por trás do prompt.`;
+REGRAS de saída:
+- Para cada prompt devolve text, category (uma das 5 acima) e intent (frase curta que descreve a intenção de compra — research/comparison/validation/migration/pricing/integration/pain_point).
+- Aplica os princípios acima (persona implícita, contexto realista, sem nomear a marca do cliente, variação dentro da categoria).`;
 }
 
 export const AUDIT_PROMPT_SCHEMA = {
@@ -120,26 +182,37 @@ function logCost(usage: { input: number; output: number }, total: number) {
 }
 
 /**
- * Gera os prompts da auditoria. `count` é 5 (auditoria gratuita) ou 30
- * (diagnóstico) — distribuídos igualmente pelas 5 categorias. Degrada para
- * o fallback determinístico se faltar a API key ou Claude falhar.
+ * Gera os prompts da auditoria. `count` é 5 (free) ou 30 (diagnóstico) e
+ * mapeia 1:1 ao tier. Fetcha o `prompts.md` da skill como contexto canónico
+ * (princípios + categorias + distribuição § 1-3); cai em SYSTEM_FALLBACK se
+ * o fetch falhar. Cai em `fallbackAuditPrompts` se Claude falhar.
  */
 export async function generateAuditPrompts(
   ctx: AuditPromptContext,
   count: 5 | 30,
 ): Promise<GenerateAuditPromptsResult> {
-  const perCategory = count / PROMPT_CATEGORIES.length;
+  const distribution = TIER_DISTRIBUTION[tierFor(count)];
+  const skillContext = await loadSkillPrompts();
+
+  if (skillContext) {
+    console.log(`[generate-audit-prompts] skill loaded (${skillContext.length} chars)`);
+  } else {
+    console.log("[generate-audit-prompts] skill unavailable, using fallback principles");
+  }
 
   if (!hasAnthropicKey()) {
     return { prompts: fallbackAuditPrompts(ctx, count), source: "fallback" };
   }
 
-  // Até 2 tentativas — o parse de JSON pode falhar pontualmente.
+  const system = skillContext
+    ? `${SYSTEM_BASE}\n\nUsa estes princípios e categorias canónicas como guia (fonte: skill geo-seo-aeo-master, § 1-3 verbatim):\n\n${skillContext}`
+    : SYSTEM_FALLBACK;
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const { data, usage } = await claudeJson<{ prompts: RawPrompt[] }>({
-        system: SYSTEM,
-        prompt: buildAuditPromptRequest(ctx, perCategory),
+        system,
+        prompt: buildAuditPromptRequest(ctx, distribution),
         schema: AUDIT_PROMPT_SCHEMA,
         maxTokens: count === 30 ? 4096 : 1024,
       });
@@ -170,6 +243,8 @@ const FALLBACK_TEMPLATES: Record<PromptCategory, ((biz: string, loc: string) => 
     (b) => `${b}: por onde começar`,
     (b) => `Vale a pena investir em ${b}`,
     (b) => `Principais tendências em ${b}`,
+    (b) => `Como resolver o problema de ${b}`,
+    (b) => `${b}: panorama do mercado`,
   ],
   direct_comparison: [
     (b) => `Comparação das melhores soluções de ${b}`,
@@ -178,6 +253,8 @@ const FALLBACK_TEMPLATES: Record<PromptCategory, ((biz: string, loc: string) => 
     (b) => `Prós e contras das principais opções de ${b}`,
     (b) => `Que ${b} tem melhor reputação`,
     (b) => `Comparar fornecedores de ${b} lado a lado`,
+    (b) => `Migrar entre fornecedores de ${b}: prós e contras`,
+    (b) => `${b}: shortlist de líderes do mercado`,
   ],
   local_recommendation: [
     (b, l) => `Melhor ${b}${l}`,
@@ -192,16 +269,12 @@ const FALLBACK_TEMPLATES: Record<PromptCategory, ((biz: string, loc: string) => 
     (b) => `${b} com integrações e automação`,
     (b) => `Que ${b} oferece a melhor experiência`,
     (b) => `${b} adequado a empresas em crescimento`,
-    (b) => `${b} com bom histórico de resultados`,
-    (b) => `${b} fácil de implementar`,
   ],
   price_comparison: [
     (b) => `Quanto custa ${b}`,
     (b) => `Preços de ${b}`,
     (b) => `${b} com melhor relação qualidade-preço`,
     (b) => `Planos e custos de ${b}`,
-    (b) => `${b} acessível para PME`,
-    (b) => `Orçamento típico para ${b}`,
   ],
 };
 
@@ -214,7 +287,7 @@ const CATEGORY_INTENT: Record<PromptCategory, string> = {
 };
 
 export function fallbackAuditPrompts(ctx: AuditPromptContext, count: 5 | 30): AuditPrompt[] {
-  const perCategory = count / PROMPT_CATEGORIES.length;
+  const distribution = TIER_DISTRIBUTION[tierFor(count)];
   const biz = ctx.business_type?.trim() || "este serviço";
   const loc = ctx.location?.trim() ? ` em ${ctx.location.trim()}` : "";
   const now = new Date().toISOString();
@@ -222,7 +295,8 @@ export function fallbackAuditPrompts(ctx: AuditPromptContext, count: 5 | 30): Au
 
   for (const category of PROMPT_CATEGORIES) {
     const templates = FALLBACK_TEMPLATES[category];
-    for (let i = 0; i < perCategory; i++) {
+    const n = distribution[category];
+    for (let i = 0; i < n; i++) {
       out.push({
         id: randomUUID(),
         text: templates[i % templates.length](biz, loc),

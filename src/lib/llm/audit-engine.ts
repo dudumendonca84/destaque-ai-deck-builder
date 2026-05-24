@@ -1,5 +1,5 @@
 import { ENGINES, type Engine } from "./models";
-import type { AuditEngineSummary, AuditResults } from "@/lib/supabase/types";
+import type { AuditEngineSummary, AuditResults, AuditTier } from "@/lib/supabase/types";
 import type { CitationAnalysis, EngineQueryResult } from "./types";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
 import { hasOpenAIKey, queryChatGPT } from "./openai";
@@ -10,6 +10,7 @@ import { hasGrokKey, queryGrok } from "./grok";
 import { hasDeepSeekKey, queryDeepSeek } from "./deepseek";
 import { parseCitations } from "./parse-citations";
 import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
+import { loadSkillModelMap, type EngineModelMap } from "./skill-models";
 
 // Motor de auditoria GEO — orquestração pura, sem acesso à base de dados. A
 // persistência vive em run-audit.ts; aqui só corremos prompts × motores e
@@ -35,16 +36,24 @@ function keyAvailable(engine: Engine): boolean {
   }
 }
 
-async function queryEngine(engine: Engine, prompt: string): Promise<EngineQueryResult> {
+async function queryEngine(
+  engine: Engine,
+  prompt: string,
+  modelOverride?: string,
+): Promise<EngineQueryResult> {
   switch (engine) {
-    case "chatgpt": return queryChatGPT(prompt);
-    case "gemini": return queryGemini(prompt);
-    case "perplexity": return queryPerplexity(prompt);
-    case "mistral": return queryMistral(prompt);
-    case "grok": return queryGrok(prompt);
-    case "deepseek": return queryDeepSeek(prompt);
+    case "chatgpt": return queryChatGPT(prompt, modelOverride);
+    case "gemini": return queryGemini(prompt, modelOverride);
+    case "perplexity": return queryPerplexity(prompt, modelOverride);
+    case "mistral": return queryMistral(prompt, modelOverride);
+    case "grok": return queryGrok(prompt, modelOverride);
+    case "deepseek": return queryDeepSeek(prompt, modelOverride);
     case "claude": {
-      const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024 });
+      const { text, tokens } = await claudeComplete({
+        prompt,
+        maxTokens: 1024,
+        model: modelOverride,
+      });
       return { response: text, tokens };
     }
   }
@@ -63,8 +72,9 @@ async function runSingle(opts: {
   prompt: string;
   brandName: string;
   competitors: string[];
+  modelOverride?: string;
 }): Promise<AuditResponseRow> {
-  const { engine, prompt, brandName, competitors } = opts;
+  const { engine, prompt, brandName, competitors, modelOverride } = opts;
 
   if (!keyAvailable(engine)) {
     return {
@@ -77,7 +87,7 @@ async function runSingle(opts: {
   }
 
   try {
-    const query = await queryEngine(engine, prompt);
+    const query = await queryEngine(engine, prompt, modelOverride);
     const analysis = await parseCitations({
       response: query.response,
       brandName,
@@ -149,6 +159,8 @@ export type ExecuteAuditInput = {
   prompts: string[];
   brandName: string;
   competitors: string[];
+  /** Determina a coluna do mapping (free → cost_optimized, diagnostic → production). */
+  tier: AuditTier;
   /** MVP = 1. Multi-run fica para o Visibility Tracker. */
   runsPerPrompt?: number;
   concurrency?: number;
@@ -170,7 +182,15 @@ export async function executeAudit(
 ): Promise<ExecuteAuditOutput> {
   const runs = Math.max(1, Math.floor(input.runsPerPrompt ?? 1));
   const concurrency = Math.max(1, Math.floor(input.concurrency ?? auditConcurrency()));
-  const { brandName, competitors } = input;
+  const { brandName, competitors, tier } = input;
+
+  const modelMap: EngineModelMap | null = await loadSkillModelMap(tier);
+  if (modelMap) {
+    const pairs = Object.entries(modelMap).map(([e, m]) => `${e}→${m}`).join(", ");
+    console.log(`[audit-engine] models.md loaded (tier=${tier}): ${pairs}`);
+  } else {
+    console.log(`[audit-engine] models.md unavailable, using hardcoded defaults`);
+  }
 
   // Cada job = um prompt (× ENGINES.length motores). runs > 1 repete o prompt.
   const jobs: string[] = [];
@@ -185,7 +205,15 @@ export async function executeAudit(
     while (cursor < jobs.length) {
       const prompt = jobs[cursor++];
       const batch = await Promise.all(
-        ENGINES.map((engine) => runSingle({ engine, prompt, brandName, competitors })),
+        ENGINES.map((engine) =>
+          runSingle({
+            engine,
+            prompt,
+            brandName,
+            competitors,
+            modelOverride: modelMap?.[engine],
+          }),
+        ),
       );
       allRows.push(...batch);
       if (onBatch) await onBatch(batch);

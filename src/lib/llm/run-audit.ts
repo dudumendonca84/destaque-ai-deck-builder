@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/server";
-import type { AuditPrompt } from "@/lib/supabase/types";
+import type { AuditPrompt, AuditTier } from "@/lib/supabase/types";
 import { auditConcurrency, executeAudit, type AuditResponseRow } from "./audit-engine";
 
 /**
@@ -20,11 +20,16 @@ export async function runAudit(
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id,custom_prompts,prospect_id")
+    .select("id,custom_prompts,prospect_id,audit_tier")
     .eq("id", proposalId)
     .single();
 
   if (!proposal) throw new Error("proposal_not_found");
+
+  const tier: AuditTier =
+    proposal.audit_tier === "free" || proposal.audit_tier === "diagnostic"
+      ? proposal.audit_tier
+      : "diagnostic";
 
   const { data: prospect } = await supabase
     .from("prospects")
@@ -59,7 +64,7 @@ export async function runAudit(
     await supabase.from("audit_responses").delete().eq("proposal_id", proposalId);
 
     const { rows, results } = await executeAudit(
-      { prompts, brandName, competitors, concurrency: auditConcurrency() },
+      { prompts, brandName, competitors, tier, concurrency: auditConcurrency() },
       async (batch: AuditResponseRow[]) => {
         await supabase.from("audit_responses").insert(
           batch.map((r) => ({

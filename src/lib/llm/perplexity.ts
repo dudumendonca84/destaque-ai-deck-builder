@@ -5,7 +5,10 @@ export function hasPerplexityKey(): boolean {
   return Boolean(process.env.PERPLEXITY_API_KEY);
 }
 
-export async function queryPerplexity(prompt: string): Promise<EngineQueryResult> {
+export async function queryPerplexity(
+  prompt: string,
+  model: string = PERPLEXITY_MODEL,
+): Promise<EngineQueryResult> {
   const res = await fetch("https://api.perplexity.ai/chat/completions", {
     method: "POST",
     headers: {
@@ -13,7 +16,7 @@ export async function queryPerplexity(prompt: string): Promise<EngineQueryResult
       authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
     },
     body: JSON.stringify({
-      model: PERPLEXITY_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
     }),
   });

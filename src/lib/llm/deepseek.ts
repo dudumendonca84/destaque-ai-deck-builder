@@ -8,7 +8,10 @@ export function hasDeepSeekKey(): boolean {
 // DeepSeek tem soft rate limits — retentamos 429/503 com backoff exponencial.
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
-export async function queryDeepSeek(prompt: string): Promise<EngineQueryResult> {
+export async function queryDeepSeek(
+  prompt: string,
+  model: string = DEEPSEEK_MODEL,
+): Promise<EngineQueryResult> {
   let lastError = "DeepSeek: sem resposta";
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
@@ -18,7 +21,7 @@ export async function queryDeepSeek(prompt: string): Promise<EngineQueryResult> 
         authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
+        model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),
