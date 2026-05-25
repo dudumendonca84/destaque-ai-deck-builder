@@ -5,6 +5,7 @@ import { DeckContainer } from "@/components/deck/DeckContainer";
 import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, AuditTier, Proposal, Prospect } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
+import type { ScanResult } from "@/lib/scan/types";
 
 export const metadata: Metadata = {
   title: "Proposta",
@@ -67,6 +68,13 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
 
   const { items: benchmarks } = await loadCoreBenchmarks();
 
+  const { data: scanRow } = await supabase
+    .from("sinal_scans")
+    .select("scan_results")
+    .eq("proposal_id", proposal.id)
+    .maybeSingle();
+  const sinalScan = (scanRow?.scan_results as ScanResult | null) ?? null;
+
   const deck: DeckData = {
     token,
     companyName: prospect?.company_name ?? "a tua marca",
@@ -84,6 +92,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns,
     benchmarks,
+    sinalScan,
   };
 
   return <DeckContainer deck={deck} />;

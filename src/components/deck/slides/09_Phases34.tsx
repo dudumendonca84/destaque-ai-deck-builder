@@ -5,7 +5,7 @@ import { ENGINE_COUNT } from "@/lib/llm/models";
 
 export function Phases34() {
   return (
-    <SlideShell index={9} total={18} eyebrow="Fases 3 e 4">
+    <SlideShell index={9} total={19} eyebrow="Fases 3 e 4">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Distribuição e <em className="mark">medição</em>
       </h2>

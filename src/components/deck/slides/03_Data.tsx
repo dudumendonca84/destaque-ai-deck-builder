@@ -25,7 +25,7 @@ export function Data({ deck, active }: SlideProps) {
 
   if (items.length === 0) {
     return (
-      <SlideShell index={3} total={18} eyebrow="O contexto">
+      <SlideShell index={3} total={19} eyebrow="O contexto">
         <h2 className="tx-h2" style={{ maxWidth: 720, marginBottom: 36 }}>
           Não é uma tendência. É <em className="mark">já</em>.
         </h2>
@@ -38,7 +38,7 @@ export function Data({ deck, active }: SlideProps) {
   }
 
   return (
-    <SlideShell index={3} total={18} eyebrow="O contexto">
+    <SlideShell index={3} total={19} eyebrow="O contexto">
       <h2 className="tx-h2" style={{ maxWidth: 720, marginBottom: 36 }}>
         Não é uma tendência. É <em className="mark">já</em>.
       </h2>
