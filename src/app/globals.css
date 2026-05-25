@@ -2459,3 +2459,152 @@ em.mark {
   font-size: 14px;
   line-height: 1.55;
 }
+
+/* ============================================================
+   MOBILE FIX — deck precisava de respiração em portrait
+   ============================================================ */
+@media (max-width: 720px) {
+  /* Slide container: para de centrar verticalmente, mantém conteúdo
+     no topo onde os utilizadores estão habituados em mobile. */
+  .slide {
+    align-items: flex-start;
+  }
+  .slide__inner {
+    padding: 56px 24px 80px;
+  }
+  .slide__inner--center {
+    min-height: auto;
+    padding-top: 32px;
+  }
+  .slide__inner--audit {
+    padding: 48px 16px 80px;
+    height: auto;
+    min-height: 100vh;
+  }
+  .slide__eyebrow {
+    margin-bottom: 24px;
+    font-size: 10.5px;
+  }
+  .slide__eyebrow .bar {
+    flex: 0 0 32px;
+  }
+
+  /* Headings — reduzir leading e tamanho em mobile para evitar quebras
+     estranhas dos serif italics. */
+  .tx-display {
+    font-size: clamp(36px, 9vw, 56px);
+  }
+  .tx-h1 {
+    font-size: clamp(32px, 8vw, 48px);
+  }
+  .tx-h2 {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+  .tx-h3 {
+    font-size: 18px;
+  }
+
+  /* Slide 03 data-grid: 3 colunas → empilha verticalmente em mobile. */
+  .data-grid {
+    grid-template-columns: 1fr;
+    border-top: 0;
+  }
+  .data-stat {
+    padding: 24px 0 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .data-stat:last-child {
+    border-bottom: 0;
+  }
+  .data-stat__value {
+    font-size: clamp(44px, 12vw, 64px);
+  }
+
+  /* Slide 10 KPIs grid: 4 → 2 → 1 conforme largura. */
+  .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* Tracker grid (slide 19): 2 colunas → 1 coluna. */
+  .tracker-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .tracker-dashboard__cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tracker-engine-breakdown {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* CTA grid (slide 20): cards stack 1 column. */
+  .cta-grid {
+    grid-template-columns: 1fr;
+  }
+  .cta-card {
+    padding: 20px;
+  }
+  .cta-card__title {
+    font-size: 18px;
+  }
+
+  /* Pricing grid: stack. */
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Apêndice E SINAL dimensions grid: 1 column. */
+  .appendix-e-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Action plan horizon actions: 1 column. */
+  .horizon-block__actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* LiveAudit (slide 04) — engines stack mais cedo, prompts mais legíveis */
+  .la-card {
+    border-radius: 8px;
+  }
+  .la-card__head {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 6px;
+  }
+  .la-card__prompt {
+    font-size: 14px;
+  }
+
+  /* Deck navigation: menos invasiva em mobile */
+  .deck-controls {
+    top: 12px;
+    right: 12px;
+  }
+  .deck-controls__btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .slide__inner {
+    padding: 48px 18px 64px;
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .tracker-dashboard__cards {
+    grid-template-columns: 1fr;
+  }
+  .tracker-engine-breakdown {
+    grid-template-columns: 1fr;
+  }
+  .appendix-e-grid {
+    grid-template-columns: 1fr;
+  }
+}
