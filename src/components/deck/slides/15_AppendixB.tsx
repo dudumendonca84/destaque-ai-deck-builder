@@ -6,7 +6,7 @@ import type { SlideProps } from "../types";
 
 export function AppendixB({ deck }: SlideProps) {
   return (
-    <SlideShell index={15} total={21} eyebrow="Apêndice B · Sprint">
+    <SlideShell index={15} total={22} eyebrow="Apêndice B · Sprint">
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Sprint — <em className="mark">a execução</em>
       </h2>

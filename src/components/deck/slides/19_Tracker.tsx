@@ -21,7 +21,7 @@ export function Tracker({ deck, active }: SlideProps) {
 
   if (!isPaidTier) {
     return (
-      <SlideShell index={19} total={21} eyebrow="Visibility Tracker · preview">
+      <SlideShell index={19} total={22} eyebrow="Visibility Tracker · preview">
         <h2 className="tx-h2" style={{ marginBottom: 24 }}>
           O <em className="mark">tracker</em> contínuo — só no retainer.
         </h2>
@@ -36,7 +36,7 @@ export function Tracker({ deck, active }: SlideProps) {
   }
 
   return (
-    <SlideShell index={19} total={21} eyebrow="Visibility Tracker · preview">
+    <SlideShell index={19} total={22} eyebrow="Visibility Tracker · preview">
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         O que recebes <em className="mark">todos os meses</em>
       </h2>

@@ -10,7 +10,7 @@ const STEPS = [
 
 export function NextSteps() {
   return (
-    <SlideShell index={12} total={21} eyebrow="A seguir">
+    <SlideShell index={12} total={22} eyebrow="A seguir">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         O que acontece <em className="mark">a partir daqui</em>
       </h2>

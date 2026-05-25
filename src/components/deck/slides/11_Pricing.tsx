@@ -28,7 +28,7 @@ export function Pricing({ deck, active }: SlideProps) {
     },
   ];
   return (
-    <SlideShell index={11} total={21} eyebrow="Investimento">
+    <SlideShell index={11} total={22} eyebrow="Investimento">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Três fases, <em className="mark">um número claro</em>
       </h2>

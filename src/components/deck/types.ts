@@ -1,6 +1,7 @@
 import type { AuditResults, AuditRun, AuditTier, Engine } from "@/lib/supabase/types";
 import type { Benchmark } from "@/lib/skill/benchmarks";
 import type { ScanResult } from "@/lib/scan/types";
+import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
 export type DeckData = {
   token: string;
@@ -20,6 +21,7 @@ export type DeckData = {
   auditRuns: AuditRun[];
   benchmarks: Benchmark[];
   sinalScan: ScanResult | null;
+  synthesized: SynthesizedDeck | null;
 };
 
 export type SlideProps = {

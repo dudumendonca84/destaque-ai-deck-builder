@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
 import { AuditRunner } from "@/components/admin/AuditRunner";
 import { SendProposalButton } from "@/components/admin/SendProposalButton";
+import { SynthesizeDeckButton } from "@/components/admin/SynthesizeDeckButton";
 import { createClient } from "@/lib/supabase/server";
 import type { AuditStatus } from "@/lib/supabase/types";
 
@@ -120,6 +121,12 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
           <SendProposalButton
             proposalId={proposal.id}
             alreadySent={Boolean(proposal.sent_at)}
+          />
+          <SynthesizeDeckButton
+            proposalId={proposal.id}
+            hasExisting={Boolean(proposal.deck_blocks)}
+            synthesizedAt={proposal.deck_synthesized_at}
+            source={proposal.deck_synthesized_source}
           />
           {proposal.sent_at && (
             <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 10 }}>
