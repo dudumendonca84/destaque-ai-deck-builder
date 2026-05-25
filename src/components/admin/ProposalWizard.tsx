@@ -3,25 +3,67 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Prospect } from "@/lib/supabase/types";
+import type { Prospect, GeneratedPromptMeta, AuditTier } from "@/lib/supabase/types";
 import { createProposal } from "@/app/(admin)/admin/proposals/actions";
 import { fallbackPrompts } from "@/lib/llm/fallback-prompts";
 
 const STEPS = [
-  { n: "01", label: "Prospect" },
-  { n: "02", label: "Prompts" },
-  { n: "03", label: "Pricing" },
-  { n: "04", label: "Mensagem" },
-  { n: "05", label: "Revisão" },
+  { n: "01", label: "Tipo" },
+  { n: "02", label: "Prospect" },
+  { n: "03", label: "Prompts" },
+  { n: "04", label: "Pricing" },
+  { n: "05", label: "Mensagem" },
+  { n: "06", label: "Revisão" },
 ] as const;
 
-type StepKey = 0 | 1 | 2 | 3 | 4;
+type StepKey = 0 | 1 | 2 | 3 | 4 | 5;
 
 type Pricing = {
-  diagnostico: number;
-  sprint: number;
-  retainer: number;
+  diagnostico: number | null;
+  sprint: number | null;
+  retainer: number | null;
 };
+
+type TierOption = {
+  value: AuditTier;
+  label: string;
+  promptsCount: number;
+  description: string;
+};
+
+const TIER_OPTIONS: TierOption[] = [
+  {
+    value: "free",
+    label: "Auditoria gratuita",
+    promptsCount: 5,
+    description: "Lead-gen — 5 prompts × 6 motores com modelos cost-optimized.",
+  },
+  {
+    value: "diagnostic",
+    label: "Diagnóstico",
+    promptsCount: 30,
+    description: "Paid — 30 prompts × 6 motores com modelos production. Fidelidade ao que o utilizador real vê.",
+  },
+  {
+    value: "premium",
+    label: "Premium",
+    promptsCount: 30,
+    description: "Diagnóstico + multimodal + análise técnica completa (em desenvolvimento).",
+  },
+];
+
+function tierTotal(tier: AuditTier): number {
+  return TIER_OPTIONS.find((t) => t.value === tier)?.promptsCount ?? 5;
+}
+
+const ENGINE_COUNT = 6;
+
+function priceFromInput(v: string): number | null {
+  const t = v.trim();
+  if (t === "") return null;
+  const n = parseInt(t, 10);
+  return Number.isFinite(n) ? n : null;
+}
 
 export function ProposalWizard({
   prospects,
@@ -32,6 +74,7 @@ export function ProposalWizard({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<StepKey>(0);
+  const [tier, setTier] = useState<AuditTier>("free");
   const [prospectId, setProspectId] = useState<string>(initialProspectId ?? "");
   const [prompts, setPrompts] = useState<string[]>(() => {
     const p = initialProspectId
@@ -46,11 +89,12 @@ export function ProposalWizard({
         })
       : [];
   });
+  const [promptsMeta, setPromptsMeta] = useState<GeneratedPromptMeta[] | null>(null);
   const [generating, setGenerating] = useState(false);
   const [pricing, setPricing] = useState<Pricing>({
-    diagnostico: 4500,
-    sprint: 18000,
-    retainer: 4500,
+    diagnostico: null,
+    sprint: null,
+    retainer: null,
   });
   const [message, setMessage] = useState<string>("");
   const [submitting, startSubmit] = useTransition();
@@ -61,7 +105,10 @@ export function ProposalWizard({
     [prospectId, prospects],
   );
 
-  // Seleção de prospect: também pré-popula prompts (fallback) se ainda vazios.
+  const targetPromptCount = tierTotal(tier);
+  const minPromptCount = tier === "free" ? 3 : Math.max(5, targetPromptCount - 5);
+  const maxPromptCount = tier === "free" ? 7 : 30;
+
   function selectProspect(id: string) {
     setProspectId(id);
     const p = prospects.find((x) => x.id === id);
@@ -78,8 +125,13 @@ export function ProposalWizard({
   }
 
   const canNext = (() => {
-    if (step === 0) return Boolean(prospectId);
-    if (step === 1) return prompts.length >= 3 && prompts.every((p) => p.trim().length >= 3);
+    if (step === 0) return Boolean(tier);
+    if (step === 1) return Boolean(prospectId);
+    if (step === 2) {
+      return (
+        prompts.length >= minPromptCount && prompts.every((p) => p.trim().length >= 3)
+      );
+    }
     return true;
   })();
 
@@ -97,12 +149,17 @@ export function ProposalWizard({
           company_name: prospect.company_name,
           target_audience: prospect.target_audience,
           competitors: prospect.competitors ?? [],
+          tier,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as { prompts?: string[] };
+      const data = (await res.json()) as {
+        prompts?: string[];
+        prompts_detailed?: GeneratedPromptMeta[];
+      };
       if (Array.isArray(data.prompts) && data.prompts.length >= 3) {
-        setPrompts(data.prompts.slice(0, 7));
+        setPrompts(data.prompts.slice(0, maxPromptCount));
+        setPromptsMeta(data.prompts_detailed ?? null);
       } else {
         throw new Error("Resposta inválida.");
       }
@@ -115,10 +172,24 @@ export function ProposalWizard({
 
   function submit() {
     setError(null);
+    // Sincroniza prompts_meta com os prompts actuais (edições manuais
+    // perdem o meta original — limpamos para esses para evitar dados
+    // inconsistentes).
+    const finalPrompts = prompts.map((p) => p.trim()).filter(Boolean);
+    let finalMeta: GeneratedPromptMeta[] | null = null;
+    if (promptsMeta) {
+      finalMeta = finalPrompts
+        .map((text) => promptsMeta.find((m) => m.text === text))
+        .filter((m): m is GeneratedPromptMeta => Boolean(m));
+      if (finalMeta.length === 0) finalMeta = null;
+    }
+
     startSubmit(async () => {
       const result = await createProposal({
         prospect_id: prospectId,
-        custom_prompts: prompts.map((p) => p.trim()).filter(Boolean),
+        audit_tier: tier,
+        custom_prompts: finalPrompts,
+        prompts_meta: finalMeta,
         custom_message: message.trim() || null,
         pricing_diagnostico: pricing.diagnostico,
         pricing_sprint: pricing.sprint,
@@ -154,8 +225,56 @@ export function ProposalWizard({
         })}
       </div>
 
-      {/* STEP 1 — Prospect */}
+      {/* STEP 1 — Tipo (tier) */}
       {step === 0 && (
+        <div className="wizard__body">
+          <h2 className="tx-h2">Tipo de auditoria</h2>
+          <p className="body-m" style={{ color: "var(--ink-3)" }}>
+            Define a profundidade do audit e o modelo de LLM usado em cada motor.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
+              marginTop: 12,
+            }}
+          >
+            {TIER_OPTIONS.map((t) => {
+              const isSelected = tier === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  className="card"
+                  style={{
+                    textAlign: "left",
+                    cursor: t.value === "premium" ? "not-allowed" : "pointer",
+                    opacity: t.value === "premium" ? 0.5 : 1,
+                    borderColor: isSelected ? "var(--ink)" : undefined,
+                    background: isSelected ? "var(--paper-2)" : undefined,
+                  }}
+                  disabled={t.value === "premium"}
+                  onClick={() => setTier(t.value)}
+                >
+                  <div className="card__head">
+                    <h3 className="tx-h3">{t.label}</h3>
+                    <span className="mono body-s" style={{ color: "var(--ink-3)" }}>
+                      {t.promptsCount}P × {ENGINE_COUNT}M
+                    </span>
+                  </div>
+                  <p className="body-s" style={{ margin: 0, color: "var(--ink-2)" }}>
+                    {t.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2 — Prospect */}
+      {step === 1 && (
         <div className="wizard__body">
           <h2 className="tx-h2">Para quem é esta proposta?</h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
@@ -201,13 +320,15 @@ export function ProposalWizard({
         </div>
       )}
 
-      {/* STEP 2 — Prompts */}
-      {step === 1 && (
+      {/* STEP 3 — Prompts */}
+      {step === 2 && (
         <div className="wizard__body">
-          <h2 className="tx-h2">5 prompts da <em className="mark">auditoria</em></h2>
+          <h2 className="tx-h2">
+            {targetPromptCount} prompts da <em className="mark">auditoria</em>
+          </h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini, Grok, DeepSeek e Mistral.
-            Edita-os à vontade — entre 3 e 7 prompts.
+            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini, Grok, DeepSeek e
+            Mistral. Edita-os à vontade — entre {minPromptCount} e {maxPromptCount} prompts.
           </p>
 
           <div style={{ display: "flex", gap: 12 }}>
@@ -223,7 +344,7 @@ export function ProposalWizard({
               type="button"
               className="btn btn--ghost"
               onClick={() => setPrompts((arr) => [...arr, ""])}
-              disabled={prompts.length >= 7}
+              disabled={prompts.length >= maxPromptCount}
             >
               + Adicionar prompt
             </button>
@@ -232,7 +353,7 @@ export function ProposalWizard({
           <div className="prompt-list">
             {prompts.map((p, i) => (
               <div className="prompt-row" key={i}>
-                <span className="idx">0{i + 1}</span>
+                <span className="idx">{String(i + 1).padStart(2, "0")}</span>
                 <textarea
                   rows={2}
                   value={p}
@@ -247,7 +368,7 @@ export function ProposalWizard({
                   type="button"
                   className="remove"
                   onClick={() => setPrompts(prompts.filter((_, idx) => idx !== i))}
-                  disabled={prompts.length <= 3}
+                  disabled={prompts.length <= minPromptCount}
                 >
                   Remover
                 </button>
@@ -256,26 +377,30 @@ export function ProposalWizard({
           </div>
           <div className="prompt-summary">
             <span>{prompts.length} prompts</span>
-            <span style={{ marginLeft: "auto" }}>3-7 prompts · 4 motores · {prompts.length * 4} chamadas</span>
+            <span style={{ marginLeft: "auto" }}>
+              {minPromptCount}-{maxPromptCount} prompts · {ENGINE_COUNT} motores ·{" "}
+              {prompts.length * ENGINE_COUNT} chamadas
+            </span>
           </div>
         </div>
       )}
 
-      {/* STEP 3 — Pricing */}
-      {step === 2 && (
+      {/* STEP 4 — Pricing */}
+      {step === 3 && (
         <div className="wizard__body">
           <h2 className="tx-h2">Pricing da proposta</h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Valores em euros. Estes números aparecem nos slides de pricing.
+            Valores em euros. Em branco mostra <i>&quot;Sob consulta&quot;</i> no deck.
           </p>
           <div className="row-2">
             <div className="field">
               <label>Diagnóstico (€)</label>
               <input
                 type="number"
-                value={pricing.diagnostico}
+                value={pricing.diagnostico ?? ""}
+                placeholder="Sob consulta"
                 onChange={(e) =>
-                  setPricing((s) => ({ ...s, diagnostico: parseInt(e.target.value || "0", 10) }))
+                  setPricing((s) => ({ ...s, diagnostico: priceFromInput(e.target.value) }))
                 }
               />
             </div>
@@ -283,9 +408,10 @@ export function ProposalWizard({
               <label>Sprint (€)</label>
               <input
                 type="number"
-                value={pricing.sprint}
+                value={pricing.sprint ?? ""}
+                placeholder="Sob consulta"
                 onChange={(e) =>
-                  setPricing((s) => ({ ...s, sprint: parseInt(e.target.value || "0", 10) }))
+                  setPricing((s) => ({ ...s, sprint: priceFromInput(e.target.value) }))
                 }
               />
             </div>
@@ -294,17 +420,18 @@ export function ProposalWizard({
             <label>Retainer (€/mês)</label>
             <input
               type="number"
-              value={pricing.retainer}
+              value={pricing.retainer ?? ""}
+              placeholder="Sob consulta"
               onChange={(e) =>
-                setPricing((s) => ({ ...s, retainer: parseInt(e.target.value || "0", 10) }))
+                setPricing((s) => ({ ...s, retainer: priceFromInput(e.target.value) }))
               }
             />
           </div>
         </div>
       )}
 
-      {/* STEP 4 — Mensagem */}
-      {step === 3 && (
+      {/* STEP 5 — Mensagem */}
+      {step === 4 && (
         <div className="wizard__body">
           <h2 className="tx-h2">Mensagem opcional</h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
@@ -322,8 +449,8 @@ export function ProposalWizard({
         </div>
       )}
 
-      {/* STEP 5 — Revisão */}
-      {step === 4 && (
+      {/* STEP 6 — Revisão */}
+      {step === 5 && (
         <div className="wizard__body">
           <h2 className="tx-h2">Pronto para gerar?</h2>
           <div className="card">
@@ -335,13 +462,19 @@ export function ProposalWizard({
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 1.7 }}>
               <li>
+                <b>Tier:</b> {TIER_OPTIONS.find((t) => t.value === tier)?.label}
+              </li>
+              <li>
                 <b>Empresa:</b> {prospect?.company_name}
               </li>
               <li>
-                <b>Prompts:</b> {prompts.length} ({prompts.length * 4} chamadas LLM)
+                <b>Prompts:</b> {prompts.length} ({prompts.length * ENGINE_COUNT} chamadas LLM)
               </li>
               <li>
-                <b>Pricing:</b> {pricing.diagnostico}€ / {pricing.sprint}€ / {pricing.retainer}€
+                <b>Pricing:</b>{" "}
+                {pricing.diagnostico != null ? `${pricing.diagnostico}€` : "Sob consulta"} /{" "}
+                {pricing.sprint != null ? `${pricing.sprint}€` : "Sob consulta"} /{" "}
+                {pricing.retainer != null ? `${pricing.retainer}€` : "Sob consulta"}
               </li>
               <li>
                 <b>Mensagem:</b>{" "}
@@ -378,7 +511,7 @@ export function ProposalWizard({
           <span />
         )}
 
-        {step < 4 ? (
+        {step < 5 ? (
           <button
             type="button"
             className="btn"

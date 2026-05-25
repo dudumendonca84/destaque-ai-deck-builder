@@ -15,6 +15,26 @@ export type AuditTier = "free" | "diagnostic" | "premium";
 
 export type Engine = "chatgpt" | "claude" | "gemini" | "grok" | "deepseek" | "mistral";
 
+export type IntentStage =
+  | "awareness"
+  | "research"
+  | "comparison"
+  | "decision"
+  | "post_decision";
+
+export type PromptCategory =
+  | "generic_category"
+  | "direct_comparison"
+  | "local_recommendation"
+  | "feature_specific"
+  | "price_comparison";
+
+export type GeneratedPromptMeta = {
+  text: string;
+  category: PromptCategory;
+  intent_stage: IntentStage;
+};
+
 export type AuditEngineSummary = {
   citation_rate: number;
   share_of_voice: number;
@@ -102,6 +122,7 @@ export type Database = {
           pricing_retainer: number | null;
           audit_status: AuditStatus;
           audit_tier: AuditTier;
+          prompts_meta: GeneratedPromptMeta[] | null;
           audit_started_at: string | null;
           audit_completed_at: string | null;
           audit_results: AuditResults | null;
@@ -124,6 +145,7 @@ export type Database = {
           pricing_retainer?: number | null;
           audit_status?: AuditStatus;
           audit_tier?: AuditTier;
+          prompts_meta?: GeneratedPromptMeta[] | null;
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;
@@ -146,6 +168,7 @@ export type Database = {
           pricing_retainer?: number | null;
           audit_status?: AuditStatus;
           audit_tier?: AuditTier;
+          prompts_meta?: GeneratedPromptMeta[] | null;
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;
@@ -222,6 +245,7 @@ export type Database = {
           created_at: string;
           prompt: string;
           engine: Engine;
+          intent_stage: IntentStage | null;
           response: string | null;
           citations_found: string[] | null;
           brand_position: number | null;
@@ -237,6 +261,7 @@ export type Database = {
           created_at?: string;
           prompt: string;
           engine: Engine;
+          intent_stage?: IntentStage | null;
           response?: string | null;
           citations_found?: string[] | null;
           brand_position?: number | null;
@@ -252,6 +277,7 @@ export type Database = {
           created_at?: string;
           prompt?: string;
           engine?: Engine;
+          intent_stage?: IntentStage | null;
           response?: string | null;
           citations_found?: string[] | null;
           brand_position?: number | null;

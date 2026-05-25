@@ -3,27 +3,27 @@
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
-import { eur } from "@/lib/utils/format";
+import { eurOrPlaceholder } from "@/lib/utils/format";
 
 export function Pricing({ deck, active }: SlideProps) {
   const tiers = [
     {
       name: "Diagnóstico",
-      price: eur(deck.pricing.diagnostico),
-      unit: "one-off",
+      price: eurOrPlaceholder(deck.pricing.diagnostico),
+      unit: deck.pricing.diagnostico != null ? "one-off" : "",
       d: "Auditoria GEO completa e roadmap priorizado.",
     },
     {
       name: "Sprint",
-      price: eur(deck.pricing.sprint),
-      unit: "one-off",
+      price: eurOrPlaceholder(deck.pricing.sprint),
+      unit: deck.pricing.sprint != null ? "one-off" : "",
       d: "Implementação técnica e editorial do roadmap.",
       featured: true,
     },
     {
       name: "Retainer",
-      price: eur(deck.pricing.retainer),
-      unit: "/ mês",
+      price: eurOrPlaceholder(deck.pricing.retainer),
+      unit: deck.pricing.retainer != null ? "/ mês" : "",
       d: "Distribuição, monitorização e iteração contínuas.",
     },
   ];

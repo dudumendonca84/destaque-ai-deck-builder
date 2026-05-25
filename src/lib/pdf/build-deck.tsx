@@ -7,7 +7,8 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import type { DeckData } from "@/components/deck/types";
-import { eur, pct } from "@/lib/utils/format";
+import { eur, eurOrPlaceholder, pct } from "@/lib/utils/format";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 // Paleta da marca.
 const CREAM = "#F5F1E8";
@@ -294,7 +295,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
                   "Otimizas para 1 resposta",
                   "A IA escolhe por ele",
                   "Estrutura e citabilidade",
-                  "Menções em 4 motores",
+                  `Menções em ${ENGINE_COUNT} motores`,
                 ],
               ],
             ] as const
@@ -359,7 +360,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         <View style={[s.row, { marginTop: 30 }]}>
           {(
             [
-              ["01", "Auditoria", "Medimos a visibilidade real em 4 motores."],
+              ["01", "Auditoria", `Medimos a visibilidade real em ${ENGINE_COUNT} motores.`],
               ["02", "Conteúdo", "Tornamos a marca extraível pela IA."],
               ["03", "Distribuição", "Construímos autoridade onde a IA procura."],
               ["04", "Medição", "Monitorizamos e iteramos com dados."],
@@ -465,9 +466,22 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {[
-            { name: "Diagnóstico", price: eur(deck.pricing.diagnostico), unit: "one-off" },
-            { name: "Sprint", price: eur(deck.pricing.sprint), unit: "one-off", hot: true },
-            { name: "Retainer", price: eur(deck.pricing.retainer), unit: "/ mês" },
+            {
+              name: "Diagnóstico",
+              price: eurOrPlaceholder(deck.pricing.diagnostico),
+              unit: deck.pricing.diagnostico != null ? "one-off" : "",
+            },
+            {
+              name: "Sprint",
+              price: eurOrPlaceholder(deck.pricing.sprint),
+              unit: deck.pricing.sprint != null ? "one-off" : "",
+              hot: true,
+            },
+            {
+              name: "Retainer",
+              price: eurOrPlaceholder(deck.pricing.retainer),
+              unit: deck.pricing.retainer != null ? "/ mês" : "",
+            },
           ].map((t, i, arr) => (
             <View
               key={t.name}
@@ -534,9 +548,15 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             n: 14,
             code: "A",
             title: "Diagnóstico",
-            meta: `2 semanas · ${eur(deck.pricing.diagnostico)}`,
+            meta:
+              deck.pricing.diagnostico != null
+                ? `2 semanas · ${eur(deck.pricing.diagnostico)}`
+                : "2 semanas · Sob consulta",
             rows: [
-              ["Auditoria GEO", `${deck.prompts.length} prompts × 4 motores analisados.`],
+              [
+                "Auditoria GEO",
+                `${deck.prompts.length} prompts × ${ENGINE_COUNT} motores analisados.`,
+              ],
               ["Benchmark", "Posição face à concorrência directa."],
               ["Roadmap", "Acções ordenadas por esforço e retorno."],
             ],
@@ -545,7 +565,10 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             n: 15,
             code: "B",
             title: "Sprint",
-            meta: `4-6 semanas · ${eur(deck.pricing.sprint)}`,
+            meta:
+              deck.pricing.sprint != null
+                ? `4-6 semanas · ${eur(deck.pricing.sprint)}`
+                : "4-6 semanas · Sob consulta",
             rows: [
               ["Técnico", "Schema.org, dados estruturados, llms.txt."],
               ["Editorial", "Conteúdo extraível e páginas-resposta."],
@@ -556,9 +579,12 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             n: 16,
             code: "C",
             title: "Retainer",
-            meta: `Mensal · ${eur(deck.pricing.retainer)} / mês`,
+            meta:
+              deck.pricing.retainer != null
+                ? `Mensal · ${eur(deck.pricing.retainer)} / mês`
+                : "Mensal · Sob consulta",
             rows: [
-              ["Monitorização", "Tracking contínuo nos 4 motores."],
+              ["Monitorização", `Tracking contínuo nos ${ENGINE_COUNT} motores.`],
               ["Iteração", "Ajustes à medida que os modelos evoluem."],
               ["Relatório", "Dashboard e report consolidado mensal."],
             ],
@@ -594,9 +620,27 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         <View style={{ marginTop: 26 }}>
           {(
             [
-              ["Diagnóstico", "2 semanas", `${eur(deck.pricing.diagnostico)} one-off`],
-              ["Sprint", "4-6 semanas", `${eur(deck.pricing.sprint)} one-off`],
-              ["Retainer", "mensal", `${eur(deck.pricing.retainer)} / mês`],
+              [
+                "Diagnóstico",
+                "2 semanas",
+                deck.pricing.diagnostico != null
+                  ? `${eur(deck.pricing.diagnostico)} one-off`
+                  : "Sob consulta",
+              ],
+              [
+                "Sprint",
+                "4-6 semanas",
+                deck.pricing.sprint != null
+                  ? `${eur(deck.pricing.sprint)} one-off`
+                  : "Sob consulta",
+              ],
+              [
+                "Retainer",
+                "mensal",
+                deck.pricing.retainer != null
+                  ? `${eur(deck.pricing.retainer)} / mês`
+                  : "Sob consulta",
+              ],
             ] as const
           ).map(([phase, dur, price]) => (
             <View

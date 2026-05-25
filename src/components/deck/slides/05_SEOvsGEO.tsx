@@ -1,12 +1,13 @@
 "use client";
 
 import { SlideShell } from "../primitives/SlideShell";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 const ROWS = [
   { seo: "Otimizas para 10 links azuis", geo: "Otimizas para 1 resposta" },
   { seo: "O utilizador escolhe entre resultados", geo: "A IA escolhe por ele" },
   { seo: "Palavras-chave e backlinks", geo: "Estrutura, autoridade e citabilidade" },
-  { seo: "Medes posições no Google", geo: "Medes menções em 4 motores de IA" },
+  { seo: "Medes posições no Google", geo: `Medes menções em ${ENGINE_COUNT} motores de IA` },
 ];
 
 export function SEOvsGEO() {

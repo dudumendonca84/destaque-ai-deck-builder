@@ -7,13 +7,33 @@ import { newProposalToken } from "@/lib/utils/tokens";
 import { sendProposalEmail } from "@/lib/email/resend";
 import { site } from "@/lib/site";
 
+const PROMPT_META = z.object({
+  text: z.string().min(1),
+  category: z.enum([
+    "generic_category",
+    "direct_comparison",
+    "local_recommendation",
+    "feature_specific",
+    "price_comparison",
+  ]),
+  intent_stage: z.enum([
+    "awareness",
+    "research",
+    "comparison",
+    "decision",
+    "post_decision",
+  ]),
+});
+
 const PAYLOAD = z.object({
   prospect_id: z.string().uuid(),
-  custom_prompts: z.array(z.string().min(3)).min(3).max(7),
+  audit_tier: z.enum(["free", "diagnostic", "premium"]).default("free"),
+  custom_prompts: z.array(z.string().min(3)).min(3).max(30),
+  prompts_meta: z.array(PROMPT_META).optional().nullable(),
   custom_message: z.string().optional().nullable(),
-  pricing_diagnostico: z.number().int().min(0).default(4500),
-  pricing_sprint: z.number().int().min(0).default(18000),
-  pricing_retainer: z.number().int().min(0).default(4500),
+  pricing_diagnostico: z.number().int().min(0).optional().nullable(),
+  pricing_sprint: z.number().int().min(0).optional().nullable(),
+  pricing_retainer: z.number().int().min(0).optional().nullable(),
 });
 
 export type CreateProposalResult = { ok: true; id: string; token: string } | { ok: false; error: string };
@@ -33,12 +53,14 @@ export async function createProposal(input: unknown): Promise<CreateProposalResu
     .from("proposals")
     .insert({
       prospect_id: parsed.data.prospect_id,
+      audit_tier: parsed.data.audit_tier,
       token,
       custom_prompts: parsed.data.custom_prompts,
+      prompts_meta: parsed.data.prompts_meta ?? null,
       custom_message: parsed.data.custom_message ?? null,
-      pricing_diagnostico: parsed.data.pricing_diagnostico,
-      pricing_sprint: parsed.data.pricing_sprint,
-      pricing_retainer: parsed.data.pricing_retainer,
+      pricing_diagnostico: parsed.data.pricing_diagnostico ?? null,
+      pricing_sprint: parsed.data.pricing_sprint ?? null,
+      pricing_retainer: parsed.data.pricing_retainer ?? null,
       audit_status: "pending",
       status: "draft",
       expires_at: expires.toISOString(),

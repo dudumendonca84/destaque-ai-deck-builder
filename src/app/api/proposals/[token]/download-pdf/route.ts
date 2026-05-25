@@ -1,7 +1,14 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { buildPdf } from "@/lib/pdf/build-deck";
 import type { DeckData } from "@/components/deck/types";
-import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
+import type {
+  AuditResults,
+  AuditRun,
+  AuditTier,
+  Proposal,
+  Prospect,
+} from "@/lib/supabase/types";
+import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
 
 // @react-pdf/renderer precisa do runtime Node.
 export const runtime = "nodejs";
@@ -45,12 +52,15 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     .select("*")
     .eq("proposal_id", proposal.id);
 
+  const { items: benchmarks } = await loadCoreBenchmarks();
+
   const deck: DeckData = {
     token,
     companyName: prospect?.company_name ?? "a tua marca",
     businessType: prospect?.business_type ?? null,
     location: prospect?.location ?? null,
     customMessage: proposal.custom_message,
+    auditTier: (proposal.audit_tier as AuditTier | undefined) ?? "free",
     pricing: {
       diagnostico: proposal.pricing_diagnostico,
       sprint: proposal.pricing_sprint,
@@ -60,6 +70,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     competitors: prospect?.competitors ?? [],
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns: (runRows ?? []) as AuditRun[],
+    benchmarks,
   };
 
   const buffer = await buildPdf(deck);
