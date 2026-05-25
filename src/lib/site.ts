@@ -10,7 +10,7 @@ export const site = {
   city: "Lisboa",
   country: "Portugal",
   description:
-    "Consultoria de Generative Engine Optimization (GEO). Operamos a presença da tua marca dentro de ChatGPT, Claude, Gemini e Perplexity.",
+    "Consultoria de Generative Engine Optimization (GEO). Operamos a presença da tua marca dentro de ChatGPT, Claude, Gemini, Grok, DeepSeek e Mistral.",
   tagline: "O ChatGPT recomenda alguém. Tem de ser tu.",
 } as const;
 

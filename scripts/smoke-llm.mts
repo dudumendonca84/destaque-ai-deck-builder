@@ -8,10 +8,19 @@
  */
 import { queryChatGPT, hasOpenAIKey } from "../src/lib/llm/openai";
 import { queryGemini, hasGeminiKey } from "../src/lib/llm/gemini";
-import { queryPerplexity, hasPerplexityKey } from "../src/lib/llm/perplexity";
+import { queryGrok, hasGrokKey } from "../src/lib/llm/grok";
+import { queryDeepSeek, hasDeepSeekKey } from "../src/lib/llm/deepseek";
+import { queryMistral, hasMistralKey } from "../src/lib/llm/mistral";
 import { claudeComplete, hasAnthropicKey } from "../src/lib/llm/anthropic";
 import { generatePrompts } from "../src/lib/llm/generate-prompts";
 import { parseCitations } from "../src/lib/llm/parse-citations";
+import {
+  OPENAI_MODEL,
+  GEMINI_MODEL,
+  GROK_MODEL,
+  DEEPSEEK_MODEL,
+  MISTRAL_MODEL,
+} from "../src/lib/llm/models";
 
 const PROMPT = "Recomenda uma boa pizzaria em Lisboa.";
 
@@ -20,44 +29,61 @@ function line(label: string, ok: boolean, detail: string) {
   console.log(`[${mark}] ${label} — ${detail}`);
 }
 
+async function tryEngine(
+  label: string,
+  has: () => boolean,
+  envVar: string,
+  call: () => Promise<{ response: string; tokens: number }>,
+) {
+  if (!has()) {
+    line(label, false, `${envVar} em falta`);
+    return;
+  }
+  try {
+    const r = await call();
+    line(label, true, `${r.response.slice(0, 60)}… (${r.tokens} tokens)`);
+  } catch (e) {
+    line(label, false, e instanceof Error ? e.message : "erro");
+  }
+}
+
 async function main() {
   console.log("=== Smoke-test LLM ===\n");
 
-  // ChatGPT
-  if (hasOpenAIKey()) {
-    try {
-      const r = await queryChatGPT(PROMPT);
-      line("ChatGPT (gpt-4o)", true, `${r.response.slice(0, 60)}… (${r.tokens} tokens)`);
-    } catch (e) {
-      line("ChatGPT", false, e instanceof Error ? e.message : "erro");
-    }
-  } else {
-    line("ChatGPT", false, "OPENAI_API_KEY em falta");
-  }
+  await tryEngine(
+    `ChatGPT (${OPENAI_MODEL})`,
+    hasOpenAIKey,
+    "OPENAI_API_KEY",
+    () => queryChatGPT(PROMPT),
+  );
 
-  // Gemini
-  if (hasGeminiKey()) {
-    try {
-      const r = await queryGemini(PROMPT);
-      line("Gemini (2.0-flash)", true, `${r.response.slice(0, 60)}… (${r.tokens} tokens)`);
-    } catch (e) {
-      line("Gemini", false, e instanceof Error ? e.message : "erro");
-    }
-  } else {
-    line("Gemini", false, "GOOGLE_AI_API_KEY em falta");
-  }
+  await tryEngine(
+    `Gemini (${GEMINI_MODEL})`,
+    hasGeminiKey,
+    "GOOGLE_AI_API_KEY",
+    () => queryGemini(PROMPT),
+  );
 
-  // Perplexity
-  if (hasPerplexityKey()) {
-    try {
-      const r = await queryPerplexity(PROMPT);
-      line("Perplexity (sonar)", true, `${r.response.slice(0, 60)}… (${r.tokens} tokens)`);
-    } catch (e) {
-      line("Perplexity", false, e instanceof Error ? e.message : "erro");
-    }
-  } else {
-    line("Perplexity", false, "PERPLEXITY_API_KEY em falta");
-  }
+  await tryEngine(
+    `Grok (${GROK_MODEL})`,
+    hasGrokKey,
+    "XAI_API_KEY",
+    () => queryGrok(PROMPT),
+  );
+
+  await tryEngine(
+    `DeepSeek (${DEEPSEEK_MODEL})`,
+    hasDeepSeekKey,
+    "DEEPSEEK_API_KEY",
+    () => queryDeepSeek(PROMPT),
+  );
+
+  await tryEngine(
+    `Mistral (${MISTRAL_MODEL})`,
+    hasMistralKey,
+    "MISTRAL_API_KEY",
+    () => queryMistral(PROMPT),
+  );
 
   // Claude
   if (hasAnthropicKey()) {

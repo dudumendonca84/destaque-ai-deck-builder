@@ -11,7 +11,7 @@ export type ProposalStatus = "draft" | "sent" | "viewed" | "replied" | "expired"
 
 export type AuditStatus = "pending" | "running" | "completed" | "failed";
 
-export type Engine = "chatgpt" | "claude" | "gemini" | "perplexity";
+export type Engine = "chatgpt" | "claude" | "gemini" | "grok" | "deepseek" | "mistral";
 
 export type AuditEngineSummary = {
   citation_rate: number;

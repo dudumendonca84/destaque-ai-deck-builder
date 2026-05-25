@@ -9,7 +9,7 @@ export type PromptContext = {
   competitors?: string[] | null;
 };
 
-const SYSTEM = `Estás a ajudar uma agência de Generative Engine Optimization a auditar a visibilidade de um cliente em motores de IA (ChatGPT, Claude, Gemini, Perplexity).`;
+const SYSTEM = `Estás a ajudar uma agência de Generative Engine Optimization a auditar a visibilidade de um cliente em motores de IA (ChatGPT, Claude, Gemini, Grok, DeepSeek, Mistral).`;
 
 function buildPrompt(ctx: PromptContext): string {
   return `CLIENTE:

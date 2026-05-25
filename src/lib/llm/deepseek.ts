@@ -1,25 +1,26 @@
-import { PERPLEXITY_MODEL } from "./models";
+import { DEEPSEEK_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
 
-export function hasPerplexityKey(): boolean {
-  return Boolean(process.env.PERPLEXITY_API_KEY);
+export function hasDeepSeekKey(): boolean {
+  return Boolean(process.env.DEEPSEEK_API_KEY);
 }
 
-export async function queryPerplexity(prompt: string): Promise<EngineQueryResult> {
-  const res = await fetch("https://api.perplexity.ai/chat/completions", {
+export async function queryDeepSeek(prompt: string): Promise<EngineQueryResult> {
+  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model: PERPLEXITY_MODEL,
+      model: DEEPSEEK_MODEL,
       messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
     }),
   });
 
   if (!res.ok) {
-    throw new Error(`Perplexity ${res.status}: ${await res.text()}`);
+    throw new Error(`DeepSeek ${res.status}: ${await res.text()}`);
   }
 
   const data = (await res.json()) as {
