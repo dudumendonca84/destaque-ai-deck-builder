@@ -18,7 +18,7 @@ const PILLARS = [
 
 export function Methodology({ active }: SlideProps) {
   return (
-    <SlideShell index={7} total={19} eyebrow="Metodologia">
+    <SlideShell index={7} total={21} eyebrow="Metodologia">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Quatro disciplinas, <em className="mark">um sistema</em>
       </h2>

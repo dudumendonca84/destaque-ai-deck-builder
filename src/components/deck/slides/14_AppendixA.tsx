@@ -11,7 +11,7 @@ export function AppendixA({ deck }: SlideProps) {
       ? `2 semanas · ${eur(deck.pricing.diagnostico)} · one-off`
       : "2 semanas · Sob consulta";
   return (
-    <SlideShell index={14} total={19} eyebrow="Apêndice A · Diagnóstico">
+    <SlideShell index={14} total={21} eyebrow="Apêndice A · Diagnóstico">
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Diagnóstico — <em className="mark">o mapa</em>
       </h2>
