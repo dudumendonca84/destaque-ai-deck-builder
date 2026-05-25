@@ -1,10 +1,31 @@
-// IDs de modelo centralizados. Atualizar aqui propaga para toda a app.
+// IDs de modelo centralizados. Estes constants são o FALLBACK quando o
+// fetch de `references/models.md` da skill falha (rede, parse error, 404).
+// Em runtime normal os IDs vêm da skill via `loadModelMappings()` em
+// `src/lib/skill/models.ts`.
+//
+// Alinhamento canónico em https://raw.githubusercontent.com/dudumendonca84/
+// geo-seo-aeo-master/main/skills/geo-seo-aeo-master/references/models.md
+// secção `## Deck Builder API mappings`.
+//
+// Production: tier `diagnostic` / `premium`. Cost-optimized: tier `free`.
+
 export const CLAUDE_MODEL = "claude-sonnet-4-6";
-export const OPENAI_MODEL = "gpt-4o";
-export const GEMINI_MODEL = "gemini-2.0-flash";
-export const GROK_MODEL = "grok-2-1212";
-export const DEEPSEEK_MODEL = "deepseek-chat";
+export const CLAUDE_MODEL_COST = "claude-haiku-4-5-20251001";
+
+export const OPENAI_MODEL = "gpt-5";
+export const OPENAI_MODEL_COST = "gpt-4o";
+
+export const GEMINI_MODEL = "gemini-3.5-flash";
+export const GEMINI_MODEL_COST = "gemini-2.5-flash";
+
+export const GROK_MODEL = "grok-4";
+export const GROK_MODEL_COST = "grok-4.1-fast";
+
+export const DEEPSEEK_MODEL = "deepseek-v4";
+export const DEEPSEEK_MODEL_COST = "deepseek-v4-flash";
+
 export const MISTRAL_MODEL = "mistral-large-latest";
+export const MISTRAL_MODEL_COST = "mistral-small-latest";
 
 export const ENGINES = [
   "chatgpt",
@@ -30,7 +51,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
 
 export const ENGINE_VERSION: Record<Engine, string> = {
   chatgpt: OPENAI_MODEL,
-  claude: "sonnet 4.6",
+  claude: CLAUDE_MODEL,
   gemini: GEMINI_MODEL,
   grok: GROK_MODEL,
   deepseek: DEEPSEEK_MODEL,

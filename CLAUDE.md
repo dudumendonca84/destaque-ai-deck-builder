@@ -15,18 +15,28 @@ A **skill `geo-seo-aeo-master` é o cérebro único da destaque.ai**. Este repo 
 │  geo-seo-aeo-master  (PUBLIC)              ← cérebro, método SINAL │
 │  https://github.com/dudumendonca84/geo-seo-aeo-master              │
 │                                                                     │
+│  Estrutura: tudo o que é consumido fica em                         │
+│  skills/geo-seo-aeo-master/ (sub-path canónico).                   │
+│                                                                     │
 │  • SKILL.md — princípios, identidade, workflow audit               │
 │  • references/                                                     │
-│    ├── prompts.md     (categorias canónicas + distribuição tier)   │
-│    ├── models.md      (Deck Builder API mappings per tier)         │
-│    ├── frameworks.md  (RAG, schema, E-E-A-T, llms.txt, crawlers)   │
-│    ├── metrics.md     (citation vs mention, SoV, PAWC)             │
-│    ├── benchmarks.md  (estudos com números, flagged stats)         │
-│    └── tools.md       (vendor landscape com gaps honestos)         │
-│  • daily-agent/       (cron 08:00 UTC — news-feed evolutivo)       │
-│  • routines/          (self-audit semanal — eat own dog food)      │
+│    ├── prompts.md            (categorias + distribuição tier +     │
+│    │                          catálogo destaque.ai)                │
+│    ├── models.md             (Deck Builder API mappings per tier)  │
+│    ├── frameworks.md         (RAG, schema, E-E-A-T, llms.txt,      │
+│    │                          crawlers, Princeton GEO)             │
+│    ├── metrics.md            (citation vs mention, SoV, PAWC)      │
+│    ├── benchmarks.md         (estudos com números, flagged stats)  │
+│    ├── tools.md              (vendor landscape com gaps)           │
+│    ├── competitor_filtering.md (4-question peer test)              │
+│    ├── alert_thresholds.md   (severidade WoW Tracker)              │
+│    ├── gap_action_mapping.md (gap→action across 8 dimensões)       │
+│    └── narrative_templates.md (skeletons editoriais)               │
+│  • daily-agent/       (cron 07:00 UTC — news-feed evolutivo)       │
+│                                                                     │
+│  Raiz do repo (fora do sub-path):                                  │
 │  • INTERFACES.md      (cross-repo contracts: paths + parse rules)  │
-│  • methodology-changelog.md (audit trail da evolução SINAL)        │
+│  • README.md          (setup, install, daily agent)                │
 └──────────────────────────┬─────────────────────────────────────────┘
                            │ raw GitHub URL fetch, cache 1h, fallback
                            ▼
@@ -61,7 +71,7 @@ Três camadas. Dados nunca atravessam para cima sem anonimização explícita:
 
 1. **`destaque-ai-ops/clients/[X]/`** — dados identificáveis. CONFIDENCIAL. Nunca entram em learnings/ nem na public skill.
 2. **`destaque-ai-ops/learnings/`** — patterns anonimizados extraídos do nível 1. Tudo aqui tem de ser publicável tal como está.
-3. **`geo-seo-aeo-master/skills/.../references/`** — agregados públicos. Uma Routine `synthesis-weekly` (futura) lê o nível 2 e propõe updates aqui.
+3. **`geo-seo-aeo-master/skills/geo-seo-aeo-master/references/`** — agregados públicos. Uma Routine `synthesis-weekly` (futura) lê o nível 2 e propõe updates aqui.
 
 ## A skill auto-alimenta-se (três loops independentes)
 
@@ -110,7 +120,7 @@ Esta secção existe para impedir uma sessão futura de **estreitar o produto a 
 
 - **Scan ≠ só technical.** Inclui sub-checks de entity (Wikidata API, Wikipedia REST, sameAs JSON-LD), authority signals (Listen Notes free tier para podcasts, Google News search para Tier-1 PT media), social (LinkedIn API, GitHub).
 - **Action plan ≠ só "adiciona schema".** Inclui acções off-site: criar artigo Wikipedia, criar QID Wikidata, pitch a 10 podcasts, outreach a 10 jornalistas Tier-1 PT, conference speaking spots, original data report.
-- **`gap_action_mapping.md` da skill** (a definir em PR #5) tem patterns para **todas as 8 dimensões**, não só technical. Mínimo 2-3 patterns por dimensão.
+- **`gap_action_mapping.md` da skill** tem patterns para **todas as 8 dimensões**, não só technical. Mínimo 2-3 patterns por dimensão. Consumido on-demand para o block "Próximas acções" das propostas e dos relatórios semanais do Tracker.
 - **Slides de plano (H1-H4)** misturam dimensões em cada horizonte. H1 não é "fix schema + llms.txt" — é "fix schema (technical) + criar QID Wikidata (entity) + pitch 3 podcasts (authority)".
 
 **Esta regra vem directamente do founder** ("não é só 3HASH — também PR, Wikipedia, podcasts, etc."). Está bakeada na própria skill (SKILL.md § Scope of the methodology — holistic, not just technical). Qualquer sessão que tente reduzir o scope a "technical SEO++" está a contradizer o produto.
@@ -213,4 +223,4 @@ Quando uma sessão futura abrir um destes, este CLAUDE.md continua válido — s
 
 ---
 
-**Última actualização:** 25 May 2026 (sessão que ligou Step 9 + Step 10 à skill via raw URL fetch, audit_tier column, modelos por tier).
+**Última actualização:** 25 May 2026 (sessão Tracker preencheu os 6 ficheiros de referência em falta na skill — models.md, prompts.md, competitor_filtering.md, alert_thresholds.md, gap_action_mapping.md, narrative_templates.md — alinhou fallback de modelos com canónico e adicionou constantes COST_*).

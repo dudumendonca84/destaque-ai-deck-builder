@@ -2,11 +2,17 @@ import { loadSkillFile } from "./loader";
 import type { Engine } from "@/lib/llm/models";
 import {
   CLAUDE_MODEL,
+  CLAUDE_MODEL_COST,
   OPENAI_MODEL,
+  OPENAI_MODEL_COST,
   GEMINI_MODEL,
+  GEMINI_MODEL_COST,
   GROK_MODEL,
+  GROK_MODEL_COST,
   DEEPSEEK_MODEL,
+  DEEPSEEK_MODEL_COST,
   MISTRAL_MODEL,
+  MISTRAL_MODEL_COST,
 } from "@/lib/llm/models";
 import type { AuditTier } from "./prompts";
 
@@ -21,12 +27,12 @@ export type EngineModelEntry = {
  * falhar (rede, parse, etc.).
  */
 const FALLBACK_MAPPINGS: Record<Engine, EngineModelEntry> = {
-  chatgpt: { production: OPENAI_MODEL, cost_optimized: OPENAI_MODEL },
-  claude: { production: CLAUDE_MODEL, cost_optimized: CLAUDE_MODEL },
-  gemini: { production: GEMINI_MODEL, cost_optimized: GEMINI_MODEL },
-  grok: { production: GROK_MODEL, cost_optimized: GROK_MODEL },
-  deepseek: { production: DEEPSEEK_MODEL, cost_optimized: DEEPSEEK_MODEL },
-  mistral: { production: MISTRAL_MODEL, cost_optimized: MISTRAL_MODEL },
+  chatgpt: { production: OPENAI_MODEL, cost_optimized: OPENAI_MODEL_COST },
+  claude: { production: CLAUDE_MODEL, cost_optimized: CLAUDE_MODEL_COST },
+  gemini: { production: GEMINI_MODEL, cost_optimized: GEMINI_MODEL_COST },
+  grok: { production: GROK_MODEL, cost_optimized: GROK_MODEL_COST },
+  deepseek: { production: DEEPSEEK_MODEL, cost_optimized: DEEPSEEK_MODEL_COST },
+  mistral: { production: MISTRAL_MODEL, cost_optimized: MISTRAL_MODEL_COST },
 };
 
 const MAPPINGS_HEADER = "## Deck Builder API mappings";
