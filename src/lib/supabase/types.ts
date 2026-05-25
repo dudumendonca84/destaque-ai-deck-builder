@@ -13,7 +13,16 @@ export type AuditStatus = "pending" | "running" | "completed" | "failed";
 
 export type AuditTier = "free" | "diagnostic" | "premium";
 
-export type Engine = "chatgpt" | "claude" | "gemini" | "grok" | "deepseek" | "mistral";
+export type Engine =
+  | "chatgpt"
+  | "claude"
+  | "gemini"
+  | "grok"
+  | "deepseek"
+  | "mistral"
+  | "perplexity"
+  | "meta"
+  | "copilot";
 
 export type IntentStage =
   | "awareness"

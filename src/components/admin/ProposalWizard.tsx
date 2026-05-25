@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Prospect, GeneratedPromptMeta, AuditTier } from "@/lib/supabase/types";
 import { createProposal } from "@/app/(admin)/admin/proposals/actions";
 import { fallbackPrompts } from "@/lib/llm/fallback-prompts";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 const STEPS = [
   { n: "01", label: "Tipo" },
@@ -48,15 +49,13 @@ const TIER_OPTIONS: TierOption[] = [
     value: "premium",
     label: "Premium",
     promptsCount: 30,
-    description: "Diagnóstico + multimodal + análise técnica completa (em desenvolvimento).",
+    description: "Diagnóstico + relatório PDF longo (20-30 páginas, 3HASH-grade) com referências, dados brutos e plano detalhado.",
   },
 ];
 
 function tierTotal(tier: AuditTier): number {
   return TIER_OPTIONS.find((t) => t.value === tier)?.promptsCount ?? 5;
 }
-
-const ENGINE_COUNT = 6;
 
 function priceFromInput(v: string): number | null {
   const t = v.trim();
@@ -249,12 +248,10 @@ export function ProposalWizard({
                   className="card"
                   style={{
                     textAlign: "left",
-                    cursor: t.value === "premium" ? "not-allowed" : "pointer",
-                    opacity: t.value === "premium" ? 0.5 : 1,
+                    cursor: "pointer",
                     borderColor: isSelected ? "var(--ink)" : undefined,
                     background: isSelected ? "var(--paper-2)" : undefined,
                   }}
-                  disabled={t.value === "premium"}
                   onClick={() => setTier(t.value)}
                 >
                   <div className="card__head">
@@ -327,8 +324,9 @@ export function ProposalWizard({
             {targetPromptCount} prompts da <em className="mark">auditoria</em>
           </h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini, Grok, DeepSeek e
-            Mistral. Edita-os à vontade — entre {minPromptCount} e {maxPromptCount} prompts.
+            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini, Grok, DeepSeek,
+            Mistral, Perplexity, Meta e Copilot ({ENGINE_COUNT} motores). Edita-os à vontade —
+            entre {minPromptCount} e {maxPromptCount} prompts.
           </p>
 
           <div style={{ display: "flex", gap: 12 }}>

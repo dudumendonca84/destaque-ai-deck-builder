@@ -13,6 +13,9 @@ import { hasGeminiKey, queryGemini } from "./gemini";
 import { hasGrokKey, queryGrok } from "./grok";
 import { hasDeepSeekKey, queryDeepSeek } from "./deepseek";
 import { hasMistralKey, queryMistral } from "./mistral";
+import { hasPerplexityKey, queryPerplexity } from "./perplexity";
+import { hasMetaKey, queryMeta } from "./meta";
+import { hasCopilotKey, queryCopilot } from "./copilot";
 import { parseCitations } from "./parse-citations";
 import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
 import {
@@ -35,7 +38,10 @@ function keyAvailable(engine: Engine): boolean {
   if (engine === "gemini") return hasGeminiKey();
   if (engine === "grok") return hasGrokKey();
   if (engine === "deepseek") return hasDeepSeekKey();
-  return hasMistralKey();
+  if (engine === "mistral") return hasMistralKey();
+  if (engine === "perplexity") return hasPerplexityKey();
+  if (engine === "meta") return hasMetaKey();
+  return hasCopilotKey();
 }
 
 async function queryEngine(
@@ -48,6 +54,9 @@ async function queryEngine(
   if (engine === "grok") return queryGrok(prompt, model);
   if (engine === "deepseek") return queryDeepSeek(prompt, model);
   if (engine === "mistral") return queryMistral(prompt, model);
+  if (engine === "perplexity") return queryPerplexity(prompt, model);
+  if (engine === "meta") return queryMeta(prompt, model);
+  if (engine === "copilot") return queryCopilot(prompt, model);
   // claude
   const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024, model });
   return { response: text, tokens };
