@@ -83,11 +83,17 @@ export async function classifyCompetitors(
  */
 export async function filterRelevantCompetitors(names: string[]): Promise<string[]> {
   const classified = await classifyCompetitors(names);
-  const strict = process.env.COMPETITOR_FILTER_STRICT !== "false";
+  // Default não-strict: inclui agências SEO clássico como competitors
+  // legítimos. No segmento PT (e na maioria dos mercados), a maioria das
+  // agências mencionadas em queries de "consultoria GEO/SEO" são SEO
+  // clássico — descartar essas resulta em SoV inflacionado e top
+  // competitor vazio. Strict mode (env COMPETITOR_FILTER_STRICT=true)
+  // mantém só GEO/AEO puros, útil quando queremos diferenciar mercados.
+  const strict = process.env.COMPETITOR_FILTER_STRICT === "true";
   return names.filter((n) => {
     const r = classified.get(n);
     if (r === "relevant_geo_aeo") return true;
     if (!strict && r === "relevant_seo_only") return true;
-    return false;
+    return false; // unrelated sempre descartado
   });
 }
