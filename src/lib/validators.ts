@@ -1,12 +1,26 @@
 import { z } from "zod";
 
+// Aceita "destaque.ai", "www.destaque.ai", "http://destaque.ai" ou "https://destaque.ai".
+// Normaliza para https:// e valida que o resultado é um URL válido.
+const flexibleUrl = z
+  .string()
+  .trim()
+  .transform((s) => (s && !/^https?:\/\//i.test(s) ? `https://${s}` : s))
+  .pipe(z.string().url("URL inválido"));
+
+const optionalUrl = z
+  .string()
+  .optional()
+  .transform((s) => s?.trim() || undefined)
+  .pipe(flexibleUrl.optional());
+
 export const prospectSchema = z.object({
   company_name: z.string().min(1, "Empresa obrigatória"),
-  company_website: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+  company_website: optionalUrl,
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal("").transform(() => undefined)),
   contact_role: z.string().optional(),
-  linkedin_url: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+  linkedin_url: optionalUrl,
   business_type: z.string().optional(),
   location: z.string().optional(),
   target_audience: z.string().optional(),
