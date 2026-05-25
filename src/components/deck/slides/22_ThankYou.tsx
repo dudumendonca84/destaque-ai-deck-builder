@@ -13,7 +13,7 @@ export function ThankYou() {
           transition={{ duration: 0.5 }}
           style={{ marginBottom: 28 }}
         >
-          <span className="num">21 / 21</span>
+          <span className="num">22 / 22</span>
           <span className="bar" />
           <span>Vamos a isto</span>
         </motion.div>

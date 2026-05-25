@@ -126,6 +126,9 @@ export type Database = {
           audit_started_at: string | null;
           audit_completed_at: string | null;
           audit_results: AuditResults | null;
+          deck_blocks: unknown | null;
+          deck_synthesized_at: string | null;
+          deck_synthesized_source: "claude" | "fallback" | null;
           status: ProposalStatus;
           sent_at: string | null;
           expires_at: string | null;

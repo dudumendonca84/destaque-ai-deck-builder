@@ -20,7 +20,7 @@ export function CTA({ deck, active }: SlideProps) {
   };
 
   return (
-    <SlideShell index={20} total={21} eyebrow="Próxima acção">
+    <SlideShell index={20} total={22} eyebrow="Próxima acção">
       <h2 className="tx-h2" style={{ marginBottom: 12 }}>
         Próximo passo — <em className="mark">três caminhos</em>.
       </h2>

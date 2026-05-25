@@ -6,6 +6,7 @@ import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, AuditTier, Proposal, Prospect } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
 import type { ScanResult } from "@/lib/scan/types";
+import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
 export const metadata: Metadata = {
   title: "Proposta",
@@ -93,6 +94,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
     auditRuns,
     benchmarks,
     sinalScan,
+    synthesized: (proposal.deck_blocks as SynthesizedDeck | null) ?? null,
   };
 
   return <DeckContainer deck={deck} />;

@@ -19,9 +19,10 @@ import { AppendixD } from "./17_AppendixD";
 import { AppendixE } from "./18_AppendixE";
 import { Tracker } from "./19_Tracker";
 import { CTA } from "./20_CTA";
-import { ThankYou } from "./21_ThankYou";
+import { AppendixF } from "./21_AppendixF";
+import { ThankYou } from "./22_ThankYou";
 
-// Registo dos 21 slides — ordem é a ordem de apresentação.
+// Registo dos 22 slides — ordem é a ordem de apresentação.
 export const SLIDES: SlideDef[] = [
   { id: "cover", title: "Capa", tone: "paper", Component: Cover },
   { id: "problem", title: "O problema", tone: "ink", Component: Problem },
@@ -43,5 +44,6 @@ export const SLIDES: SlideDef[] = [
   { id: "appendix-e", title: "Apêndice E · Análise SINAL", tone: "paper", Component: AppendixE },
   { id: "tracker", title: "Visibility Tracker · preview", tone: "paper", Component: Tracker },
   { id: "cta", title: "Próxima acção", tone: "paper", Component: CTA },
+  { id: "appendix-f", title: "Apêndice F · Plano personalizado SINAL", tone: "paper", Component: AppendixF },
   { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
 ];

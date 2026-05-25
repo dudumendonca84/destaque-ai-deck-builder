@@ -92,7 +92,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
     <div className="slide" data-tone="paper">
       <div className="slide__inner slide__inner--audit">
         <div className="slide__eyebrow" style={{ marginBottom: 16 }}>
-          <span className="num">04 / 21</span>
+          <span className="num">04 / 22</span>
           <span className="bar" />
           <span>Auditoria personalizada · {brand}</span>
         </div>

@@ -1,4 +1,4 @@
-// Metadados dos 21 slides — sem "use client", utilizável em Server Components
+// Metadados dos 22 slides — sem "use client", utilizável em Server Components
 // (ex.: dashboard de analytics) e na geração de PDF.
 
 export type SlideMeta = { n: number; id: string; title: string };
@@ -24,7 +24,8 @@ export const SLIDE_META: SlideMeta[] = [
   { n: 18, id: "appendix-e", title: "Apêndice E · Análise SINAL" },
   { n: 19, id: "tracker", title: "Visibility Tracker · preview" },
   { n: 20, id: "cta", title: "Próxima acção" },
-  { n: 21, id: "thank-you", title: "Vamos a isto" },
+  { n: 21, id: "appendix-f", title: "Apêndice F · Plano personalizado SINAL" },
+  { n: 22, id: "thank-you", title: "Vamos a isto" },
 ];
 
 export const TOTAL_SLIDES = SLIDE_META.length;

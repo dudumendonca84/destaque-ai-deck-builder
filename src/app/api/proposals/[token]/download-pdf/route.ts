@@ -10,6 +10,7 @@ import type {
 } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
 import type { ScanResult } from "@/lib/scan/types";
+import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
 // @react-pdf/renderer precisa do runtime Node.
 export const runtime = "nodejs";
@@ -80,6 +81,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     auditRuns: (runRows ?? []) as AuditRun[],
     benchmarks,
     sinalScan,
+    synthesized: (proposal.deck_blocks as SynthesizedDeck | null) ?? null,
   };
 
   const buffer = await buildPdf(deck);
