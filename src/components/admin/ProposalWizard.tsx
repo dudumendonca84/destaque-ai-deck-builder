@@ -48,7 +48,7 @@ const TIER_OPTIONS: TierOption[] = [
     value: "premium",
     label: "Premium",
     promptsCount: 30,
-    description: "Diagnóstico + multimodal + análise técnica completa (em desenvolvimento).",
+    description: "Diagnóstico + SINAL scan completo (8 dimensões) + Step 12 deck-by-AI personalizado. Hoje funcionalmente igual a Diagnóstico (multimodal vem em release futura).",
   },
 ];
 
@@ -249,12 +249,10 @@ export function ProposalWizard({
                   className="card"
                   style={{
                     textAlign: "left",
-                    cursor: t.value === "premium" ? "not-allowed" : "pointer",
-                    opacity: t.value === "premium" ? 0.5 : 1,
+                    cursor: "pointer",
                     borderColor: isSelected ? "var(--ink)" : undefined,
                     background: isSelected ? "var(--paper-2)" : undefined,
                   }}
-                  disabled={t.value === "premium"}
                   onClick={() => setTier(t.value)}
                 >
                   <div className="card__head">
