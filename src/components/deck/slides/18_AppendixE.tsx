@@ -37,7 +37,7 @@ export function AppendixE({ deck, active }: SlideProps) {
 
   if (!scan) {
     return (
-      <SlideShell index={18} total={19} eyebrow="Apêndice E · Análise SINAL">
+      <SlideShell index={18} total={21} eyebrow="Apêndice E · Análise SINAL">
         <h2 className="tx-h2" style={{ marginBottom: 12 }}>
           Análise SINAL — <em className="mark">o teu site</em>
         </h2>
@@ -56,7 +56,7 @@ export function AppendixE({ deck, active }: SlideProps) {
     .slice(0, 6);
 
   return (
-    <SlideShell index={18} total={19} eyebrow="Apêndice E · Análise SINAL">
+    <SlideShell index={18} total={21} eyebrow="Apêndice E · Análise SINAL">
       <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginBottom: 24 }}>
         <h2 className="tx-h2" style={{ margin: 0 }}>
           Análise SINAL — <em className="mark">o teu site</em>

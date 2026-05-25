@@ -4,7 +4,7 @@ import { SlideShell } from "../primitives/SlideShell";
 
 export function Phases12() {
   return (
-    <SlideShell index={8} total={19} eyebrow="Fases 1 e 2">
+    <SlideShell index={8} total={21} eyebrow="Fases 1 e 2">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Diagnóstico e <em className="mark">conteúdo</em>
       </h2>

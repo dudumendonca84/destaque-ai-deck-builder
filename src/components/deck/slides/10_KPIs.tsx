@@ -33,7 +33,7 @@ export function KPIs({ deck, active }: SlideProps) {
     },
   ];
   return (
-    <SlideShell index={10} total={19} eyebrow="Ponto de partida">
+    <SlideShell index={10} total={21} eyebrow="Ponto de partida">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Onde a <em className="mark">{deck.companyName}</em> está hoje
       </h2>
