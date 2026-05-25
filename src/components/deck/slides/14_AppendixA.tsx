@@ -2,23 +2,28 @@
 
 import { SlideShell } from "../primitives/SlideShell";
 import { eur } from "@/lib/utils/format";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 import type { SlideProps } from "../types";
 
 export function AppendixA({ deck }: SlideProps) {
+  const priceLine =
+    deck.pricing.diagnostico != null
+      ? `2 semanas · ${eur(deck.pricing.diagnostico)} · one-off`
+      : "2 semanas · Sob consulta";
   return (
     <SlideShell index={14} total={18} eyebrow="Apêndice A · Diagnóstico">
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Diagnóstico — <em className="mark">o mapa</em>
       </h2>
       <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24 }}>
-        2 semanas · {eur(deck.pricing.diagnostico)} · one-off
+        {priceLine}
       </p>
       <ul className="deck-list">
         <li>
           <b>Auditoria GEO</b>
           <span>
-            {deck.prompts.length} prompts reais corridos em 4 motores — {deck.prompts.length * 4}{" "}
-            respostas analisadas marca a marca.
+            {deck.prompts.length} prompts reais corridos em {ENGINE_COUNT} motores —{" "}
+            {deck.prompts.length * ENGINE_COUNT} respostas analisadas marca a marca.
           </span>
         </li>
         <li>

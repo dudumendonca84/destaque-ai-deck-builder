@@ -2,10 +2,15 @@
 
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 import type { SlideProps } from "../types";
 
 const PILLARS = [
-  { n: "01", t: "Auditoria", d: "Medimos a tua visibilidade real em 4 motores de IA." },
+  {
+    n: "01",
+    t: "Auditoria",
+    d: `Medimos a tua visibilidade real em ${ENGINE_COUNT} motores de IA.`,
+  },
   { n: "02", t: "Conteúdo", d: "Tornamos a tua marca extraível e citável pela IA." },
   { n: "03", t: "Distribuição", d: "Construímos autoridade onde os modelos vão buscar." },
   { n: "04", t: "Medição", d: "Monitorizamos e iteramos com dados, todos os meses." },

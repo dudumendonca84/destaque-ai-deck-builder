@@ -7,6 +7,19 @@ export function eur(value: number | null | undefined): string {
   }).format(value);
 }
 
+/**
+ * Variante do formatter de euros para o deck: se o valor for null/undefined
+ * devolve "Sob consulta" (em vez de "—"). 0 é mostrado como gratuito.
+ */
+export function eurOrPlaceholder(
+  value: number | null | undefined,
+  placeholder = "Sob consulta",
+): string {
+  if (value == null) return placeholder;
+  if (value === 0) return "Gratuito";
+  return eur(value);
+}
+
 export function pct(value: number | null | undefined): string {
   if (value == null) return "—";
   return `${Math.round(value * 100)}%`;

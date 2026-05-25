@@ -1,5 +1,10 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import type { AuditResults, AuditEngineSummary, AuditTier } from "@/lib/supabase/types";
+import type {
+  AuditResults,
+  AuditEngineSummary,
+  AuditTier,
+  GeneratedPromptMeta,
+} from "@/lib/supabase/types";
 import { ENGINES, type Engine } from "./models";
 import type { CitationAnalysis, EngineQueryResult } from "./types";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
@@ -15,6 +20,7 @@ import {
   resolveModel,
   type EngineModelEntry,
 } from "@/lib/skill/models";
+import { filterRelevantCompetitors } from "./competitor-filter";
 
 function resolveConcurrency(): number {
   const raw = process.env.AUDIT_CONCURRENCY;
@@ -111,24 +117,40 @@ async function runWithLimit<T, R>(
   return results;
 }
 
-function summarise(rows: RunRow[]): AuditEngineSummary {
+function summarise(rows: RunRow[], relevant?: Set<string>): AuditEngineSummary {
   if (rows.length === 0) {
     return { citation_rate: 0, share_of_voice: 0, avg_position: null, top_competitors: [] };
   }
   const present = rows.filter((r) => r.analysis.brand_present);
   const citation_rate = present.length / rows.length;
 
-  let brandMentions = 0;
+  // Filtro de competitors relevantes (se fornecido). Reduz ruído de
+  // empresas não relacionadas que apareceram nas respostas.
+  const isRelevant = (c: string) => !relevant || relevant.has(c);
+
+  // Share of voice (convenção Profound/Peec): por resposta onde a marca aparece,
+  // share = 1 / total_brands_named_in_response (a marca conta como 1).
+  // Resultado final = média desses shares. Não é "menções globais da marca /
+  // menções globais totais" — essa fórmula sobre-pondera respostas com muitos
+  // competitors mencionados.
+  const perResponseShares: number[] = present.map((r) => {
+    const compsInResponse = r.analysis.competitors_mentioned.filter(isRelevant);
+    const totalBrandsInResponse = 1 + compsInResponse.length;
+    return totalBrandsInResponse > 0 ? 1 / totalBrandsInResponse : 0;
+  });
+  const share_of_voice =
+    perResponseShares.length > 0
+      ? perResponseShares.reduce((a, b) => a + b, 0) / perResponseShares.length
+      : 0;
+
+  // Contagem agregada de competitors (para top_competitors), só os relevantes.
   const compCounts = new Map<string, number>();
   for (const r of rows) {
-    if (r.analysis.brand_present) brandMentions += 1;
     for (const c of r.analysis.competitors_mentioned) {
+      if (!isRelevant(c)) continue;
       compCounts.set(c, (compCounts.get(c) ?? 0) + 1);
     }
   }
-  const compTotal = [...compCounts.values()].reduce((a, b) => a + b, 0);
-  const share_of_voice =
-    brandMentions + compTotal > 0 ? brandMentions / (brandMentions + compTotal) : 0;
 
   const positions = present
     .map((r) => r.analysis.brand_position)
@@ -151,12 +173,12 @@ function summarise(rows: RunRow[]): AuditEngineSummary {
   };
 }
 
-function aggregate(rows: RunRow[]): AuditResults {
+function aggregate(rows: RunRow[], relevant?: Set<string>): AuditResults {
   const by_engine = {} as Record<Engine, AuditEngineSummary>;
   for (const engine of ENGINES) {
-    by_engine[engine] = summarise(rows.filter((r) => r.engine === engine));
+    by_engine[engine] = summarise(rows.filter((r) => r.engine === engine), relevant);
   }
-  return { summary: summarise(rows), by_engine };
+  return { summary: summarise(rows, relevant), by_engine };
 }
 
 /**
@@ -170,7 +192,7 @@ export async function runAudit(proposalId: string): Promise<void> {
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id,custom_prompts,prospect_id,audit_tier")
+    .select("id,custom_prompts,prospect_id,audit_tier,prompts_meta")
     .eq("id", proposalId)
     .single();
 
@@ -187,6 +209,15 @@ export async function runAudit(proposalId: string): Promise<void> {
   const prompts: string[] = proposal.custom_prompts ?? [];
   const tier: AuditTier = (proposal.audit_tier as AuditTier | undefined) ?? "free";
 
+  // Map prompt → intent_stage via prompts_meta (se existir)
+  const intentByPrompt = new Map<string, string>();
+  const meta = proposal.prompts_meta as GeneratedPromptMeta[] | null;
+  if (Array.isArray(meta)) {
+    for (const m of meta) {
+      if (m?.text && m?.intent_stage) intentByPrompt.set(m.text, m.intent_stage);
+    }
+  }
+
   await supabase
     .from("proposals")
     .update({ audit_status: "running", audit_started_at: new Date().toISOString() })
@@ -202,15 +233,23 @@ export async function runAudit(proposalId: string): Promise<void> {
         prompt,
         engine,
         model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
+        intent_stage: intentByPrompt.get(prompt) ?? null,
       })),
     );
 
     const rows = await runWithLimit(tasks, resolveConcurrency(), async (task) => {
-      const row = await runSingle({ ...task, brandName, competitors });
+      const row = await runSingle({
+        engine: task.engine,
+        prompt: task.prompt,
+        brandName,
+        competitors,
+        model: task.model,
+      });
       await supabase.from("audit_runs").insert({
         proposal_id: proposalId,
         prompt: row.prompt,
         engine: row.engine,
+        intent_stage: task.intent_stage,
         response: row.response,
         citations_found: row.analysis.citations_found,
         brand_position: row.analysis.brand_position,
@@ -222,7 +261,15 @@ export async function runAudit(proposalId: string): Promise<void> {
       return row;
     });
 
-    const results = aggregate(rows);
+    // Filtra competitors via classificação semântica antes de gravar nos
+    // results (descarta SEO-only puros e ruído).
+    const allMentioned = new Set<string>();
+    for (const row of rows) {
+      for (const c of row.analysis.competitors_mentioned) allMentioned.add(c);
+    }
+    const relevant = await filterRelevantCompetitors([...allMentioned]);
+    const results = aggregate(rows, new Set(relevant));
+
     await supabase
       .from("proposals")
       .update({

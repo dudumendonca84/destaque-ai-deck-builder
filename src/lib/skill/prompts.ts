@@ -14,6 +14,19 @@ export const PROMPT_CATEGORIES = [
 ] as const;
 export type PromptCategory = (typeof PROMPT_CATEGORIES)[number];
 
+/**
+ * Intent stages — estágio do funil que cada prompt expressa.
+ * Coordenado com SINAL v1.5 (methodology-changelog.md).
+ */
+export const INTENT_STAGES = [
+  "awareness",
+  "research",
+  "comparison",
+  "decision",
+  "post_decision",
+] as const;
+export type IntentStage = (typeof INTENT_STAGES)[number];
+
 export type AuditTier = "free" | "diagnostic" | "premium";
 
 /**

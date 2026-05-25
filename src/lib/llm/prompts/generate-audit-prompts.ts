@@ -1,8 +1,13 @@
 import { claudeJson, hasAnthropicKey } from "../anthropic";
 import { fallbackPrompts } from "../fallback-prompts";
 import { loadPromptDirectives } from "@/lib/skill/prompts";
-import type { AuditTier } from "@/lib/skill/prompts";
-import { PROMPT_CATEGORIES, TIER_DISTRIBUTION, tierTotal } from "@/lib/skill/prompts";
+import type { AuditTier, IntentStage, PromptCategory } from "@/lib/skill/prompts";
+import {
+  PROMPT_CATEGORIES,
+  INTENT_STAGES,
+  TIER_DISTRIBUTION,
+  tierTotal,
+} from "@/lib/skill/prompts";
 
 export type PromptContext = {
   business_type?: string | null;
@@ -13,23 +18,29 @@ export type PromptContext = {
   tier?: AuditTier;
 };
 
+export type GeneratedPrompt = {
+  text: string;
+  category: PromptCategory;
+  intent_stage: IntentStage;
+};
+
 export type GeneratePromptsResult = {
-  prompts: string[];
+  prompts: string[]; // Texto puro, para compat com call sites antigos
+  prompts_detailed: GeneratedPrompt[]; // Com category + intent_stage
   source: "claude" | "fallback";
   skill_source: "skill" | "fallback";
   tier: AuditTier;
 };
 
-const SYSTEM_BASE = `És parte do método SINAL (Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs). Ajudas a gerar prompts de audit de visibilidade em motores de IA (ChatGPT, Claude, Gemini, Grok, DeepSeek, Mistral) seguindo as regras canónicas da destaque.ai abaixo.`;
+const SYSTEM_BASE = `És parte do método SINAL (Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs). Ajudas a gerar prompts de audit de visibilidade em motores de IA seguindo as regras canónicas da destaque.ai abaixo.`;
 
 function buildSystem(directives: string): string {
-  return `${SYSTEM_BASE}\n\n${directives}`;
+  return `${SYSTEM_BASE}\n\n${directives}\n\nIntent stages canónicos: ${INTENT_STAGES.join(", ")}. Cada prompt deve receber um intent_stage que reflicta o estágio do funil que a query expressa.`;
 }
 
 function distributionTable(tier: AuditTier): string {
   const dist = TIER_DISTRIBUTION[tier];
-  const lines = PROMPT_CATEGORIES.map((cat) => `- ${cat}: ${dist[cat]}`);
-  return lines.join("\n");
+  return PROMPT_CATEGORIES.map((cat) => `- ${cat}: ${dist[cat]}`).join("\n");
 }
 
 function buildPrompt(ctx: PromptContext, tier: AuditTier): string {
@@ -43,19 +54,31 @@ function buildPrompt(ctx: PromptContext, tier: AuditTier): string {
 
 TIER: ${tier} (${total} prompts no total)
 
-DISTRIBUIÇÃO POR CATEGORIA CANÓNICA (segue exactamente):
+DISTRIBUIÇÃO POR CATEGORIA (segue exactamente):
 ${distributionTable(tier)}
 
-TAREFA: Gera ${total} prompts em conformidade com a distribuição acima. Cada prompt segue os princípios e categorias canónicas SINAL. Sem nomear a marca do cliente (queremos ver se aparece organicamente). PT-PT por defeito; PT-BR só se o público-alvo for tipicamente brasileiro.
+TAREFA: Gera ${total} prompts em conformidade com a distribuição acima. Cada prompt segue os princípios SINAL e tem category + intent_stage. Sem nomear a marca do cliente. PT-PT por defeito; PT-BR só se o público-alvo for tipicamente brasileiro.
 
-OUTPUT: devolve um array de exactamente ${total} strings.`;
+OUTPUT: array de exactamente ${total} objectos { text, category, intent_stage }.`;
 }
 
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    prompts: { type: "array", items: { type: "string" } },
+    prompts: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          text: { type: "string" },
+          category: { type: "string", enum: [...PROMPT_CATEGORIES] },
+          intent_stage: { type: "string", enum: [...INTENT_STAGES] },
+        },
+        required: ["text", "category", "intent_stage"],
+      },
+    },
   },
   required: ["prompts"],
 };
@@ -64,18 +87,32 @@ async function attempt(opts: {
   system: string;
   ctx: PromptContext;
   tier: AuditTier;
-}): Promise<string[]> {
+}): Promise<GeneratedPrompt[]> {
   const total = tierTotal(opts.tier);
-  const { data } = await claudeJson<{ prompts: string[] }>({
+  const { data } = await claudeJson<{ prompts: GeneratedPrompt[] }>({
     system: opts.system,
     prompt: buildPrompt(opts.ctx, opts.tier),
     schema: SCHEMA,
     maxTokens: opts.tier === "free" ? 1024 : 4096,
   });
   return (data.prompts ?? [])
-    .map((p) => p.trim())
-    .filter(Boolean)
+    .map((p) => ({
+      text: p.text?.trim() ?? "",
+      category: p.category,
+      intent_stage: p.intent_stage,
+    }))
+    .filter((p) => p.text && p.category && p.intent_stage)
     .slice(0, total);
+}
+
+function withDefaultIntent(prompts: string[]): GeneratedPrompt[] {
+  // Fallback: assume todos generic_category + research stage. Não óptimo
+  // mas mantém o schema válido para downstream.
+  return prompts.map((text) => ({
+    text,
+    category: "generic_category" as PromptCategory,
+    intent_stage: "research" as IntentStage,
+  }));
 }
 
 export async function generateAuditPrompts(
@@ -85,8 +122,10 @@ export async function generateAuditPrompts(
   const total = tierTotal(tier);
 
   if (!hasAnthropicKey()) {
+    const fallback = fallbackPrompts(ctx);
     return {
-      prompts: fallbackPrompts(ctx),
+      prompts: fallback,
+      prompts_detailed: withDefaultIntent(fallback),
       source: "fallback",
       skill_source: "fallback",
       tier,
@@ -96,22 +135,29 @@ export async function generateAuditPrompts(
   const directives = await loadPromptDirectives();
   const system = buildSystem(directives.body);
 
-  // Mínimo aceitável: free precisa de ≥3; diagnostic precisa de ≥ total - 5.
   const minAcceptable = tier === "free" ? 3 : Math.max(5, total - 5);
 
   for (let i = 0; i < 2; i++) {
     try {
-      const prompts = await attempt({ system, ctx, tier });
-      if (prompts.length >= minAcceptable) {
-        return { prompts, source: "claude", skill_source: directives.source, tier };
+      const prompts_detailed = await attempt({ system, ctx, tier });
+      if (prompts_detailed.length >= minAcceptable) {
+        return {
+          prompts: prompts_detailed.map((p) => p.text),
+          prompts_detailed,
+          source: "claude",
+          skill_source: directives.source,
+          tier,
+        };
       }
     } catch {
       // tenta de novo
     }
   }
 
+  const fallback = fallbackPrompts(ctx);
   return {
-    prompts: fallbackPrompts(ctx),
+    prompts: fallback,
+    prompts_detailed: withDefaultIntent(fallback),
     source: "fallback",
     skill_source: directives.source,
     tier,

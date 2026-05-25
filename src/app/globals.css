@@ -1540,14 +1540,15 @@ em.mark {
 }
 .la-engines {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
 }
 .la-engine {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-right: 1px solid var(--rule-soft);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 .la-engine:last-child {
   border-right: 0;
@@ -1639,11 +1640,19 @@ em.mark {
   font-size: 12px;
   color: var(--ink-2);
 }
-@media (max-width: 860px) {
+@media (max-width: 1100px) {
+  .la-engines {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .la-engine:nth-child(3n) {
+    border-right: 0;
+  }
+}
+@media (max-width: 720px) {
   .la-engines {
     grid-template-columns: 1fr 1fr;
   }
-  .la-engine:nth-child(2) {
+  .la-engine:nth-child(2n) {
     border-right: 0;
   }
   .la-kpis {

@@ -4,12 +4,23 @@ import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import { pct } from "@/lib/utils/format";
+import { anonymizeCompetitors } from "@/lib/llm/anonymize";
 
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;
+  // Concorrentes anonimizados (A, B, C...) para criar gancho comercial.
+  // Revelados em call, não no deck público.
+  const anonymized = anonymizeCompetitors(s?.top_competitors ?? []);
+  const topCompetitorLabel = anonymized[0]?.label
+    ? `Concorrente ${anonymized[0].label}`
+    : "—";
   const cards = [
     { label: "Taxa de citação", value: s ? pct(s.citation_rate) : "—", note: "respostas onde és citado" },
-    { label: "Share of voice", value: s ? pct(s.share_of_voice) : "—", note: "a tua fatia das menções" },
+    {
+      label: "Share of voice",
+      value: s ? pct(s.share_of_voice) : "—",
+      note: "a tua fatia das menções dentro das respostas onde apareces",
+    },
     {
       label: "Posição média",
       value: s?.avg_position != null ? `#${s.avg_position}` : "—",
@@ -17,8 +28,8 @@ export function KPIs({ deck, active }: SlideProps) {
     },
     {
       label: "Top concorrente",
-      value: s?.top_competitors[0] ?? "—",
-      note: "quem a IA cita primeiro",
+      value: topCompetitorLabel,
+      note: "revelado em conversa de alinhamento",
     },
   ];
   return (

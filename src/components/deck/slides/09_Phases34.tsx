@@ -1,6 +1,7 @@
 "use client";
 
 import { SlideShell } from "../primitives/SlideShell";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 export function Phases34() {
   return (
@@ -25,7 +26,7 @@ export function Phases34() {
           <span className="phase__n">Fase 04 · Medição</span>
           <span className="phase__dur">mensal</span>
           <p className="phase__lead">
-            Monitorizamos os 4 motores e iteramos com dados.
+            Monitorizamos os {ENGINE_COUNT} motores e iteramos com dados.
           </p>
           <ul className="phase__list">
             <li>Tracking de citações e share of voice</li>

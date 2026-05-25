@@ -16,6 +16,9 @@ export const ENGINES = [
 ] as const;
 export type Engine = (typeof ENGINES)[number];
 
+/** Número de motores activos — usado em UI/deck para evitar hardcode. */
+export const ENGINE_COUNT = ENGINES.length;
+
 export const ENGINE_LABEL: Record<Engine, string> = {
   chatgpt: "ChatGPT",
   claude: "Claude",

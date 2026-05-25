@@ -89,6 +89,32 @@ A skill **não é estática**. Evolui sozinha. Quando este repo faz fetch da ski
 
 Detalhes completos em `geo-seo-aeo-master/skills/geo-seo-aeo-master/SKILL.md`. Quando precisares de raciocinar sobre o método, fetch o ficheiro — não inventes a partir do que está aqui.
 
+## ⚠️ SCOPE OBRIGATÓRIO: 8 dimensões, não apenas técnico
+
+Esta secção existe para impedir uma sessão futura de **estreitar o produto a "scan técnico tipo 3HASH"**. Esse é o erro recorrente: tratar GEO como "tornar o site técnicamente perfeito" e ignorar tudo o resto.
+
+**O método SINAL cobre 8 dimensões, e o deck/proposta tem de cobrir todas:**
+
+| # | Dimensão | Exemplos de findings / acções |
+|---|---|---|
+| 1 | **Technical foundation** | Schema.org, llms.txt, robots.txt AI crawlers, CWV, performance, server-rendered HTML |
+| 2 | **Content & topical authority** | Original statistics published, comparative content, topic clusters, content cadence |
+| 3 | **Entity & brand foundation** | **Wikidata QID**, **Wikipedia article**, Knowledge Panel, sameAs depth, NAP consistency |
+| 4 | **Authority & digital PR** | **Tier-1 PT media coverage** (Observador, ECO, Público), **podcast appearances**, conference speaking, branded anchor text |
+| 5 | **UX & engagement** | Conversion funnel, bounce, time on site (when measurable) |
+| 6 | **Measurement & feedback** | GSC, GA4 AI channel, Bing Webmaster Tools AI Performance |
+| 7 | **Strategic positioning** | Share-of-voice trend, no-click strategy, pipeline-stage mapping |
+| 8 | **Operational excellence** | Cadência editorial, process, hand-offs |
+
+**Implicação dura para qualquer PR / slide / acção:**
+
+- **Scan ≠ só technical.** Inclui sub-checks de entity (Wikidata API, Wikipedia REST, sameAs JSON-LD), authority signals (Listen Notes free tier para podcasts, Google News search para Tier-1 PT media), social (LinkedIn API, GitHub).
+- **Action plan ≠ só "adiciona schema".** Inclui acções off-site: criar artigo Wikipedia, criar QID Wikidata, pitch a 10 podcasts, outreach a 10 jornalistas Tier-1 PT, conference speaking spots, original data report.
+- **`gap_action_mapping.md` da skill** (a definir em PR #5) tem patterns para **todas as 8 dimensões**, não só technical. Mínimo 2-3 patterns por dimensão.
+- **Slides de plano (H1-H4)** misturam dimensões em cada horizonte. H1 não é "fix schema + llms.txt" — é "fix schema (technical) + criar QID Wikidata (entity) + pitch 3 podcasts (authority)".
+
+**Esta regra vem directamente do founder** ("não é só 3HASH — também PR, Wikipedia, podcasts, etc."). Está bakeada na própria skill (SKILL.md § Scope of the methodology — holistic, not just technical). Qualquer sessão que tente reduzir o scope a "technical SEO++" está a contradizer o produto.
+
 ## Princípios editoriais (propagam-se a tudo o que sai daqui)
 
 Vêm da skill. Aplicam-se a prompts gerados, copy de email, custom_message da proposta, slide content do deck público, error messages client-facing:

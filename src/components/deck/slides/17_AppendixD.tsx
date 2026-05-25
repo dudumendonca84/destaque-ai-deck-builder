@@ -1,14 +1,29 @@
 "use client";
 
 import { SlideShell } from "../primitives/SlideShell";
-import { eur } from "@/lib/utils/format";
+import { eurOrPlaceholder } from "@/lib/utils/format";
 import type { SlideProps } from "../types";
 
 export function AppendixD({ deck }: SlideProps) {
   const rows = [
-    { phase: "Diagnóstico", dur: "2 semanas", price: eur(deck.pricing.diagnostico), unit: "one-off" },
-    { phase: "Sprint", dur: "4-6 semanas", price: eur(deck.pricing.sprint), unit: "one-off" },
-    { phase: "Retainer", dur: "mensal", price: eur(deck.pricing.retainer), unit: "/ mês" },
+    {
+      phase: "Diagnóstico",
+      dur: "2 semanas",
+      price: eurOrPlaceholder(deck.pricing.diagnostico),
+      unit: deck.pricing.diagnostico != null ? "one-off" : "",
+    },
+    {
+      phase: "Sprint",
+      dur: "4-6 semanas",
+      price: eurOrPlaceholder(deck.pricing.sprint),
+      unit: deck.pricing.sprint != null ? "one-off" : "",
+    },
+    {
+      phase: "Retainer",
+      dur: "mensal",
+      price: eurOrPlaceholder(deck.pricing.retainer),
+      unit: deck.pricing.retainer != null ? "/ mês" : "",
+    },
   ];
   return (
     <SlideShell index={17} total={18} eyebrow="Apêndice D · Investimento">

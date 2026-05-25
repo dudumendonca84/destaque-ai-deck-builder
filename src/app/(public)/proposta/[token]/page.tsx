@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DeckContainer } from "@/components/deck/DeckContainer";
 import type { DeckData } from "@/components/deck/types";
-import type { AuditResults, AuditRun, Proposal, Prospect } from "@/lib/supabase/types";
+import type { AuditResults, AuditRun, AuditTier, Proposal, Prospect } from "@/lib/supabase/types";
+import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
 
 export const metadata: Metadata = {
   title: "Proposta",
@@ -43,7 +44,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
           <span className="pulse-dot" />
           <h1 className="tx-h2">A preparar a tua proposta</h1>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Estamos a correr a auditoria GEO nos quatro motores de IA. Volta dentro de
+            Estamos a correr a auditoria GEO em seis motores de IA. Volta dentro de
             alguns minutos — o link mantém-se o mesmo.
           </p>
         </div>
@@ -64,12 +65,15 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
     .eq("proposal_id", proposal.id);
   const auditRuns = (runRows ?? []) as AuditRun[];
 
+  const { items: benchmarks } = await loadCoreBenchmarks();
+
   const deck: DeckData = {
     token,
     companyName: prospect?.company_name ?? "a tua marca",
     businessType: prospect?.business_type ?? null,
     location: prospect?.location ?? null,
     customMessage: proposal.custom_message,
+    auditTier: (proposal.audit_tier as AuditTier | undefined) ?? "free",
     pricing: {
       diagnostico: proposal.pricing_diagnostico,
       sprint: proposal.pricing_sprint,
@@ -79,6 +83,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
     competitors: prospect?.competitors ?? [],
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns,
+    benchmarks,
   };
 
   return <DeckContainer deck={deck} />;
