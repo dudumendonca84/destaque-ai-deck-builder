@@ -2470,38 +2470,37 @@ em.mark {
     align-items: flex-start;
   }
   .slide__inner {
-    padding: 56px 24px 80px;
+    padding: 64px 28px 96px;
   }
   .slide__inner--center {
     min-height: auto;
-    padding-top: 32px;
+    padding-top: 40px;
   }
   .slide__inner--audit {
-    padding: 48px 16px 80px;
+    padding: 56px 20px 96px;
     height: auto;
     min-height: 100vh;
   }
   .slide__eyebrow {
-    margin-bottom: 24px;
-    font-size: 10.5px;
+    margin-bottom: 28px;
+    font-size: 11px;
   }
   .slide__eyebrow .bar {
-    flex: 0 0 32px;
+    flex: 0 0 40px;
   }
 
-  /* Headings — reduzir leading e tamanho em mobile para evitar quebras
-     estranhas dos serif italics. */
+  /* Headings — manter substância em mobile, não infantilizar. */
   .tx-display {
-    font-size: clamp(36px, 9vw, 56px);
+    font-size: clamp(44px, 10vw, 72px);
   }
   .tx-h1 {
-    font-size: clamp(32px, 8vw, 48px);
+    font-size: clamp(36px, 9vw, 56px);
   }
   .tx-h2 {
-    font-size: clamp(24px, 6vw, 32px);
+    font-size: clamp(28px, 7vw, 40px);
   }
   .tx-h3 {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   /* Slide 03 data-grid: 3 colunas → empilha verticalmente em mobile. */
@@ -2518,7 +2517,7 @@ em.mark {
     border-bottom: 0;
   }
   .data-stat__value {
-    font-size: clamp(44px, 12vw, 64px);
+    font-size: clamp(52px, 14vw, 76px);
   }
 
   /* Slide 10 KPIs grid: 4 → 2 → 1 conforme largura. */
@@ -2577,7 +2576,7 @@ em.mark {
     gap: 6px;
   }
   .la-card__prompt {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   /* Deck navigation: menos invasiva em mobile */
@@ -2593,7 +2592,7 @@ em.mark {
 
 @media (max-width: 480px) {
   .slide__inner {
-    padding: 48px 18px 64px;
+    padding: 56px 22px 80px;
   }
   .kpi-grid {
     grid-template-columns: 1fr;
