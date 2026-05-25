@@ -32,7 +32,11 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
         location?: string;
       } | null);
 
-  const publicUrl = `${process.env.NEXT_PUBLIC_PROPOSAL_URL ?? ""}/proposta/${proposal.token}`;
+  // URL clean: o subdomain proposta.destaque.ai serve directamente
+  // /{token} via middleware rewrite para /proposta/{token}. Não duplicar
+  // o prefix no URL público.
+  const base = (process.env.NEXT_PUBLIC_PROPOSAL_URL ?? "").replace(/\/$/, "");
+  const publicUrl = `${base}/${proposal.token}`;
 
   return (
     <>

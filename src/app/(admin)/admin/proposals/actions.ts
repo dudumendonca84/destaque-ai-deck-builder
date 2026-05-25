@@ -107,8 +107,10 @@ export async function sendProposal(proposalId: string): Promise<SendProposalResu
     };
   }
 
-  const base = process.env.NEXT_PUBLIC_PROPOSAL_URL ?? site.url;
-  const proposalUrl = `${base.replace(/\/$/, "")}/proposta/${proposal.token}`;
+  // URL clean para email — subdomain proposta.destaque.ai reescreve
+  // /{token} para /proposta/{token} via middleware. Sem prefix duplicado.
+  const base = (process.env.NEXT_PUBLIC_PROPOSAL_URL ?? site.url).replace(/\/$/, "");
+  const proposalUrl = `${base}/${proposal.token}`;
 
   try {
     await sendProposalEmail({
