@@ -1,25 +1,29 @@
-import { PERPLEXITY_MODEL } from "./models";
+import { GROK_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
 
-export function hasPerplexityKey(): boolean {
-  return Boolean(process.env.PERPLEXITY_API_KEY);
+export function hasGrokKey(): boolean {
+  return Boolean(process.env.XAI_API_KEY);
 }
 
-export async function queryPerplexity(prompt: string): Promise<EngineQueryResult> {
-  const res = await fetch("https://api.perplexity.ai/chat/completions", {
+export async function queryGrok(
+  prompt: string,
+  model: string = GROK_MODEL,
+): Promise<EngineQueryResult> {
+  const res = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      authorization: `Bearer ${process.env.XAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: PERPLEXITY_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
     }),
   });
 
   if (!res.ok) {
-    throw new Error(`Perplexity ${res.status}: ${await res.text()}`);
+    throw new Error(`Grok ${res.status}: ${await res.text()}`);
   }
 
   const data = (await res.json()) as {

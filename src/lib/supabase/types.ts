@@ -11,7 +11,9 @@ export type ProposalStatus = "draft" | "sent" | "viewed" | "replied" | "expired"
 
 export type AuditStatus = "pending" | "running" | "completed" | "failed";
 
-export type Engine = "chatgpt" | "claude" | "gemini" | "perplexity";
+export type AuditTier = "free" | "diagnostic" | "premium";
+
+export type Engine = "chatgpt" | "claude" | "gemini" | "grok" | "deepseek" | "mistral";
 
 export type AuditEngineSummary = {
   citation_rate: number;
@@ -99,6 +101,7 @@ export type Database = {
           pricing_sprint: number | null;
           pricing_retainer: number | null;
           audit_status: AuditStatus;
+          audit_tier: AuditTier;
           audit_started_at: string | null;
           audit_completed_at: string | null;
           audit_results: AuditResults | null;
@@ -120,6 +123,7 @@ export type Database = {
           pricing_sprint?: number | null;
           pricing_retainer?: number | null;
           audit_status?: AuditStatus;
+          audit_tier?: AuditTier;
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;
@@ -141,6 +145,7 @@ export type Database = {
           pricing_sprint?: number | null;
           pricing_retainer?: number | null;
           audit_status?: AuditStatus;
+          audit_tier?: AuditTier;
           audit_started_at?: string | null;
           audit_completed_at?: string | null;
           audit_results?: AuditResults | null;

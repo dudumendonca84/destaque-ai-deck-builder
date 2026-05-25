@@ -33,10 +33,13 @@ Ver `.env.local.example`. Necessárias:
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projecto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role (server-only, NUNCA expor) |
-| `ANTHROPIC_API_KEY` | Claude (geração de prompts + parsing de citações) |
+| `ANTHROPIC_API_KEY` | Claude (geração de prompts + parsing de citações + auditoria) |
 | `OPENAI_API_KEY` | ChatGPT (auditoria) |
-| `GOOGLE_AI_API_KEY` | Gemini |
-| `PERPLEXITY_API_KEY` | Perplexity |
+| `GOOGLE_AI_API_KEY` | Gemini (auditoria) |
+| `XAI_API_KEY` | Grok (auditoria) |
+| `DEEPSEEK_API_KEY` | DeepSeek (auditoria) |
+| `MISTRAL_API_KEY` | Mistral (auditoria) |
+| `AUDIT_CONCURRENCY` | Paralelismo das chamadas LLM (default `5`) |
 | `RESEND_API_KEY` | Email |
 | `NEXT_PUBLIC_APP_URL` | URL do admin (https://admin.destaque.ai) |
 | `NEXT_PUBLIC_PROPOSAL_URL` | URL do deck público (https://destaque.ai) |
@@ -48,6 +51,8 @@ Correr as migrations em ordem no SQL Editor:
 
 1. `supabase/migrations/001_init.sql` — tabelas + índices + triggers
 2. `supabase/migrations/002_rls.sql` — Row Level Security
+3. `supabase/migrations/003_rls_lockdown.sql` — lockdown de leitura anónima
+4. `supabase/migrations/004_engines_expand.sql` — alarga check de `engine` para os 6 motores activos
 
 Para gerar tipos (opcional, ao vivo a partir do projecto):
 
@@ -118,7 +123,7 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 7 | CRUD Prospects | ✓ |
 | 8 | Wizard criar Proposta | ✓ |
 | 9 | Geração prompts via Claude | ✓ |
-| 10 | Auditoria GEO 4 motores | ✓ |
+| 10 | Auditoria GEO 6 motores | ✓ |
 | 11 | Deck público `/proposta/[token]` | ✓ |
 | 12 | DeckContainer + navegação | ✓ |
 | 13 | 18 slides (ficheiros individuais) + Slide 4 Live Audit | ✓ |
@@ -143,16 +148,22 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 
 ## Auditoria GEO
 
-A auditoria corre `prompts × 4 motores` (ChatGPT, Claude, Gemini, Perplexity).
-Para cada resposta, Claude extrai marcas citadas, posição da marca do prospect,
-concorrentes e sentimento. O resultado agregado é gravado em
-`proposals.audit_results`.
+A auditoria corre `prompts × 6 motores` (ChatGPT, Claude, Gemini, Grok,
+DeepSeek, Mistral). Para cada resposta, Claude extrai marcas citadas,
+posição da marca do prospect, concorrentes e sentimento. O resultado
+agregado é gravado em `proposals.audit_results`.
 
-- **Sem API keys configuradas** a auditoria corre em modo simulação
-  (`mock-audit.ts`), gerando dados determinísticos — o fluxo completo
-  (wizard → deck) é testável sem credenciais.
+- **Sem API keys configuradas** (por motor) a auditoria corre em modo
+  simulação (`mock-audit.ts`), gerando dados determinísticos — o fluxo
+  completo (wizard → deck) é testável sem credenciais. Cada motor faz
+  fallback independente: se a key existir mas a chamada falhar (ex.: 401,
+  rate-limit), esse `(prompt, motor)` específico é simulado.
 - A auditoria é iniciada pela página de detalhe da proposta
   (`AuditRunner`, client-driven via `/api/audit/start`), mais robusto em
   serverless do que um background job verdadeiro.
+- `AUDIT_CONCURRENCY` controla o nº máximo de chamadas LLM em paralelo
+  ao longo de todos os `(prompt × motor)`. Cada `audit_run` é inserido
+  no Supabase à medida que termina, para que o endpoint de status
+  reporte progresso ao vivo.
 - Os motores são consultados directamente (sem grounding/web-search).
   Para produção, considerar adicionar pesquisa web a cada motor.

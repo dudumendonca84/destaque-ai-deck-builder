@@ -206,7 +206,7 @@ export function ProposalWizard({
         <div className="wizard__body">
           <h2 className="tx-h2">5 prompts da <em className="mark">auditoria</em></h2>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini e Perplexity.
+            Estes são os prompts que vamos correr em ChatGPT, Claude, Gemini, Grok, DeepSeek e Mistral.
             Edita-os à vontade — entre 3 e 7 prompts.
           </p>
 

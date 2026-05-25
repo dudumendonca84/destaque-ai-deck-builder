@@ -5,8 +5,11 @@ export function hasGeminiKey(): boolean {
   return Boolean(process.env.GOOGLE_AI_API_KEY);
 }
 
-export async function queryGemini(prompt: string): Promise<EngineQueryResult> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`;
+export async function queryGemini(
+  prompt: string,
+  model: string = GEMINI_MODEL,
+): Promise<EngineQueryResult> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`;
 
   const res = await fetch(url, {
     method: "POST",

@@ -1,19 +1,19 @@
-import { OPENAI_MODEL } from "./models";
+import { DEEPSEEK_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
 
-export function hasOpenAIKey(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
+export function hasDeepSeekKey(): boolean {
+  return Boolean(process.env.DEEPSEEK_API_KEY);
 }
 
-export async function queryChatGPT(
+export async function queryDeepSeek(
   prompt: string,
-  model: string = OPENAI_MODEL,
+  model: string = DEEPSEEK_MODEL,
 ): Promise<EngineQueryResult> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
       model,
@@ -23,7 +23,7 @@ export async function queryChatGPT(
   });
 
   if (!res.ok) {
-    throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+    throw new Error(`DeepSeek ${res.status}: ${await res.text()}`);
   }
 
   const data = (await res.json()) as {

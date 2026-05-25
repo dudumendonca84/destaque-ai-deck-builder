@@ -33,8 +33,8 @@ function buildHtml({ companyName, contactName, proposalUrl }: ProposalEmail): st
     <p style="font-size:16px;line-height:1.5;margin:0 0 16px;">${hello}</p>
     <p style="font-size:16px;line-height:1.5;margin:0 0 16px;">
       Preparámos uma análise da visibilidade da <strong>${companyName}</strong> nos
-      motores de IA — ChatGPT, Claude, Gemini e Perplexity — com uma proposta
-      personalizada para a tornar mais citável.
+      motores de IA — ChatGPT, Claude, Gemini, Grok, DeepSeek e Mistral — com uma
+      proposta personalizada para a tornar mais citável.
     </p>
     <p style="font-size:16px;line-height:1.5;margin:0 0 28px;">
       Podes ver tudo aqui:

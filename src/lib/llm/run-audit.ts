@@ -1,26 +1,48 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import type { AuditResults, AuditEngineSummary } from "@/lib/supabase/types";
+import type { AuditResults, AuditEngineSummary, AuditTier } from "@/lib/supabase/types";
 import { ENGINES, type Engine } from "./models";
 import type { CitationAnalysis, EngineQueryResult } from "./types";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
 import { hasOpenAIKey, queryChatGPT } from "./openai";
 import { hasGeminiKey, queryGemini } from "./gemini";
-import { hasPerplexityKey, queryPerplexity } from "./perplexity";
+import { hasGrokKey, queryGrok } from "./grok";
+import { hasDeepSeekKey, queryDeepSeek } from "./deepseek";
+import { hasMistralKey, queryMistral } from "./mistral";
 import { parseCitations } from "./parse-citations";
 import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
+import {
+  loadModelMappings,
+  resolveModel,
+  type EngineModelEntry,
+} from "@/lib/skill/models";
+
+function resolveConcurrency(): number {
+  const raw = process.env.AUDIT_CONCURRENCY;
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
+}
 
 function keyAvailable(engine: Engine): boolean {
   if (engine === "chatgpt") return hasOpenAIKey();
   if (engine === "claude") return hasAnthropicKey();
   if (engine === "gemini") return hasGeminiKey();
-  return hasPerplexityKey();
+  if (engine === "grok") return hasGrokKey();
+  if (engine === "deepseek") return hasDeepSeekKey();
+  return hasMistralKey();
 }
 
-async function queryEngine(engine: Engine, prompt: string): Promise<EngineQueryResult> {
-  if (engine === "chatgpt") return queryChatGPT(prompt);
-  if (engine === "gemini") return queryGemini(prompt);
-  if (engine === "perplexity") return queryPerplexity(prompt);
-  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024 });
+async function queryEngine(
+  engine: Engine,
+  prompt: string,
+  model: string,
+): Promise<EngineQueryResult> {
+  if (engine === "chatgpt") return queryChatGPT(prompt, model);
+  if (engine === "gemini") return queryGemini(prompt, model);
+  if (engine === "grok") return queryGrok(prompt, model);
+  if (engine === "deepseek") return queryDeepSeek(prompt, model);
+  if (engine === "mistral") return queryMistral(prompt, model);
+  // claude
+  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024, model });
   return { response: text, tokens };
 }
 
@@ -37,8 +59,9 @@ async function runSingle(opts: {
   prompt: string;
   brandName: string;
   competitors: string[];
+  model: string;
 }): Promise<RunRow> {
-  const { engine, prompt, brandName, competitors } = opts;
+  const { engine, prompt, brandName, competitors, model } = opts;
 
   if (!keyAvailable(engine)) {
     return {
@@ -51,7 +74,7 @@ async function runSingle(opts: {
   }
 
   try {
-    const query = await queryEngine(engine, prompt);
+    const query = await queryEngine(engine, prompt, model);
     const analysis = await parseCitations({
       response: query.response,
       brandName,
@@ -59,7 +82,6 @@ async function runSingle(opts: {
     });
     return { prompt, engine, response: query.response, analysis, tokens: query.tokens };
   } catch {
-    // Falha de rede / API — degrada para simulação para não bloquear a auditoria.
     return {
       prompt,
       engine,
@@ -68,6 +90,25 @@ async function runSingle(opts: {
       tokens: 0,
     };
   }
+}
+
+async function runWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+  const lane = async () => {
+    while (true) {
+      const i = cursor++;
+      if (i >= items.length) return;
+      results[i] = await worker(items[i], i);
+    }
+  };
+  const lanes = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: lanes }, lane));
+  return results;
 }
 
 function summarise(rows: RunRow[]): AuditEngineSummary {
@@ -85,7 +126,6 @@ function summarise(rows: RunRow[]): AuditEngineSummary {
       compCounts.set(c, (compCounts.get(c) ?? 0) + 1);
     }
   }
-  // share of voice = mentions da marca / (mentions da marca + concorrentes)
   const compTotal = [...compCounts.values()].reduce((a, b) => a + b, 0);
   const share_of_voice =
     brandMentions + compTotal > 0 ? brandMentions / (brandMentions + compTotal) : 0;
@@ -120,15 +160,17 @@ function aggregate(rows: RunRow[]): AuditResults {
 }
 
 /**
- * Corre a auditoria GEO completa para uma proposta: prompts × 4 motores.
- * Atualiza audit_status, grava audit_runs e popula audit_results.
+ * Corre a auditoria GEO completa para uma proposta. Para cada motor,
+ * resolve o `model id` a partir de `models.md` da skill conforme o
+ * `audit_tier` da proposta (free → cost_optimized; diagnostic → production).
+ * Paralelismo controlado por `AUDIT_CONCURRENCY`.
  */
 export async function runAudit(proposalId: string): Promise<void> {
   const supabase = createServiceClient();
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id,custom_prompts,prospect_id")
+    .select("id,custom_prompts,prospect_id,audit_tier")
     .eq("id", proposalId)
     .single();
 
@@ -143,6 +185,7 @@ export async function runAudit(proposalId: string): Promise<void> {
   const brandName: string = prospect?.company_name ?? "a marca";
   const competitors: string[] = prospect?.competitors ?? [];
   const prompts: string[] = proposal.custom_prompts ?? [];
+  const tier: AuditTier = (proposal.audit_tier as AuditTier | undefined) ?? "free";
 
   await supabase
     .from("proposals")
@@ -150,31 +193,34 @@ export async function runAudit(proposalId: string): Promise<void> {
     .eq("id", proposalId);
 
   try {
-    // Limpa runs anteriores; depois insere por lote de prompt, para que o
-    // endpoint de status consiga reportar progresso incremental.
     await supabase.from("audit_runs").delete().eq("proposal_id", proposalId);
 
-    const rows: RunRow[] = [];
-    for (const prompt of prompts) {
-      const batch = await Promise.all(
-        ENGINES.map((engine) => runSingle({ engine, prompt, brandName, competitors })),
-      );
-      rows.push(...batch);
-      await supabase.from("audit_runs").insert(
-        batch.map((r) => ({
-          proposal_id: proposalId,
-          prompt: r.prompt,
-          engine: r.engine,
-          response: r.response,
-          citations_found: r.analysis.citations_found,
-          brand_position: r.analysis.brand_position,
-          brand_present: r.analysis.brand_present,
-          competitors_mentioned: r.analysis.competitors_mentioned,
-          sentiment_score: r.analysis.sentiment_score,
-          tokens_used: r.tokens,
-        })),
-      );
-    }
+    const { mappings } = await loadModelMappings();
+
+    const tasks = prompts.flatMap((prompt) =>
+      ENGINES.map((engine) => ({
+        prompt,
+        engine,
+        model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
+      })),
+    );
+
+    const rows = await runWithLimit(tasks, resolveConcurrency(), async (task) => {
+      const row = await runSingle({ ...task, brandName, competitors });
+      await supabase.from("audit_runs").insert({
+        proposal_id: proposalId,
+        prompt: row.prompt,
+        engine: row.engine,
+        response: row.response,
+        citations_found: row.analysis.citations_found,
+        brand_position: row.analysis.brand_position,
+        brand_present: row.analysis.brand_present,
+        competitors_mentioned: row.analysis.competitors_mentioned,
+        sentiment_score: row.analysis.sentiment_score,
+        tokens_used: row.tokens,
+      });
+      return row;
+    });
 
     const results = aggregate(rows);
     await supabase

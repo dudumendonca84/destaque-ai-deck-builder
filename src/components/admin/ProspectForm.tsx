@@ -49,8 +49,9 @@ export function ProspectForm({
           <input
             id="company_website"
             name="company_website"
-            type="url"
-            placeholder="https://"
+            type="text"
+            inputMode="url"
+            placeholder="destaque.ai"
             defaultValue={v("company_website")}
           />
           {err("company_website") && <span className="error">{err("company_website")}</span>}
@@ -126,8 +127,9 @@ export function ProspectForm({
           <input
             id="linkedin_url"
             name="linkedin_url"
-            type="url"
-            placeholder="https://linkedin.com/in/..."
+            type="text"
+            inputMode="url"
+            placeholder="linkedin.com/in/..."
             defaultValue={v("linkedin_url")}
           />
         </div>
