@@ -1,29 +1,43 @@
 -- =====================================================
--- destaque.ai Deck Builder · migration 004 — engines: +grok +deepseek +mistral
+-- destaque.ai Deck Builder · migration 004 — rebuild audit_runs + 6 motores
 -- =====================================================
--- Usa DO/EXECUTE para resolver o nome da constraint dinamicamente,
--- evitando o erro 42703 do parser PL/pgSQL ao referenciar colunas.
+-- A tabela `audit_runs` foi originalmente criada com um schema antigo
+-- baseado em `prompts jsonb` (uma linha por audit, com tudo dentro de
+-- JSON). O código actual espera o schema normalizado de 001_init.sql:
+-- uma linha por (prompt × motor), com colunas tipadas.
+--
+-- Esta migration:
+--  1. Apaga audit_runs (segura — tabela vazia)
+--  2. Recria com o schema normalizado
+--  3. Inclui os 6 motores activos no check (+ perplexity e mistral
+--     para retro-compatibilidade)
+--  4. Reaplica RLS (idempotente)
 
-do $$
-declare v_cname text;
-begin
-  select conname into v_cname
-  from pg_constraint
-  where conrelid = 'public.audit_runs'::regclass
-    and contype = 'c'
-    and pg_get_constraintdef(oid) like '%engine%'
-  limit 1;
+drop table if exists public.audit_runs cascade;
 
-  if v_cname is not null then
-    execute format('alter table public.audit_runs drop constraint %I', v_cname);
-  end if;
+create table public.audit_runs (
+  id uuid primary key default gen_random_uuid(),
+  proposal_id uuid references public.proposals(id) on delete cascade,
+  created_at timestamptz default now(),
+  prompt text not null,
+  engine text not null check (engine in (
+    'chatgpt', 'claude', 'gemini',
+    'perplexity', 'grok', 'deepseek', 'mistral'
+  )),
+  response text,
+  citations_found text[],
+  brand_position integer,
+  brand_present boolean default false,
+  competitors_mentioned text[],
+  sentiment_score numeric,
+  tokens_used integer,
+  cost_usd numeric(10, 6)
+);
 
-  execute $q$
-    alter table public.audit_runs
-      add constraint audit_runs_engine_check
-      check (engine in (
-        'chatgpt', 'claude', 'gemini',
-        'perplexity', 'grok', 'deepseek', 'mistral'
-      ))
-  $q$;
-end $$;
+create index idx_runs_proposal on public.audit_runs(proposal_id);
+
+alter table public.audit_runs enable row level security;
+
+drop policy if exists "admin_all_audit_runs" on public.audit_runs;
+create policy "admin_all_audit_runs" on public.audit_runs
+  for all using (auth.role() = 'authenticated');
