@@ -24,19 +24,35 @@ export type Dimension =
 
 export type ActionItem = {
   title: string;
-  why: string;
+  /** Markdown rico — 200-400 palavras com mecanismo + porquê + fonte. */
+  why_md?: string;
+  /** Compat antigo — versão curta. Routine moderna usa why_md. */
+  why?: string;
   effort: string;
-  impact: string;
+  /** Markdown rico — pode incluir fonte URL inline. */
+  impact_md?: string;
+  /** Compat antigo. */
+  impact?: string;
   dimension: Dimension;
+  /** Ancoragem ao finding/observação que motivou esta acção. */
+  anchor?: string;
+  /** URL de fonte primária (paper, vendor doc, etc.). */
+  source_url?: string;
+  /** Compat antigo. */
   source?: string;
 };
 
 export type SynthesizedDeck = {
-  executive_reading: string;
+  /** Markdown — 600-1000 palavras de leitura editorial. */
+  executive_reading_md?: string;
+  /** Compat antigo. */
+  executive_reading?: string;
   critical_findings: Array<{
     title: string;
-    why: string;
+    why_md?: string;
+    why?: string;
     dimension: Dimension;
+    anchor?: string;
   }>;
   action_plan: {
     h1: ActionItem[];
@@ -44,12 +60,17 @@ export type SynthesizedDeck = {
     h3: ActionItem[];
     ongoing: ActionItem[];
   };
+  /** Markdown — research adicional ao vivo (Wikipedia, PR PT, podcasts). */
+  research_additional_md?: string;
   projection_6m: {
     citation_rate_baseline: number;
     citation_rate_target: number;
-    methodology_note: string;
+    methodology_note_md?: string;
+    methodology_note?: string;
   };
-  faq: Array<{ q: string; a: string }>;
+  faq: Array<{ q: string; a_md?: string; a?: string }>;
+  /** Markdown — auto-crítica do output pela Routine. */
+  self_critique_md?: string;
 };
 
 export type SynthesizeInput = {

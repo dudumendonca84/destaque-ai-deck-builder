@@ -1,16 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import type { ActionItem } from "@/lib/llm/synthesize-deck";
 
 /**
  * Slide 21 — Apêndice F · Plano personalizado SINAL.
- * Renderiza o output do Step 12 (synthesize-deck.ts).
+ * Renderiza o output da Routine "synthesize-pending-decks" que corre
+ * no Claude Code Max do operador. Output é markdown rico (não JSON
+ * espremido), por isso usa react-markdown.
  *
- * Se synthesized estiver null, mostra placeholder a indicar que o
- * admin precisa de clicar "Sintetizar deck" para gerar.
+ * Backwards-compat: campos `*_md` são preferidos, fallback para campos
+ * legacy (string simples).
  */
 
 const DIMENSION_LABEL: Record<string, string> = {
@@ -31,7 +34,18 @@ const HORIZON_LABEL: Record<"h1" | "h2" | "h3" | "ongoing", string> = {
   ongoing: "Contínuo",
 };
 
+function MD({ children }: { children: string }) {
+  return (
+    <div className="md-body">
+      <ReactMarkdown>{children}</ReactMarkdown>
+    </div>
+  );
+}
+
 function ActionCard({ action, index }: { action: ActionItem; index: number }) {
+  const why = action.why_md ?? action.why ?? "";
+  const impact = action.impact_md ?? action.impact ?? "";
+  const sourceUrl = action.source_url ?? action.source;
   return (
     <motion.div
       className="action-card"
@@ -44,12 +58,28 @@ function ActionCard({ action, index }: { action: ActionItem; index: number }) {
         <span className="action-card__effort">{action.effort}</span>
       </div>
       <span className="action-card__title">{action.title}</span>
-      <p className="action-card__why">{action.why}</p>
-      <p className="action-card__impact">
-        <strong>Impacto típico:</strong> {action.impact}
-      </p>
-      {action.source && (
-        <span className="action-card__source">{action.source}</span>
+      <div className="action-card__why">
+        <MD>{why}</MD>
+      </div>
+      {impact && (
+        <div className="action-card__impact">
+          <strong>Impacto típico:</strong>{" "}
+          <span><MD>{impact}</MD></span>
+        </div>
+      )}
+      {action.anchor && (
+        <span className="action-card__source">Origem: {action.anchor}</span>
+      )}
+      {sourceUrl && (
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="action-card__source"
+          style={{ textDecoration: "underline" }}
+        >
+          {sourceUrl}
+        </a>
       )}
     </motion.div>
   );
@@ -65,28 +95,44 @@ export function AppendixF({ deck }: SlideProps) {
           Plano personalizado — <em className="mark">por gerar</em>.
         </h2>
         <p className="body-m" style={{ color: "var(--ink-3)", maxWidth: 640 }}>
-          O plano personalizado SINAL é gerado por Claude com a skill inteira (princípios,
-          metrics, benchmarks, gap_action_mapping) + dados reais deste audit. Admin: clica
-          em <strong>Sintetizar deck</strong> na página de detalhe da proposta.
+          A análise personalizada SINAL é gerada pela Routine{" "}
+          <code>synthesize-pending-decks</code> no Claude Code Max — cada audit pendente é
+          processado uma vez por hora. Volta dentro de algum tempo, ou pede ao admin para
+          disparar manualmente.
         </p>
       </SlideShell>
     );
   }
 
   const horizons: Array<"h1" | "h2" | "h3" | "ongoing"> = ["h1", "h2", "h3", "ongoing"];
+  const exec = synth.executive_reading_md ?? synth.executive_reading ?? "";
 
   return (
     <SlideShell index={21} total={22} eyebrow="Apêndice F · Plano personalizado SINAL">
-      <h2 className="tx-h2" style={{ marginBottom: 12 }}>
-        O que faríamos, <em className="mark">por horizonte</em>.
+      <h2 className="tx-h2" style={{ marginBottom: 24 }}>
+        Análise editorial.
       </h2>
-      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 32, maxWidth: 720 }}>
-        {synth.executive_reading}
-      </p>
+
+      {exec && (
+        <div className="executive-reading">
+          <MD>{exec}</MD>
+        </div>
+      )}
+
+      {synth.research_additional_md && (
+        <div className="research-additional">
+          <h3 className="tx-h3" style={{ marginBottom: 12, marginTop: 32 }}>
+            Research adicional ao vivo
+          </h3>
+          <MD>{synth.research_additional_md}</MD>
+        </div>
+      )}
 
       {synth.critical_findings.length > 0 && (
         <div className="findings-summary">
-          <h3 className="tx-h3" style={{ marginBottom: 12 }}>Findings críticos</h3>
+          <h3 className="tx-h3" style={{ marginBottom: 12, marginTop: 32 }}>
+            Findings críticos
+          </h3>
           <ul className="findings-summary__list">
             {synth.critical_findings.map((f, i) => (
               <li key={i}>
@@ -94,13 +140,18 @@ export function AppendixF({ deck }: SlideProps) {
                   {DIMENSION_LABEL[f.dimension] ?? f.dimension}
                 </span>
                 <span className="findings-summary__title">{f.title}</span>
-                <p className="findings-summary__why">{f.why}</p>
+                <div className="findings-summary__why">
+                  <MD>{f.why_md ?? f.why ?? ""}</MD>
+                </div>
               </li>
             ))}
           </ul>
         </div>
       )}
 
+      <h3 className="tx-h3" style={{ marginBottom: 12, marginTop: 32 }}>
+        Plano de acção por horizonte
+      </h3>
       <div className="action-plan-grid">
         {horizons.map((h) => {
           const actions = synth.action_plan[h];
@@ -125,7 +176,9 @@ export function AppendixF({ deck }: SlideProps) {
             {synth.faq.map((qa, i) => (
               <div key={i} className="faq-item">
                 <dt>{qa.q}</dt>
-                <dd>{qa.a}</dd>
+                <dd>
+                  <MD>{qa.a_md ?? qa.a ?? ""}</MD>
+                </dd>
               </div>
             ))}
           </dl>
