@@ -1,12 +1,29 @@
 -- =====================================================
--- destaque.ai Deck Builder · migration 004 — engines: +grok +deepseek
+-- destaque.ai Deck Builder · migration 004 — engines: +grok +deepseek +mistral
 -- =====================================================
--- Substitui Perplexity por Grok + DeepSeek na lista activa de motores.
--- Mantém 'perplexity' e adiciona 'mistral' no check para retro-compatibilidade
--- (audit_runs antigos não devem invalidar; mistral fica pronto se for activado).
+-- Usa DO/EXECUTE para resolver o nome da constraint dinamicamente,
+-- evitando o erro 42703 do parser PL/pgSQL ao referenciar colunas.
 
-alter table audit_runs drop constraint if exists audit_runs_engine_check;
+do $$
+declare v_cname text;
+begin
+  select conname into v_cname
+  from pg_constraint
+  where conrelid = 'public.audit_runs'::regclass
+    and contype = 'c'
+    and pg_get_constraintdef(oid) like '%engine%'
+  limit 1;
 
-alter table audit_runs
-  add constraint audit_runs_engine_check
-  check (engine in ('chatgpt','claude','gemini','perplexity','grok','deepseek','mistral'));
+  if v_cname is not null then
+    execute format('alter table public.audit_runs drop constraint %I', v_cname);
+  end if;
+
+  execute $q$
+    alter table public.audit_runs
+      add constraint audit_runs_engine_check
+      check (engine in (
+        'chatgpt', 'claude', 'gemini',
+        'perplexity', 'grok', 'deepseek', 'mistral'
+      ))
+  $q$;
+end $$;
