@@ -12,7 +12,7 @@ const ROWS = [
 
 export function SEOvsGEO() {
   return (
-    <SlideShell index={5} total={18} eyebrow="SEO vs GEO">
+    <SlideShell index={5} total={19} eyebrow="SEO vs GEO">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Não substitui o SEO. <em className="mark">Sucede-o</em>.
       </h2>

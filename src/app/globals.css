@@ -1979,3 +1979,78 @@ em.mark {
 .send-proposal__msg.is-err {
   color: var(--red);
 }
+
+
+/* ---- 18 · Apêndice E · Análise SINAL ---- */
+.appendix-e-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.appendix-e-dim {
+  padding: 12px 14px;
+  border: 1px solid var(--rule-soft);
+  border-radius: 8px;
+  background: var(--paper-2);
+}
+.appendix-e-dim__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.appendix-e-dim__name {
+  font-family: var(--font-mono-jetbrains);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.appendix-e-dim__score {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--ink);
+}
+.appendix-e-dim__count {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.appendix-e-findings {
+  margin-top: 16px;
+}
+.appendix-e-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.appendix-e-list li {
+  border-left: 2px solid var(--rule-soft);
+  padding-left: 14px;
+}
+.appendix-e-finding__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.appendix-e-finding__sev {
+  font-family: var(--font-mono-jetbrains);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+.appendix-e-finding__title {
+  font-weight: 500;
+  color: var(--ink);
+}
+.appendix-e-finding__why {
+  margin: 0;
+  color: var(--ink-3);
+  line-height: 1.55;
+}
+

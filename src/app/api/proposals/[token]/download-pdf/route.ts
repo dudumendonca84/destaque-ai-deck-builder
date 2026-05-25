@@ -9,6 +9,7 @@ import type {
   Prospect,
 } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
+import type { ScanResult } from "@/lib/scan/types";
 
 // @react-pdf/renderer precisa do runtime Node.
 export const runtime = "nodejs";
@@ -54,6 +55,13 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
 
   const { items: benchmarks } = await loadCoreBenchmarks();
 
+  const { data: scanRow } = await supabase
+    .from("sinal_scans")
+    .select("scan_results")
+    .eq("proposal_id", proposal.id)
+    .maybeSingle();
+  const sinalScan = (scanRow?.scan_results as ScanResult | null) ?? null;
+
   const deck: DeckData = {
     token,
     companyName: prospect?.company_name ?? "a tua marca",
@@ -71,6 +79,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns: (runRows ?? []) as AuditRun[],
     benchmarks,
+    sinalScan,
   };
 
   const buffer = await buildPdf(deck);

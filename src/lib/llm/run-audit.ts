@@ -21,6 +21,7 @@ import {
   type EngineModelEntry,
 } from "@/lib/skill/models";
 import { filterRelevantCompetitors } from "./competitor-filter";
+import { runSinalScan } from "@/lib/scan/sinal-scan";
 
 function resolveConcurrency(): number {
   const raw = process.env.AUDIT_CONCURRENCY;
@@ -200,11 +201,12 @@ export async function runAudit(proposalId: string): Promise<void> {
 
   const { data: prospect } = await supabase
     .from("prospects")
-    .select("company_name,competitors")
+    .select("company_name,company_website,competitors")
     .eq("id", proposal.prospect_id)
     .single();
 
   const brandName: string = prospect?.company_name ?? "a marca";
+  const companyWebsite: string | null = prospect?.company_website ?? null;
   const competitors: string[] = prospect?.competitors ?? [];
   const prompts: string[] = proposal.custom_prompts ?? [];
   const tier: AuditTier = (proposal.audit_tier as AuditTier | undefined) ?? "free";
@@ -225,6 +227,22 @@ export async function runAudit(proposalId: string): Promise<void> {
 
   try {
     await supabase.from("audit_runs").delete().eq("proposal_id", proposalId);
+    await supabase.from("sinal_scans").delete().eq("proposal_id", proposalId);
+
+    // SINAL scan corre em paralelo com as queries aos LLMs. Independente —
+    // se falhar não bloqueia o audit principal.
+    const scanPromise = companyWebsite
+      ? runSinalScan(companyWebsite, brandName).then(async (result) => {
+          await supabase.from("sinal_scans").insert({
+            proposal_id: proposalId,
+            domain: result.domain,
+            score: result.score,
+            scan_results: result,
+            critical_count: result.critical_findings.length,
+            unknown_count: result.unknown_count,
+          });
+        }).catch(() => undefined)
+      : Promise.resolve();
 
     const { mappings } = await loadModelMappings();
 
@@ -269,6 +287,9 @@ export async function runAudit(proposalId: string): Promise<void> {
     }
     const relevant = await filterRelevantCompetitors([...allMentioned]);
     const results = aggregate(rows, new Set(relevant));
+
+    // Aguarda o scan se ainda não terminou — independente do audit já estar.
+    await scanPromise;
 
     await supabase
       .from("proposals")

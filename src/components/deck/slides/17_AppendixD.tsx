@@ -26,7 +26,7 @@ export function AppendixD({ deck }: SlideProps) {
     },
   ];
   return (
-    <SlideShell index={17} total={18} eyebrow="Apêndice D · Investimento">
+    <SlideShell index={17} total={19} eyebrow="Apêndice D · Investimento">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Resumo do <em className="mark">investimento</em>
       </h2>

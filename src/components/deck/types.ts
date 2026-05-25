@@ -1,5 +1,6 @@
 import type { AuditResults, AuditRun, AuditTier, Engine } from "@/lib/supabase/types";
 import type { Benchmark } from "@/lib/skill/benchmarks";
+import type { ScanResult } from "@/lib/scan/types";
 
 export type DeckData = {
   token: string;
@@ -18,6 +19,7 @@ export type DeckData = {
   audit: AuditResults | null;
   auditRuns: AuditRun[];
   benchmarks: Benchmark[];
+  sinalScan: ScanResult | null;
 };
 
 export type SlideProps = {

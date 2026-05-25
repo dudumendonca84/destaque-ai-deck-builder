@@ -11,7 +11,7 @@ export function AppendixC({ deck }: SlideProps) {
       ? `Mensal · ${eur(deck.pricing.retainer)} / mês`
       : "Mensal · Sob consulta";
   return (
-    <SlideShell index={16} total={18} eyebrow="Apêndice C · Retainer">
+    <SlideShell index={16} total={19} eyebrow="Apêndice C · Retainer">
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Retainer — <em className="mark">a operação</em>
       </h2>
