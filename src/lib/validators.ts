@@ -44,10 +44,11 @@ export function parseCompetitors(csv?: string): string[] | null {
 
 export const proposalWizardSchema = z.object({
   prospect_id: z.string().uuid("Prospect inválido"),
+  audit_tier: z.enum(["free", "diagnostic", "premium"]).default("free"),
   custom_prompts: z
     .array(z.string().min(3, "Prompt demasiado curto"))
     .min(3, "Mínimo 3 prompts")
-    .max(7, "Máximo 7 prompts"),
+    .max(30, "Máximo 30 prompts"),
   custom_message: z.string().optional(),
   pricing_diagnostico: z.number().int().min(0).default(4500),
   pricing_sprint: z.number().int().min(0).default(18000),

@@ -5,7 +5,10 @@ export function hasGrokKey(): boolean {
   return Boolean(process.env.XAI_API_KEY);
 }
 
-export async function queryGrok(prompt: string): Promise<EngineQueryResult> {
+export async function queryGrok(
+  prompt: string,
+  model: string = GROK_MODEL,
+): Promise<EngineQueryResult> {
   const res = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -13,7 +16,7 @@ export async function queryGrok(prompt: string): Promise<EngineQueryResult> {
       authorization: `Bearer ${process.env.XAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: GROK_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     }),

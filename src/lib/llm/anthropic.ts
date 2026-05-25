@@ -26,9 +26,10 @@ export async function claudeComplete(opts: {
   system?: string;
   prompt: string;
   maxTokens?: number;
+  model?: string;
 }): Promise<{ text: string; tokens: number }> {
   const message = await client().messages.create({
-    model: CLAUDE_MODEL,
+    model: opts.model ?? CLAUDE_MODEL,
     max_tokens: opts.maxTokens ?? 1024,
     system: opts.system,
     messages: [{ role: "user", content: opts.prompt }],

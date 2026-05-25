@@ -5,7 +5,10 @@ export function hasDeepSeekKey(): boolean {
   return Boolean(process.env.DEEPSEEK_API_KEY);
 }
 
-export async function queryDeepSeek(prompt: string): Promise<EngineQueryResult> {
+export async function queryDeepSeek(
+  prompt: string,
+  model: string = DEEPSEEK_MODEL,
+): Promise<EngineQueryResult> {
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -13,7 +16,7 @@ export async function queryDeepSeek(prompt: string): Promise<EngineQueryResult> 
       authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     }),

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { generatePrompts } from "@/lib/llm/generate-prompts";
+import { generateAuditPrompts } from "@/lib/llm/prompts/generate-audit-prompts";
 import { createClient } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+// diagnostic tier gera 30 prompts; pode levar até ~1 min com 2 retries.
+export const maxDuration = 120;
 
 const schema = z.object({
   business_type: z.string().optional().nullable(),
@@ -11,6 +12,7 @@ const schema = z.object({
   company_name: z.string().optional().nullable(),
   target_audience: z.string().optional().nullable(),
   competitors: z.array(z.string()).optional().nullable(),
+  tier: z.enum(["free", "diagnostic", "premium"]).optional(),
 });
 
 export async function POST(request: Request) {
@@ -28,12 +30,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
 
-  const result = await generatePrompts({
+  const result = await generateAuditPrompts({
     business_type: parsed.data.business_type ?? undefined,
     location: parsed.data.location ?? undefined,
     company_name: parsed.data.company_name ?? undefined,
     target_audience: parsed.data.target_audience ?? undefined,
     competitors: parsed.data.competitors ?? undefined,
+    tier: parsed.data.tier,
   });
 
   return NextResponse.json(result);

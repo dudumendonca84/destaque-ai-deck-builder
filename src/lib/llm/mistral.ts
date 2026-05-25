@@ -5,7 +5,10 @@ export function hasMistralKey(): boolean {
   return Boolean(process.env.MISTRAL_API_KEY);
 }
 
-export async function queryMistral(prompt: string): Promise<EngineQueryResult> {
+export async function queryMistral(
+  prompt: string,
+  model: string = MISTRAL_MODEL,
+): Promise<EngineQueryResult> {
   const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -13,7 +16,7 @@ export async function queryMistral(prompt: string): Promise<EngineQueryResult> {
       authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
     },
     body: JSON.stringify({
-      model: MISTRAL_MODEL,
+      model,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     }),
