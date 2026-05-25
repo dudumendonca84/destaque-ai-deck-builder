@@ -36,30 +36,25 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
     }
   }, [proposalId, router]);
 
-  // Idempotência: só dispara /api/audit/start se ainda estiver pending.
+  // Dispara /api/audit/start fire-and-forget. Não bloqueia em await da
+  // resposta nem tenta parsear JSON — o backend pode demorar mais que o
+  // timeout edge da Vercel e devolver HTML; o que importa é a DB
+  // (audit_status + audit_runs) que o poll() lê em paralelo.
   const start = useCallback(async () => {
     setError(null);
     setStatus("running");
     try {
-      const res = await fetch("/api/audit/start", {
+      // Não await response body. Apenas dispara.
+      void fetch("/api/audit/start", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ proposal_id: proposalId }),
-      });
-      const data = (await res.json()) as { ok: boolean; error?: string };
-      if (!data.ok) {
-        setStatus("failed");
-        setError(data.error ?? "Falha na auditoria.");
-      } else {
-        setStatus("completed");
-        setProgress(100);
-        router.refresh();
-      }
-    } catch (e) {
-      setStatus("failed");
-      setError(e instanceof Error ? e.message : "Falha na auditoria.");
+        keepalive: true,
+      }).catch(() => undefined);
+    } catch {
+      // Ignorado — o estado real vem do polling.
     }
-  }, [proposalId, router]);
+  }, [proposalId]);
 
   useEffect(() => {
     if (status === "pending" && !started.current) {

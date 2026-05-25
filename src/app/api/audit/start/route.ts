@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { runAudit } from "@/lib/llm/run-audit";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
-// A auditoria pode demorar (prompts × 4 motores × parsing). Em Vercel,
-// maxDuration estende o tempo da função serverless.
+// Vercel maxDuration. A audit corre em background via `after()` — o
+// response volta imediatamente para o client, evitando timeouts edge.
 export const maxDuration = 300;
 
 const schema = z.object({ proposal_id: z.string().uuid() });
@@ -24,13 +24,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
 
-  try {
-    await runAudit(parsed.data.proposal_id);
-    return NextResponse.json({ ok: true, status: "completed" });
-  } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: e instanceof Error ? e.message : "audit_failed" },
-      { status: 500 },
-    );
-  }
+  const proposalId = parsed.data.proposal_id;
+
+  // Marca como running imediatamente para o client UI mostrar progresso
+  // sem latência. Service client para não depender do auth do user.
+  const sb = createServiceClient();
+  await sb
+    .from("proposals")
+    .update({ audit_status: "running", audit_started_at: new Date().toISOString() })
+    .eq("id", proposalId);
+
+  // Audit corre em background. Não bloqueia o response. Quando termina,
+  // grava audit_status e audit_results na DB; o client descobre via poll
+  // ao /api/audit/[id]/status.
+  after(async () => {
+    try {
+      await runAudit(proposalId);
+    } catch {
+      await sb
+        .from("proposals")
+        .update({ audit_status: "failed" })
+        .eq("id", proposalId);
+    }
+  });
+
+  return NextResponse.json({ ok: true, status: "running" });
 }
