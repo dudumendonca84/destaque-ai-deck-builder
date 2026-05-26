@@ -20,13 +20,13 @@ export function AppendixF2Findings({ deck }: SlideProps) {
   const synth = deck.synthesized;
   if (!synth) return null;
 
-  // Mostra os primeiros 6 findings (cabem confortavelmente em 2 colunas).
-  // Cada finding tem só dimension + title + why_md condensado.
-  const findings = (synth.critical_findings ?? []).slice(0, 6);
+  // 4 findings por slide, com why_md completo (sem line-clamp). Texto
+  // visível na íntegra. F2More acomoda findings adicionais.
+  const findings = (synth.critical_findings ?? []).slice(0, 4);
 
   return (
     <SlideShell index={19} total={26} eyebrow="Análise · findings críticos">
-      <h2 className="tx-h2" style={{ marginBottom: 32, maxWidth: 900 }}>
+      <h2 className="tx-h2" style={{ marginBottom: 24, maxWidth: 900 }}>
         Onde está o problema.
       </h2>
 
@@ -35,7 +35,7 @@ export function AppendixF2Findings({ deck }: SlideProps) {
           display: "grid",
           gridTemplateColumns: "repeat(2, 1fr)",
           gap: 24,
-          maxWidth: 1080,
+          maxWidth: 1100,
         }}
       >
         {findings.map((f, i) => (
@@ -62,7 +62,7 @@ export function AppendixF2Findings({ deck }: SlideProps) {
             </span>
             <h3
               className="tx-h3"
-              style={{ marginTop: 6, marginBottom: 10, fontSize: 19, lineHeight: 1.3 }}
+              style={{ marginTop: 6, marginBottom: 10, fontSize: 18, lineHeight: 1.3 }}
             >
               {f.title}
             </h3>
@@ -71,21 +71,19 @@ export function AppendixF2Findings({ deck }: SlideProps) {
                 fontSize: 13,
                 lineHeight: 1.55,
                 color: "var(--ink-3)",
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
               }}
             >
               <ReactMarkdown
                 components={{
-                  p: ({ children }) => <>{children}</>,
+                  p: ({ children }) => (
+                    <p style={{ margin: "0 0 0.6em" }}>{children}</p>
+                  ),
                   strong: ({ children }) => (
                     <strong style={{ color: "var(--ink-2)" }}>{children}</strong>
                   ),
                 }}
               >
-                {(f.why_md ?? f.why ?? "").split("\n\n")[0] ?? ""}
+                {f.why_md ?? f.why ?? ""}
               </ReactMarkdown>
             </div>
           </motion.div>

@@ -4,16 +4,14 @@ import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import { pct } from "@/lib/utils/format";
-import { anonymizeCompetitors } from "@/lib/llm/anonymize";
 
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;
-  // Concorrentes anonimizados (A, B, C...) para criar gancho comercial.
-  // Revelados em call, não no deck público.
-  const anonymized = anonymizeCompetitors(s?.top_competitors ?? []);
-  const topCompetitorLabel = anonymized[0]?.label
-    ? `Concorrente ${anonymized[0].label}`
-    : "—";
+  // Métricas reais do audit. "Top concorrente" foi removido — o aggregator
+  // não distinguia vendor platforms (Profound, AthenaHQ) de consultorias
+  // peer, induzindo o cliente em erro. Análise competitiva real fica para
+  // os slides F (Routine output) quando tiver classificação semântica.
+  const findings_count = deck.synthesized?.critical_findings?.length ?? 0;
   const cards = [
     { label: "Taxa de citação", value: s ? pct(s.citation_rate) : "—", note: "respostas onde és citado" },
     {
@@ -27,9 +25,9 @@ export function KPIs({ deck, active }: SlideProps) {
       note: "ordem em que apareces",
     },
     {
-      label: "Top concorrente",
-      value: topCompetitorLabel,
-      note: "revelado em conversa de alinhamento",
+      label: "Findings críticos",
+      value: findings_count > 0 ? String(findings_count) : "—",
+      note: "dimensões SINAL com gap claro",
     },
   ];
   return (
