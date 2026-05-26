@@ -14,6 +14,19 @@ export default async function ProspectPage(props: { params: Promise<{ id: string
 
   if (!prospect) notFound();
 
+  // Procura o último audit completo deste prospect — é a fonte REAL dos
+  // concorrentes (o que os LLMs mencionam nas buscas) vs os declarados no
+  // form (que são só seed para o parser).
+  const { data: latestAudit } = await supabase
+    .from("proposals")
+    .select("id, audit_completed_at, audit_results")
+    .eq("prospect_id", id)
+    .eq("audit_status", "completed")
+    .not("audit_results", "is", null)
+    .order("audit_completed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const update = updateProspect.bind(null, id);
 
   return (
@@ -38,7 +51,16 @@ export default async function ProspectPage(props: { params: Promise<{ id: string
             {prospect.business_type ?? "—"} · {prospect.location ?? "—"} · estado{" "}
             <b>{prospect.status}</b>
           </p>
-          <ProspectForm action={update} prospect={prospect} submitLabel="Guardar alterações" />
+          <ProspectForm
+            action={update}
+            prospect={prospect}
+            submitLabel="Guardar alterações"
+            discoveredCompetitors={
+              (latestAudit?.audit_results as { summary?: { top_competitors?: string[] } } | null)
+                ?.summary?.top_competitors ?? []
+            }
+            discoveredAt={latestAudit?.audit_completed_at ?? null}
+          />
         </div>
       </div>
     </>

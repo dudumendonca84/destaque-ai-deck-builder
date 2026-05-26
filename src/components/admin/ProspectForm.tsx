@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState } from "react";
 import type { Prospect, ProspectStatus } from "@/lib/supabase/types";
-import { discoverCompetitors, type ProspectFormState } from "@/app/(admin)/admin/prospects/actions";
+import type { ProspectFormState } from "@/app/(admin)/admin/prospects/actions";
 
 const STATUSES: ProspectStatus[] = [
   "lead",
@@ -20,15 +20,19 @@ export function ProspectForm({
   action,
   prospect,
   submitLabel = "Guardar",
+  discoveredCompetitors = [],
+  discoveredAt = null,
 }: {
   action: Action;
   prospect?: Partial<Prospect>;
   submitLabel?: string;
+  /** Top competitors organicamente mencionados pelos LLMs no último audit
+   * completo deste prospect. Fonte canónica da realidade competitiva — o
+   * campo `competitors` no form é apenas um seed para o parser. */
+  discoveredCompetitors?: string[];
+  discoveredAt?: string | null;
 }) {
   const [state, formAction, pending] = useActionState<ProspectFormState, FormData>(action, {});
-  const formRef = useRef<HTMLFormElement>(null);
-  const [discoverError, setDiscoverError] = useState<string | null>(null);
-  const [isDiscovering, startDiscover] = useTransition();
 
   const v = (k: keyof Prospect): string => {
     const val = prospect?.[k];
@@ -39,35 +43,8 @@ export function ProspectForm({
 
   const err = (k: string) => state.fieldErrors?.[k];
 
-  const handleDiscover = () => {
-    const f = formRef.current;
-    if (!f) return;
-    setDiscoverError(null);
-    const getField = (name: string): string =>
-      (f.elements.namedItem(name) as HTMLInputElement | null)?.value ?? "";
-    const payload = {
-      company_name: getField("company_name").trim(),
-      business_type: getField("business_type").trim() || undefined,
-      location: getField("location").trim() || undefined,
-      target_audience: getField("target_audience").trim() || undefined,
-    };
-    if (!payload.company_name) {
-      setDiscoverError("Preenche o nome da empresa primeiro.");
-      return;
-    }
-    startDiscover(async () => {
-      const result = await discoverCompetitors(payload);
-      if (result.error) {
-        setDiscoverError(result.error);
-        return;
-      }
-      const input = f.elements.namedItem("competitors") as HTMLInputElement | null;
-      if (input && result.csv) input.value = result.csv;
-    });
-  };
-
   return (
-    <form ref={formRef} action={formAction} className="wizard__body">
+    <form action={formAction} className="wizard__body">
       <div className="row-2">
         <div className="field">
           <label htmlFor="company_name">Empresa *</label>
@@ -120,37 +97,30 @@ export function ProspectForm({
           />
         </div>
         <div className="field">
-          <label
-            htmlFor="competitors"
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}
-          >
-            <span>Concorrentes (separados por vírgula)</span>
-            <button
-              type="button"
-              onClick={handleDiscover}
-              disabled={isDiscovering}
-              style={{
-                background: "none",
-                border: 0,
-                padding: 0,
-                cursor: isDiscovering ? "wait" : "pointer",
-                color: "var(--ink-2)",
-                textDecoration: "underline",
-                fontFamily: "inherit",
-                fontSize: 12,
-              }}
-            >
-              {isDiscovering ? "A descobrir…" : "Descobrir automaticamente"}
-            </button>
-          </label>
+          <label htmlFor="competitors">Concorrentes conhecidos (opcional)</label>
           <input
             id="competitors"
             name="competitors"
             placeholder="Concorrente A, Concorrente B"
             defaultValue={v("competitors")}
           />
-          {discoverError && (
-            <span className="error">{discoverError}</span>
+          <span style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>
+            Seed para o parser. Os concorrentes <em>reais</em> são descobertos no audit
+            via menções dos LLMs.
+          </span>
+          {discoveredCompetitors.length > 0 && (
+            <div
+              style={{
+                marginTop: 10,
+                padding: 10,
+                background: "var(--paper-2)",
+                borderLeft: "3px solid var(--amber, #d97706)",
+                fontSize: 13,
+              }}
+            >
+              <strong>Descobertos no audit{discoveredAt ? ` · ${new Date(discoveredAt).toLocaleDateString("pt-PT")}` : ""}:</strong>{" "}
+              {discoveredCompetitors.join(", ")}
+            </div>
           )}
         </div>
       </div>
