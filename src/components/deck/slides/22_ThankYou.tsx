@@ -13,7 +13,7 @@ export function ThankYou() {
           transition={{ duration: 0.5 }}
           style={{ marginBottom: 28 }}
         >
-          <span className="num">22 / 22</span>
+          <span className="num">Fim</span>
           <span className="bar" />
           <span>Vamos a isto</span>
         </motion.div>
@@ -27,6 +27,28 @@ export function ThankYou() {
         >
           Vamos pôr a tua marca <em className="mark">no parágrafo</em>.
         </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          style={{
+            marginTop: 48,
+            display: "flex",
+            gap: 32,
+            alignItems: "baseline",
+            color: "var(--ink-4)",
+            fontSize: 14,
+          }}
+        >
+          <a
+            href="mailto:contacto@destaque.ai"
+            style={{ color: "var(--paper)", textDecoration: "underline", textUnderlineOffset: 4 }}
+          >
+            contacto@destaque.ai
+          </a>
+          <span style={{ opacity: 0.5 }}>destaque.ai · Lisboa</span>
+        </motion.div>
       </div>
     </div>
   );
