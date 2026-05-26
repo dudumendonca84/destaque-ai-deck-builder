@@ -67,7 +67,7 @@ function mockAuditEnabled(): boolean {
   return process.env.MOCK_AUDIT === "true";
 }
 
-const PER_CALL_TIMEOUT_MS = 20_000;
+const PER_CALL_TIMEOUT_MS = 60_000;
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -249,10 +249,16 @@ function aggregate(rows: RunRow[], relevant?: Set<string>): AuditResults {
   for (const engine of ENGINES) {
     const engineRows = rows.filter((r) => r.engine === engine);
     by_engine[engine] = summarise(engineRows, relevant);
+    // error_reason agora tem prefixo + detalhe ("api_failed: OpenAI 400: …",
+    // "engine_circuit_broken: …"). Match por prefixo em vez de equality.
     engines_status[engine] = {
       real: engineRows.filter((r) => r.analysis !== null).length,
       no_api_key: engineRows.filter((r) => r.error_reason === "no_api_key").length,
-      api_failed: engineRows.filter((r) => r.error_reason === "api_failed").length,
+      api_failed: engineRows.filter(
+        (r) =>
+          r.error_reason?.startsWith("api_failed") ||
+          r.error_reason?.startsWith("engine_circuit_broken"),
+      ).length,
     };
   }
   return { summary: summarise(rows, relevant), by_engine, engines_status };
