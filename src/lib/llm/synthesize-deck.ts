@@ -67,6 +67,15 @@ export type SynthesizedDeck = {
     citation_rate_target: number;
     methodology_note_md?: string;
     methodology_note?: string;
+    /** Estimativa de pipeline at risk em € por mês. Routine usa benchmarks
+     * industry quando o prospect não dá LTV/funnel/TAQ. Omitido quando
+     * faltam dados completamente — slide Potential degrada graciosamente. */
+    monthly_eur_estimate?: {
+      low: number;
+      high: number;
+      assumptions_md: string;
+      confidence: "low" | "medium" | "high";
+    };
   };
   faq: Array<{ q: string; a_md?: string; a?: string }>;
   /** Markdown — auto-crítica do output pela Routine. */

@@ -105,10 +105,77 @@ export function AppendixFPotential({ deck }: SlideProps) {
         </motion.div>
       </div>
 
+      {synth.projection_6m.monthly_eur_estimate && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.65 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr",
+            gap: 24,
+            alignItems: "center",
+            maxWidth: 1100,
+            marginBottom: 24,
+            paddingBottom: 24,
+            borderBottom: "1px solid var(--rule-soft)",
+          }}
+        >
+          <div>
+            <div className="kpi__label">Pipeline at risk · mês</div>
+            <div
+              style={{
+                fontFamily: "var(--font-fraunces), Georgia, serif",
+                fontSize: 48,
+                lineHeight: 1.1,
+                color: "var(--ink)",
+                marginTop: 4,
+              }}
+            >
+              €{(synth.projection_6m.monthly_eur_estimate.low / 1000).toFixed(0)}–
+              {(synth.projection_6m.monthly_eur_estimate.high / 1000).toFixed(0)}k
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--ink-3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginTop: 4,
+              }}
+            >
+              confidence {synth.projection_6m.monthly_eur_estimate.confidence}
+            </div>
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" }}>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p style={{ margin: "0 0 0.5em" }}>{children}</p>,
+                strong: ({ children }) => (
+                  <strong style={{ color: "var(--ink-2)" }}>{children}</strong>
+                ),
+                a: ({ children, href }) => (
+                  <a
+                    href={href ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--ink-2)", textDecoration: "underline" }}
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {synth.projection_6m.monthly_eur_estimate.assumptions_md}
+            </ReactMarkdown>
+          </div>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
+        transition={{ duration: 0.5, delay: 0.75 }}
         style={{
           padding: 16,
           background: "var(--paper-2)",
