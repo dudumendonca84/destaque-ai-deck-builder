@@ -72,7 +72,10 @@ function useTyping(full: string, active: boolean) {
 }
 
 export function LiveAudit({ deck, active }: SlideProps) {
-  const prompts = deck.prompts.length ? deck.prompts : ["(sem prompts)"];
+  // Limita a 5 prompts (de até 30) para evitar wall of cards. Cada prompt
+  // só mostra engines com resposta real (response != null AND brand_present
+  // != null). Engines com circuit_broken/api_failed/no_api_key são skipped.
+  const allPrompts = deck.prompts.length ? deck.prompts : ["(sem prompts)"];
   const brand = deck.companyName;
   const competitors = deck.competitors;
 
@@ -82,8 +85,21 @@ export function LiveAudit({ deck, active }: SlideProps) {
     return (prompt: string, engine: Engine) => map.get(`${prompt}|${engine}`);
   }, [deck.auditRuns]);
 
-  // Typing apenas no primeiro motor do primeiro prompt.
-  const firstRun = runOf(prompts[0], "chatgpt");
+  const enginesFor = (prompt: string): Engine[] =>
+    ENGINES.filter((engine) => {
+      const r = runOf(prompt, engine);
+      return r?.response && r.brand_present !== null;
+    });
+
+  // Só prompts com pelo menos 1 motor com resposta real. Pega os primeiros 5.
+  const prompts = allPrompts
+    .filter((p) => enginesFor(p).length > 0)
+    .slice(0, 5);
+
+  // Typing apenas no primeiro motor real do primeiro prompt.
+  const firstPrompt = prompts[0];
+  const firstEngine = firstPrompt ? enginesFor(firstPrompt)[0] : undefined;
+  const firstRun = firstPrompt && firstEngine ? runOf(firstPrompt, firstEngine) : undefined;
   const typedFirst = useTyping(firstRun?.response ?? "", active);
 
   const summary = deck.audit?.summary;
@@ -92,13 +108,15 @@ export function LiveAudit({ deck, active }: SlideProps) {
     <div className="slide" data-tone="paper">
       <div className="slide__inner slide__inner--audit">
         <div className="slide__eyebrow" style={{ marginBottom: 16 }}>
-          <span className="num">04 / 22</span>
+          <span className="num">Auditoria</span>
           <span className="bar" />
           <span>Auditoria personalizada · {brand}</span>
         </div>
 
         <div className="la-scroll">
-          {prompts.map((prompt, pi) => (
+          {prompts.map((prompt, pi) => {
+            const enginesWithData = enginesFor(prompt);
+            return (
             <motion.div
               className="la-card"
               key={pi}
@@ -111,10 +129,10 @@ export function LiveAudit({ deck, active }: SlideProps) {
                 <span className="la-card__prompt">{prompt}</span>
               </div>
               <div className="la-engines">
-                {ENGINES.map((engine) => {
+                {enginesWithData.map((engine) => {
                   const run = runOf(prompt, engine);
                   const present = run?.brand_present ?? false;
-                  const isTyping = pi === 0 && engine === "chatgpt";
+                  const isTyping = pi === 0 && engine === firstEngine;
                   return (
                     <div className="la-engine" key={engine}>
                       <div className="la-engine__top">
@@ -136,7 +154,8 @@ export function LiveAudit({ deck, active }: SlideProps) {
                 })}
               </div>
             </motion.div>
-          ))}
+            );
+          })}
 
           {/* Mini-KPIs */}
           <motion.div
