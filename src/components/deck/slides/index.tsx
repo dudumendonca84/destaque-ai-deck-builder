@@ -24,7 +24,6 @@ import { AppendixF3ActionH1 } from "./21c_AppendixF3_ActionH1";
 import { AppendixFActionH2H3 } from "./21d_AppendixF_ActionH2H3";
 import { AppendixFFAQ } from "./21e_AppendixF_FAQ";
 import { Tracker } from "./19_Tracker";
-import { CTA } from "./20_CTA";
 import { ThankYou } from "./22_ThankYou";
 
 // Registo dos slides — ordem é a ordem de apresentação. O bloco F
@@ -56,6 +55,5 @@ export const SLIDES: SlideDef[] = [
   { id: "appendix-f4", title: "Plano H2 · H3 · contínuo", tone: "paper", Component: AppendixFActionH2H3 },
   { id: "appendix-f5", title: "Perguntas frequentes", tone: "paper", Component: AppendixFFAQ },
   { id: "tracker", title: "Visibility Tracker · preview", tone: "paper", Component: Tracker },
-  { id: "cta", title: "Próxima acção", tone: "paper", Component: CTA },
   { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
 ];
