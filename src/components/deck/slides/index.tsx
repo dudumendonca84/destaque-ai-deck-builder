@@ -11,6 +11,7 @@ import { Phases34 } from "./09_Phases34";
 import { KPIs } from "./10_KPIs";
 import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings } from "./21b_AppendixF2_Findings";
+import { AppendixFPotential } from "./21x_AppendixF_Potential";
 import { AppendixF3ActionH1 } from "./21c_AppendixF3_ActionH1";
 import { AppendixFActionH2H3 } from "./21d_AppendixF_ActionH2H3";
 import { AppendixFFAQ } from "./21e_AppendixF_FAQ";
@@ -40,6 +41,9 @@ export const SLIDES: SlideDef[] = [
   { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
   { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },
   { id: "appendix-f2", title: "Findings críticos", tone: "paper", Component: AppendixF2Findings },
+
+  // ACT 2.5 — Potencial (o que está em cima da mesa)
+  { id: "appendix-potential", title: "Potencial · 6 meses", tone: "paper", Component: AppendixFPotential },
 
   // ACT 3 — Como podemos ajudar
   { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
