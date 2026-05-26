@@ -42,9 +42,18 @@ export type AuditEngineSummary = {
   top_competitors: string[];
 };
 
+export type EngineRunStatus = {
+  real: number;
+  no_api_key: number;
+  api_failed: number;
+};
+
 export type AuditResults = {
   summary: AuditEngineSummary;
   by_engine: Record<Engine, AuditEngineSummary>;
+  // Operator-facing visibility (não vai para o deck cliente). Permite
+  // ao admin ver quantas runs por motor foram reais vs falhadas/sem key.
+  engines_status?: Record<Engine, EngineRunStatus>;
 };
 
 // Shape inspirada nos tipos gerados pelo `supabase gen types typescript`.
