@@ -34,7 +34,7 @@ function Excerpt({
   typed: string | null;
 }) {
   const full = run?.response ?? "Sem dados.";
-  const text = typed ?? full.slice(0, 150);
+  const text = typed ?? full.slice(0, 240);
   const segs = highlight(text, brand, competitors);
   return (
     <span className="la-excerpt">
@@ -47,7 +47,7 @@ function Excerpt({
           <span key={i}>{s.text}</span>
         ),
       )}
-      {typed !== null && typed.length < full.slice(0, 150).length && (
+      {typed !== null && typed.length < full.slice(0, 240).length && (
         <span className="caret">▍</span>
       )}
     </span>
@@ -59,7 +59,7 @@ function useTyping(full: string, active: boolean) {
   useEffect(() => {
     if (!active) return;
     let i = 0;
-    const target = full.slice(0, 150);
+    const target = full.slice(0, 240);
     const step = Math.max(1, Math.round(target.length / 60));
     const id = setInterval(() => {
       i = Math.min(i + step, target.length);
@@ -72,9 +72,6 @@ function useTyping(full: string, active: boolean) {
 }
 
 export function LiveAudit({ deck, active }: SlideProps) {
-  // Limita a 5 prompts (de até 30) para evitar wall of cards. Cada prompt
-  // só mostra engines com resposta real (response != null AND brand_present
-  // != null). Engines com circuit_broken/api_failed/no_api_key são skipped.
   const allPrompts = deck.prompts.length ? deck.prompts : ["(sem prompts)"];
   const brand = deck.companyName;
   const competitors = deck.competitors;
@@ -91,18 +88,22 @@ export function LiveAudit({ deck, active }: SlideProps) {
       return r?.response && r.brand_present !== null;
     });
 
-  // Só prompts com pelo menos 1 motor com resposta real. Pega os primeiros 5.
-  const prompts = allPrompts
-    .filter((p) => enginesFor(p).length > 0)
-    .slice(0, 5);
+  const bestEngineFor = (prompt: string): Engine | undefined => {
+    const engines = enginesFor(prompt);
+    const withPresent = engines.find((e) => runOf(prompt, e)?.brand_present);
+    if (withPresent) return withPresent;
+    return engines.sort(
+      (a, b) =>
+        (runOf(prompt, b)?.response?.length ?? 0) - (runOf(prompt, a)?.response?.length ?? 0),
+    )[0];
+  };
 
-  // Typing apenas no primeiro motor real do primeiro prompt.
+  const prompts = allPrompts.filter((p) => enginesFor(p).length > 0).slice(0, 5);
+
   const firstPrompt = prompts[0];
-  const firstEngine = firstPrompt ? enginesFor(firstPrompt)[0] : undefined;
+  const firstEngine = firstPrompt ? bestEngineFor(firstPrompt) : undefined;
   const firstRun = firstPrompt && firstEngine ? runOf(firstPrompt, firstEngine) : undefined;
   const typedFirst = useTyping(firstRun?.response ?? "", active);
-
-  const summary = deck.audit?.summary;
 
   return (
     <div className="slide" data-tone="paper">
@@ -115,85 +116,93 @@ export function LiveAudit({ deck, active }: SlideProps) {
 
         <div className="la-scroll">
           {prompts.map((prompt, pi) => {
-            const enginesWithData = enginesFor(prompt);
+            const engines = enginesFor(prompt);
+            const bestEngine = bestEngineFor(prompt);
+            const bestRun = bestEngine ? runOf(prompt, bestEngine) : undefined;
             return (
-            <motion.div
-              className="la-card"
-              key={pi}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
-              transition={{ duration: 0.45, delay: 0.1 + pi * 0.08 }}
-            >
-              <div className="la-card__head">
-                <span className="la-card__n">PROMPT {String(pi + 1).padStart(2, "0")}</span>
-                <span className="la-card__prompt">{prompt}</span>
-              </div>
-              <div className="la-engines">
-                {enginesWithData.map((engine) => {
-                  const run = runOf(prompt, engine);
-                  const present = run?.brand_present ?? false;
-                  const isTyping = pi === 0 && engine === firstEngine;
-                  return (
-                    <div className="la-engine" key={engine}>
-                      <div className="la-engine__top">
-                        <span className="la-engine__name">{ENGINE_LABEL[engine]}</span>
+              <motion.div
+                className="la-card"
+                key={pi}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
+                transition={{ duration: 0.45, delay: 0.1 + pi * 0.08 }}
+              >
+                <div className="la-card__head">
+                  <span className="la-card__n">PROMPT {String(pi + 1).padStart(2, "0")}</span>
+                  <span className="la-card__prompt">{prompt}</span>
+                </div>
+                <div style={{ padding: "12px 16px" }}>
+                  {bestRun && bestEngine && (
+                    <div style={{ marginBottom: 10 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 6,
+                        }}
+                      >
                         <span
-                          className={`la-flag ${present ? "is-present" : "is-absent"}`}
+                          style={{
+                            fontFamily: "var(--font-mono-jetbrains)",
+                            fontSize: 10,
+                            letterSpacing: "0.06em",
+                            color: "var(--ink-2)",
+                          }}
                         >
-                          {present ? "PRESENTE" : "AUSENTE"}
+                          {ENGINE_LABEL[bestEngine]}
+                        </span>
+                        <span
+                          className={`la-flag ${bestRun.brand_present ? "is-present" : "is-absent"}`}
+                        >
+                          {bestRun.brand_present ? "PRESENTE" : "AUSENTE"}
                         </span>
                       </div>
                       <Excerpt
-                        run={run}
+                        run={bestRun}
                         brand={brand}
                         competitors={competitors}
-                        typed={isTyping ? typedFirst : null}
+                        typed={pi === 0 ? typedFirst : null}
                       />
                     </div>
-                  );
-                })}
-              </div>
-            </motion.div>
+                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 12,
+                      paddingTop: 8,
+                      borderTop: "1px solid var(--rule-soft)",
+                      fontSize: 10,
+                      fontFamily: "var(--font-mono-jetbrains)",
+                      color: "var(--ink-3)",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {engines.map((engine) => {
+                      const present = runOf(prompt, engine)?.brand_present;
+                      return (
+                        <span
+                          key={engine}
+                          style={{ display: "inline-flex", gap: 4, alignItems: "center" }}
+                        >
+                          {ENGINE_LABEL[engine]}
+                          <span
+                            style={{
+                              color: present ? "var(--status-active)" : "var(--red)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {present ? "✓" : "✗"}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
             );
           })}
-
-          {/* Mini-KPIs */}
-          <motion.div
-            className="la-kpis"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <div className="la-kpi">
-              <span className="la-kpi__label">Citation rate</span>
-              <span className="la-kpi__value">
-                {summary ? Math.round(summary.citation_rate * 100) : 0}
-                <sup>%</sup>
-              </span>
-            </div>
-            <div className="la-kpi">
-              <span className="la-kpi__label">Share of voice</span>
-              <span className="la-kpi__value">
-                {summary ? Math.round(summary.share_of_voice * 100) : 0}
-                <sup>%</sup>
-              </span>
-            </div>
-            <div className="la-kpi">
-              <span className="la-kpi__label">Posição média</span>
-              <span className="la-kpi__value">
-                {summary?.avg_position != null ? summary.avg_position : "—"}
-              </span>
-            </div>
-            <div className="la-kpi">
-              <span className="la-kpi__label">Top concorrentes</span>
-              <span className="la-kpi__list">
-                {(summary?.top_competitors ?? []).slice(0, 3).map((c, i) => (
-                  <span key={i}>{c}</span>
-                ))}
-                {(summary?.top_competitors ?? []).length === 0 && <span>—</span>}
-              </span>
-            </div>
-          </motion.div>
         </div>
       </div>
     </div>
