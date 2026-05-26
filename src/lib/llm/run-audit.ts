@@ -68,7 +68,11 @@ function mockAuditEnabled(): boolean {
 }
 
 const PER_CALL_TIMEOUT_MS = 60_000;
-const CIRCUIT_BREAKER_THRESHOLD = 3;
+// Threshold baixo: 2 falhas consecutivas → motor partido (key inválida,
+// rate limit, model deprecated). Com concurrency 5, mesmo threshold 2
+// ainda gasta ~10 calls in-flight no pior caso, mas muito menos do que
+// threshold 3 que devorava 5×60s antes de fail-fast.
+const CIRCUIT_BREAKER_THRESHOLD = 2;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
