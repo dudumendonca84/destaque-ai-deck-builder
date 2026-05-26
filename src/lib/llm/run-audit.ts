@@ -98,7 +98,7 @@ async function runSingle(opts: {
       knownCompetitors: competitors,
     });
     return { prompt, engine, response: query.response, analysis, tokens: query.tokens, error_reason: null };
-  } catch {
+  } catch (err) {
     if (mockAuditEnabled()) {
       return {
         prompt,
@@ -109,7 +109,16 @@ async function runSingle(opts: {
         error_reason: null,
       };
     }
-    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "api_failed" };
+    const msg = err instanceof Error ? err.message : String(err);
+    // Trunca para evitar gravar logs de API gigantes (10s of KB) em cada row.
+    return {
+      prompt,
+      engine,
+      response: null,
+      analysis: null,
+      tokens: 0,
+      error_reason: `api_failed: ${msg.slice(0, 300)}`,
+    };
   }
 }
 
