@@ -3,6 +3,7 @@ import type {
   AuditResults,
   AuditEngineSummary,
   AuditTier,
+  EngineRunStatus,
   GeneratedPromptMeta,
 } from "@/lib/supabase/types";
 import { ENGINES, type Engine } from "./models";
@@ -56,10 +57,15 @@ async function queryEngine(
 type RunRow = {
   prompt: string;
   engine: Engine;
-  response: string;
-  analysis: CitationAnalysis;
+  response: string | null;
+  analysis: CitationAnalysis | null;
   tokens: number;
+  error_reason: string | null;
 };
+
+function mockAuditEnabled(): boolean {
+  return process.env.MOCK_AUDIT === "true";
+}
 
 async function runSingle(opts: {
   engine: Engine;
@@ -71,13 +77,17 @@ async function runSingle(opts: {
   const { engine, prompt, brandName, competitors, model } = opts;
 
   if (!keyAvailable(engine)) {
-    return {
-      prompt,
-      engine,
-      response: mockEngineQuery(prompt, engine).response,
-      analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
-      tokens: 0,
-    };
+    if (mockAuditEnabled()) {
+      return {
+        prompt,
+        engine,
+        response: mockEngineQuery(prompt, engine).response,
+        analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
+        tokens: 0,
+        error_reason: null,
+      };
+    }
+    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key" };
   }
 
   try {
@@ -87,15 +97,19 @@ async function runSingle(opts: {
       brandName,
       knownCompetitors: competitors,
     });
-    return { prompt, engine, response: query.response, analysis, tokens: query.tokens };
+    return { prompt, engine, response: query.response, analysis, tokens: query.tokens, error_reason: null };
   } catch {
-    return {
-      prompt,
-      engine,
-      response: mockEngineQuery(prompt, engine).response,
-      analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
-      tokens: 0,
-    };
+    if (mockAuditEnabled()) {
+      return {
+        prompt,
+        engine,
+        response: mockEngineQuery(prompt, engine).response,
+        analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
+        tokens: 0,
+        error_reason: null,
+      };
+    }
+    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "api_failed" };
   }
 }
 
@@ -119,11 +133,16 @@ async function runWithLimit<T, R>(
 }
 
 function summarise(rows: RunRow[], relevant?: Set<string>): AuditEngineSummary {
-  if (rows.length === 0) {
+  // Rows sem análise (motor sem key ou API failed) ficam fora do denominador.
+  // Garante que citation_rate e SoV reflectem só respostas LLM reais.
+  const valid = rows.filter(
+    (r): r is RunRow & { analysis: CitationAnalysis } => r.analysis !== null,
+  );
+  if (valid.length === 0) {
     return { citation_rate: 0, share_of_voice: 0, avg_position: null, top_competitors: [] };
   }
-  const present = rows.filter((r) => r.analysis.brand_present);
-  const citation_rate = present.length / rows.length;
+  const present = valid.filter((r) => r.analysis.brand_present);
+  const citation_rate = present.length / valid.length;
 
   // Filtro de competitors relevantes (se fornecido). Reduz ruído de
   // empresas não relacionadas que apareceram nas respostas.
@@ -146,7 +165,7 @@ function summarise(rows: RunRow[], relevant?: Set<string>): AuditEngineSummary {
 
   // Contagem agregada de competitors (para top_competitors), só os relevantes.
   const compCounts = new Map<string, number>();
-  for (const r of rows) {
+  for (const r of valid) {
     for (const c of r.analysis.competitors_mentioned) {
       if (!isRelevant(c)) continue;
       compCounts.set(c, (compCounts.get(c) ?? 0) + 1);
@@ -176,10 +195,17 @@ function summarise(rows: RunRow[], relevant?: Set<string>): AuditEngineSummary {
 
 function aggregate(rows: RunRow[], relevant?: Set<string>): AuditResults {
   const by_engine = {} as Record<Engine, AuditEngineSummary>;
+  const engines_status = {} as Record<Engine, EngineRunStatus>;
   for (const engine of ENGINES) {
-    by_engine[engine] = summarise(rows.filter((r) => r.engine === engine), relevant);
+    const engineRows = rows.filter((r) => r.engine === engine);
+    by_engine[engine] = summarise(engineRows, relevant);
+    engines_status[engine] = {
+      real: engineRows.filter((r) => r.analysis !== null).length,
+      no_api_key: engineRows.filter((r) => r.error_reason === "no_api_key").length,
+      api_failed: engineRows.filter((r) => r.error_reason === "api_failed").length,
+    };
   }
-  return { summary: summarise(rows, relevant), by_engine };
+  return { summary: summarise(rows, relevant), by_engine, engines_status };
 }
 
 /**
@@ -269,20 +295,22 @@ export async function runAudit(proposalId: string): Promise<void> {
         engine: row.engine,
         intent_stage: task.intent_stage,
         response: row.response,
-        citations_found: row.analysis.citations_found,
-        brand_position: row.analysis.brand_position,
-        brand_present: row.analysis.brand_present,
-        competitors_mentioned: row.analysis.competitors_mentioned,
-        sentiment_score: row.analysis.sentiment_score,
+        citations_found: row.analysis?.citations_found ?? null,
+        brand_position: row.analysis?.brand_position ?? null,
+        brand_present: row.analysis?.brand_present ?? null,
+        competitors_mentioned: row.analysis?.competitors_mentioned ?? null,
+        sentiment_score: row.analysis?.sentiment_score ?? null,
         tokens_used: row.tokens,
+        error_reason: row.error_reason,
       });
       return row;
     });
 
     // Filtra competitors via classificação semântica antes de gravar nos
-    // results (descarta SEO-only puros e ruído).
+    // results (descarta SEO-only puros e ruído). Só rows com analysis real.
     const allMentioned = new Set<string>();
     for (const row of rows) {
+      if (!row.analysis) continue;
       for (const c of row.analysis.competitors_mentioned) allMentioned.add(c);
     }
     const relevant = await filterRelevantCompetitors([...allMentioned]);
