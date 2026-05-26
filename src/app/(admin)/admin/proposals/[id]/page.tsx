@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
 import { AuditRunner } from "@/components/admin/AuditRunner";
 import { SendProposalButton } from "@/components/admin/SendProposalButton";
-import { SynthesizeDeckButton } from "@/components/admin/SynthesizeDeckButton";
+import { SynthesisProgress } from "@/components/admin/SynthesisProgress";
 import { createClient } from "@/lib/supabase/server";
 import type { AuditStatus } from "@/lib/supabase/types";
 
@@ -64,10 +64,29 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
           {prospect?.business_type ?? "—"} · {prospect?.location ?? "—"}
         </p>
 
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div className="v2-eyebrow" style={{ marginBottom: 8 }}>
+            <span className="num">F1</span>
+            <span className="bar" />
+            <span>Fase 1 — Auditoria GEO</span>
+          </div>
           <AuditRunner
             proposalId={proposal.id}
             initialStatus={proposal.audit_status as AuditStatus}
+          />
+        </div>
+
+        <div style={{ marginBottom: 32 }}>
+          <div className="v2-eyebrow" style={{ marginBottom: 8 }}>
+            <span className="num">F2</span>
+            <span className="bar" />
+            <span>Fase 2 — Análise SINAL</span>
+          </div>
+          <SynthesisProgress
+            auditCompletedAt={proposal.audit_completed_at}
+            deckSynthesisPending={Boolean(proposal.deck_synthesis_pending)}
+            deckBlocksExists={Boolean(proposal.deck_blocks)}
+            deckSynthesizedAt={proposal.deck_synthesized_at}
           />
         </div>
 
@@ -122,16 +141,25 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
           >
             {publicUrl}
           </code>
-          <SendProposalButton
-            proposalId={proposal.id}
-            alreadySent={Boolean(proposal.sent_at)}
-          />
-          <SynthesizeDeckButton
-            proposalId={proposal.id}
-            hasExisting={Boolean(proposal.deck_blocks)}
-            synthesizedAt={proposal.deck_synthesized_at}
-            source={proposal.deck_synthesized_source}
-          />
+          {(() => {
+            const audit_done = proposal.audit_status === "completed";
+            const synthesis_done =
+              Boolean(proposal.deck_blocks) && !proposal.deck_synthesis_pending;
+            const ready = audit_done && synthesis_done;
+            const reason = !audit_done
+              ? "Fase 1 (Auditoria GEO) ainda a correr."
+              : !synthesis_done
+              ? "Fase 2 (Análise SINAL) ainda a correr. Aguarda conclusão."
+              : undefined;
+            return (
+              <SendProposalButton
+                proposalId={proposal.id}
+                alreadySent={Boolean(proposal.sent_at)}
+                notReady={!ready}
+                notReadyReason={reason}
+              />
+            );
+          })()}
           {proposal.sent_at && (
             <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 10 }}>
               Enviada a {new Date(proposal.sent_at).toLocaleString("pt-PT")}.
