@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseCompetitors, prospectSchema } from "@/lib/validators";
 import type { ProspectStatus } from "@/lib/supabase/types";
+import { claudeComplete } from "@/lib/llm/anthropic";
 
 function pickFormData(formData: FormData) {
   const get = (k: string) => {
@@ -49,6 +50,9 @@ function toRowPayload(data: ReturnType<typeof pickFormData>) {
 export type ProspectFormState = {
   error?: string;
   fieldErrors?: Record<string, string>;
+  // Flag para banner "Guardado" no client após save bem-sucedido.
+  // Distingue success de initial state (ambos seriam {} de outro modo).
+  success?: boolean;
 };
 
 export async function createProspect(
@@ -104,7 +108,7 @@ export async function updateProspect(
 
   revalidatePath("/admin/prospects");
   revalidatePath(`/admin/prospects/${id}`);
-  return {};
+  return { success: true };
 }
 
 export async function deleteProspect(id: string) {
@@ -112,4 +116,40 @@ export async function deleteProspect(id: string) {
   await supabase.from("prospects").delete().eq("id", id);
   revalidatePath("/admin/prospects");
   redirect("/admin/prospects");
+}
+
+export type DiscoverResult = { csv?: string; error?: string };
+
+export async function discoverCompetitors(input: {
+  company_name: string;
+  business_type?: string;
+  location?: string;
+  target_audience?: string;
+}): Promise<DiscoverResult> {
+  const { company_name, business_type, location, target_audience } = input;
+  if (!company_name?.trim()) return { error: "Empresa em falta" };
+
+  const prompt = `Identifica 5 a 8 concorrentes directos da empresa abaixo, no contexto português.
+
+Empresa: ${company_name}
+Tipo de negócio: ${business_type ?? "desconhecido"}
+Localização: ${location ?? "Portugal"}
+Público-alvo: ${target_audience ?? "B2B"}
+
+Regras estritas:
+- Devolve APENAS os nomes das empresas separados por vírgula. Sem números, sem URLs, sem texto adicional, sem aspas.
+- Foco em concorrentes directos: mesmo serviço, mesmo mercado geográfico (Portugal preferencialmente), mesma escala.
+- Inclui players genuinamente activos. Se a categoria for muito nicho, podes incluir 1-2 players adjacentes mas relevantes.
+- Não inventes. Se não tens certeza, devolve apenas os que conheces.
+
+Exemplo de output válido: Empresa A, Empresa B, Empresa C, Empresa D, Empresa E`;
+
+  try {
+    const { text } = await claudeComplete({ prompt, maxTokens: 200 });
+    const cleaned = text.trim().replace(/^["']|["']$/g, "").replace(/\n+/g, ", ");
+    if (!cleaned) return { error: "Resposta vazia do modelo" };
+    return { csv: cleaned };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Erro ao chamar o modelo" };
+  }
 }
