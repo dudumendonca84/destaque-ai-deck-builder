@@ -17,12 +17,19 @@ import { AppendixB } from "./15_AppendixB";
 import { AppendixC } from "./16_AppendixC";
 import { AppendixD } from "./17_AppendixD";
 import { AppendixE } from "./18_AppendixE";
+import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
+import { AppendixFLandscape } from "./21b_AppendixF_Landscape";
+import { AppendixF2Findings } from "./21b_AppendixF2_Findings";
+import { AppendixF3ActionH1 } from "./21c_AppendixF3_ActionH1";
+import { AppendixFActionH2H3 } from "./21d_AppendixF_ActionH2H3";
+import { AppendixFFAQ } from "./21e_AppendixF_FAQ";
 import { Tracker } from "./19_Tracker";
 import { CTA } from "./20_CTA";
-import { AppendixF } from "./21_AppendixF";
 import { ThankYou } from "./22_ThankYou";
 
-// Registo dos 22 slides — ordem é a ordem de apresentação.
+// Registo dos slides — ordem é a ordem de apresentação. O bloco F
+// substitui o antigo Apêndice F monolítico (parede de markdown) por 6
+// slides estruturados, cada um com 1 conceito e sem scroll interno.
 export const SLIDES: SlideDef[] = [
   { id: "cover", title: "Capa", tone: "paper", Component: Cover },
   { id: "problem", title: "O problema", tone: "ink", Component: Problem },
@@ -42,8 +49,13 @@ export const SLIDES: SlideDef[] = [
   { id: "appendix-c", title: "Apêndice C · Retainer", tone: "paper", Component: AppendixC },
   { id: "appendix-d", title: "Apêndice D · Investimento", tone: "paper", Component: AppendixD },
   { id: "appendix-e", title: "Apêndice E · Análise SINAL", tone: "paper", Component: AppendixE },
+  { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },
+  { id: "appendix-f-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape },
+  { id: "appendix-f2", title: "Findings críticos", tone: "paper", Component: AppendixF2Findings },
+  { id: "appendix-f3", title: "Plano H1 · semana 1-2", tone: "paper", Component: AppendixF3ActionH1 },
+  { id: "appendix-f4", title: "Plano H2 · H3 · contínuo", tone: "paper", Component: AppendixFActionH2H3 },
+  { id: "appendix-f5", title: "Perguntas frequentes", tone: "paper", Component: AppendixFFAQ },
   { id: "tracker", title: "Visibility Tracker · preview", tone: "paper", Component: Tracker },
   { id: "cta", title: "Próxima acção", tone: "paper", Component: CTA },
-  { id: "appendix-f", title: "Apêndice F · Plano personalizado SINAL", tone: "paper", Component: AppendixF },
   { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
 ];
