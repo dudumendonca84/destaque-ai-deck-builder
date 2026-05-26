@@ -88,11 +88,30 @@ export async function sendProposal(proposalId: string): Promise<SendProposalResu
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("id,token,status,prospect_id")
+    .select("id,token,status,prospect_id,audit_status,deck_synthesis_pending,deck_blocks")
     .eq("id", proposalId)
     .single();
 
   if (!proposal) return { ok: false, error: "Proposta não encontrada." };
+
+  // Guard: não envia o deck enquanto a Fase 2 (Análise SINAL · Routine)
+  // não estiver concluída — caso contrário o Slide 21 (Apêndice F)
+  // chega ao cliente em branco com "Plano personalizado por gerar".
+  if (proposal.audit_status !== "completed") {
+    return { ok: false, error: "Fase 1 (Auditoria GEO) ainda não terminou." };
+  }
+  if (proposal.deck_synthesis_pending) {
+    return {
+      ok: false,
+      error: "Fase 2 (Análise SINAL) em curso. Aguarda conclusão.",
+    };
+  }
+  if (!proposal.deck_blocks) {
+    return {
+      ok: false,
+      error: "Análise SINAL ainda não foi gerada. Dispara a Routine antes de enviar.",
+    };
+  }
 
   const { data: prospect } = await supabase
     .from("prospects")
