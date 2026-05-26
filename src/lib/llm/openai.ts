@@ -15,10 +15,11 @@ export async function queryChatGPT(
       "content-type": "application/json",
       authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
+    // Não envia temperature: o gpt-5.5 só aceita o default (1) e rejeita
+    // valores custom com 400. Para audit não precisamos de tunar.
     body: JSON.stringify({
       model,
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
     }),
   });
 
