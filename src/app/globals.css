@@ -2607,3 +2607,84 @@ em.mark {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Markdown rendering nos slides synthesized ---- */
+.md-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.md-body p {
+  margin: 0 0 0.7em;
+}
+.md-body p:last-child {
+  margin-bottom: 0;
+}
+.md-body strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.md-body em {
+  font-style: italic;
+}
+.md-body ul,
+.md-body ol {
+  margin: 0.4em 0 0.7em;
+  padding-left: 1.4em;
+}
+.md-body li {
+  margin: 0.2em 0;
+}
+.md-body code {
+  font-family: var(--font-mono-jetbrains);
+  font-size: 0.9em;
+  background: var(--paper-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--rule-soft);
+}
+.md-body a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.md-body blockquote {
+  margin: 0.6em 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--rule-soft);
+  color: var(--ink-3);
+}
+.md-body h2,
+.md-body h3,
+.md-body h4 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 1.2em 0 0.5em;
+  color: var(--ink);
+}
+.md-body h2 { font-size: 22px; }
+.md-body h3 { font-size: 18px; }
+.md-body h4 { font-size: 16px; }
+
+/* Executive reading (Slide 21) — markdown maior */
+.executive-reading {
+  max-width: 760px;
+  margin-bottom: 24px;
+}
+.executive-reading .md-body {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.executive-reading .md-body p {
+  margin-bottom: 1em;
+}
+
+.research-additional {
+  max-width: 760px;
+  padding: 16px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+}

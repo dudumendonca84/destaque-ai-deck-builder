@@ -297,6 +297,10 @@ export async function runAudit(proposalId: string): Promise<void> {
         audit_status: "completed",
         audit_completed_at: new Date().toISOString(),
         audit_results: results,
+        // Sinaliza à Routine no Claude Code Max (geo-seo-aeo-master)
+        // que esta proposta precisa de synthesis. Routine corre na
+        // subscription Max do operador (zero custo API).
+        deck_synthesis_pending: true,
       })
       .eq("id", proposalId);
   } catch {
