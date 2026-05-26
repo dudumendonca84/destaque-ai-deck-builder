@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Topbar } from "@/components/admin/Topbar";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteProspectButton } from "./DeleteProspectButton";
 
 export const metadata = { title: "Prospects" };
 
@@ -99,6 +100,7 @@ export default async function ProspectsPage(props: { searchParams: Promise<Searc
                     <Link className="link-arrow" href={`/admin/prospects/${p.id}`}>
                       Abrir <span>→</span>
                     </Link>
+                    <DeleteProspectButton id={p.id} name={p.company_name} />
                   </td>
                 </tr>
               ))}

@@ -67,14 +67,29 @@ function mockAuditEnabled(): boolean {
   return process.env.MOCK_AUDIT === "true";
 }
 
+const PER_CALL_TIMEOUT_MS = 20_000;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`timeout after ${ms}ms (${label})`)), ms),
+    ),
+  ]);
+}
+
+type EngineCircuitState = { consecutiveFailures: number; broken: boolean };
+
 async function runSingle(opts: {
   engine: Engine;
   prompt: string;
   brandName: string;
   competitors: string[];
   model: string;
+  circuit: Map<Engine, EngineCircuitState>;
 }): Promise<RunRow> {
-  const { engine, prompt, brandName, competitors, model } = opts;
+  const { engine, prompt, brandName, competitors, model, circuit } = opts;
 
   if (!keyAvailable(engine)) {
     if (mockAuditEnabled()) {
@@ -90,15 +105,35 @@ async function runSingle(opts: {
     return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key" };
   }
 
+  // Circuit breaker: salta motor se já falhou CIRCUIT_BREAKER_THRESHOLD vezes
+  // seguidas. Evita gastar 30s em retries de um motor partido (model id
+  // inválido, key expirada). Próximo audit recomeça com circuit limpo.
+  if (circuit.get(engine)?.broken) {
+    return {
+      prompt,
+      engine,
+      response: null,
+      analysis: null,
+      tokens: 0,
+      error_reason: `engine_circuit_broken: ${CIRCUIT_BREAKER_THRESHOLD} falhas consecutivas`,
+    };
+  }
+
   try {
-    const query = await queryEngine(engine, prompt, model);
+    const query = await withTimeout(
+      queryEngine(engine, prompt, model),
+      PER_CALL_TIMEOUT_MS,
+      `${engine}`,
+    );
     const analysis = await parseCitations({
       response: query.response,
       brandName,
       knownCompetitors: competitors,
     });
+    // Sucesso → reset do contador
+    circuit.set(engine, { consecutiveFailures: 0, broken: false });
     return { prompt, engine, response: query.response, analysis, tokens: query.tokens, error_reason: null };
-  } catch {
+  } catch (err) {
     if (mockAuditEnabled()) {
       return {
         prompt,
@@ -109,7 +144,22 @@ async function runSingle(opts: {
         error_reason: null,
       };
     }
-    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "api_failed" };
+    // Increment consecutive failures; trip o circuit ao atingir o threshold.
+    const state = circuit.get(engine) ?? { consecutiveFailures: 0, broken: false };
+    state.consecutiveFailures += 1;
+    if (state.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) state.broken = true;
+    circuit.set(engine, state);
+
+    const msg = err instanceof Error ? err.message : String(err);
+    // Trunca para evitar gravar logs de API gigantes (10s of KB) em cada row.
+    return {
+      prompt,
+      engine,
+      response: null,
+      analysis: null,
+      tokens: 0,
+      error_reason: `api_failed: ${msg.slice(0, 300)}`,
+    };
   }
 }
 
@@ -281,6 +331,9 @@ export async function runAudit(proposalId: string): Promise<void> {
       })),
     );
 
+    // Estado partilhado pelo circuit-breaker (per audit run).
+    const circuit = new Map<Engine, EngineCircuitState>();
+
     const rows = await runWithLimit(tasks, resolveConcurrency(), async (task) => {
       const row = await runSingle({
         engine: task.engine,
@@ -288,6 +341,7 @@ export async function runAudit(proposalId: string): Promise<void> {
         brandName,
         competitors,
         model: task.model,
+        circuit,
       });
       await supabase.from("audit_runs").insert({
         proposal_id: proposalId,
