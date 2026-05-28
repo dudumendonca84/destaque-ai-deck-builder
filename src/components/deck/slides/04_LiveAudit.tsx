@@ -152,14 +152,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
         </h2>
 
         {/* Herói: 0% grande */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, auto)",
-            gap: 56,
-            marginBottom: 36,
-          }}
-        >
+        <div className="la-hero">
           {HERO.map((h, i) => (
             <motion.div
               key={h.label}
@@ -168,17 +161,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
               transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
             >
               <div className="kpi__label">{h.label}</div>
-              <div
-                style={{
-                  fontFamily: "var(--font-fraunces), Georgia, serif",
-                  fontSize: 84,
-                  lineHeight: 1,
-                  color: "var(--ink)",
-                  marginTop: 6,
-                }}
-              >
-                {h.value}
-              </div>
+              <div className="la-hero__v">{h.value}</div>
             </motion.div>
           ))}
         </div>

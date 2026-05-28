@@ -1512,6 +1512,21 @@ em.mark {
   gap: 12px;
   padding-right: 8px;
 }
+/* Slide 04 invertido — herói 0%/0%/— */
+.la-hero {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 56px;
+  margin-bottom: 36px;
+  justify-content: start;
+}
+.la-hero__v {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 84px;
+  line-height: 1;
+  color: var(--ink);
+  margin-top: 6px;
+}
 .la-card {
   border: 1px solid var(--rule-soft);
   border-radius: 10px;
@@ -2579,14 +2594,35 @@ em.mark {
     font-size: 15px;
   }
 
-  /* Deck navigation: menos invasiva em mobile */
+  /* Deck navigation: tap targets ≥44px (acessibilidade mobile). */
   .deck-controls {
     top: 12px;
     right: 12px;
   }
   .deck-controls__btn {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
+  }
+  .deck-nav__arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Slide 04 herói: 3 números grandes não cabem em linha a 390px →
+     empilha e reduz. Mantém legível, nunca minúsculo. */
+  .la-hero {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .la-hero__v {
+    font-size: clamp(48px, 16vw, 72px);
+  }
+
+  /* Corpo nunca abaixo de ~14px efectivo. */
+  .body-m,
+  .la-excerpt {
+    font-size: 14px;
   }
 }
 
@@ -2605,6 +2641,14 @@ em.mark {
   }
   .appendix-e-grid {
     grid-template-columns: 1fr;
+  }
+  /* Herói do slide 04: 1 coluna em ecrãs muito estreitos. */
+  .la-hero {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .la-hero__v {
+    font-size: clamp(44px, 18vw, 64px);
   }
 }
 
