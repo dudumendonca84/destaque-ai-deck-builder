@@ -27,6 +27,10 @@ export type DeckData = {
 export type SlideProps = {
   deck: DeckData;
   active: boolean;
+  /** Para slides paginados (LiveAudit, Findings): índice 0-based da página
+   * e total de páginas deste tipo de slide. Injectados por buildSlides. */
+  page?: number;
+  pageCount?: number;
 };
 
 export type SlideDef = {

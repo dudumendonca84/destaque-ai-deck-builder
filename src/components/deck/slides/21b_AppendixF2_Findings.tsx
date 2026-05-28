@@ -3,7 +3,17 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { SlideShell } from "../primitives/SlideShell";
-import type { SlideProps } from "../types";
+import type { SlideProps, DeckData } from "../types";
+
+// 2 por página: why_md tem 100-200 palavras, precisa de meia-largura
+// a altura completa para caber sem scroll. Mais findings → mais slides.
+const FINDINGS_PER_PAGE = 2;
+
+/** Nº de slides Findings necessários para mostrar todos os findings. */
+export function findingsPageCount(deck: DeckData): number {
+  const n = deck.synthesized?.critical_findings?.length ?? 0;
+  return n === 0 ? 0 : Math.ceil(n / FINDINGS_PER_PAGE);
+}
 
 const DIMENSION_LABEL: Record<string, string> = {
   technical: "Técnica",
@@ -16,16 +26,21 @@ const DIMENSION_LABEL: Record<string, string> = {
   operational: "Operacional",
 };
 
-export function AppendixF2Findings({ deck }: SlideProps) {
+export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps) {
   const synth = deck.synthesized;
   if (!synth) return null;
 
-  // 4 findings por slide, com why_md completo (sem line-clamp). Texto
-  // visível na íntegra. F2More acomoda findings adicionais.
-  const findings = (synth.critical_findings ?? []).slice(0, 4);
+  // Paginação: 4 findings por slide. why_md completo (sem truncar).
+  const all = synth.critical_findings ?? [];
+  const start = page * FINDINGS_PER_PAGE;
+  const findings = all.slice(start, start + FINDINGS_PER_PAGE);
 
   return (
-    <SlideShell index={19} total={26} eyebrow="Análise · findings críticos">
+    <SlideShell
+      index={19}
+      total={26}
+      eyebrow={`Análise · findings críticos${pageCount > 1 ? ` ${page + 1}/${pageCount}` : ""}`}
+    >
       <h2 className="tx-h2" style={{ marginBottom: 24, maxWidth: 900 }}>
         Onde está o problema.
       </h2>
