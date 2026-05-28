@@ -97,7 +97,7 @@ export function AppendixF2Findings({ deck }: SlideProps) {
                   paddingLeft: 8,
                 }}
               >
-                {f.benchmark_md.replace(/[*_`#]/g, "")}
+                {f.benchmark_md.replace(/[*_`#]/g, "").replace(/3HASH[\s-]*grade/gi, "benchmark")}
               </div>
             )}
           </motion.div>

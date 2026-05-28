@@ -81,7 +81,10 @@ export function AppendixF3ActionH1({ deck }: SlideProps) {
                   lineHeight: 1.4,
                 }}
               >
-                3HASH-grade: {a.benchmark_md.replace(/[*_`#]/g, "").replace(/^.*?3HASH-grade:?\s*/i, "")}
+                Benchmark: {a.benchmark_md
+                  .replace(/[*_`#]/g, "")
+                  .replace(/3HASH[\s-]*grade/gi, "benchmark")
+                  .replace(/^.*?benchmark:?\s*/i, "")}
               </div>
             )}
           </motion.div>
