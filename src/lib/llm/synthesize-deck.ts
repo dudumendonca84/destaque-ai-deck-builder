@@ -33,6 +33,8 @@ export type ActionItem = {
   impact_md?: string;
   /** Compat antigo. */
   impact?: string;
+  /** Markdown 1 frase — target de excelência 3HASH-grade desta acção. */
+  benchmark_md?: string;
   dimension: Dimension;
   /** Ancoragem ao finding/observação que motivou esta acção. */
   anchor?: string;
@@ -51,6 +53,8 @@ export type SynthesizedDeck = {
     title: string;
     why_md?: string;
     why?: string;
+    /** Markdown 1 frase — "tu: X · 3HASH-grade: Y" com números. */
+    benchmark_md?: string;
     dimension: Dimension;
     anchor?: string;
   }>;
