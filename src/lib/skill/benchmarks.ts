@@ -22,31 +22,30 @@ export type Benchmark = {
  */
 const FALLBACK_BENCHMARKS: Benchmark[] = [
   {
-    key: "aio_ctr_drop",
-    value: "47%",
-    caption: "queda relativa de CTR quando AI Overview presente",
-    source_name: "Pew Research, Jul 2025",
+    key: "b2b_ai_answer",
+    value: "82%",
+    caption: "das pesquisas em tech B2B já acionam uma resposta de IA",
+    source_name: "BrightEdge, 2026 (36% → 82% em 12 meses)",
+    source_url:
+      "https://www.brightedge.com/resources/weekly-ai-search-insights/ai-overviews-one-year-presence-size-citing",
+    date: "2026-02-01",
+  },
+  {
+    key: "aio_click_share",
+    value: "~1%",
+    caption: "dos utilizadores clica numa fonte dentro de uma AI Overview",
+    source_name: "Pew Research, Jul 2025 (CTR 8% vs 15%)",
     source_url:
       "https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/",
     date: "2025-07-22",
   },
   {
-    key: "aio_query_share",
-    value: "~50%",
-    caption: "das queries Google têm AI Overview (early 2026)",
-    source_name: "BrightEdge, 2026",
-    source_url:
-      "https://www.brightedge.com/resources/weekly-ai-search-insights/ai-overviews-one-year-presence-size-citing",
-    date: "2026-02-01",
-  },
-  {
-    key: "aio_b2b_tech",
-    value: "82%",
-    caption: "das queries B2B Tech têm AI Overview",
-    source_name: "BrightEdge, 2026",
-    source_url:
-      "https://www.brightedge.com/resources/weekly-ai-search-insights/ai-overviews-one-year-presence-size-citing",
-    date: "2026-02-01",
+    key: "cited_brand_clicks",
+    value: "35%",
+    caption: "mais cliques orgânicos para marcas citadas em respostas de IA",
+    source_name: "Seer Interactive, 2026 (2,43 mil milhões de impressões)",
+    source_url: "https://www.seerinteractive.com/insights",
+    date: "2026-01-01",
   },
 ];
 

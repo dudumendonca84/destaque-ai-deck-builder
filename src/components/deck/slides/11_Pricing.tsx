@@ -30,7 +30,7 @@ export function Pricing({ deck, active }: SlideProps) {
   return (
     <SlideShell index={11} total={22} eyebrow="Investimento">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
-        Três fases, <em className="mark">um número claro</em>
+        Três fases, <em className="mark">um percurso claro</em>
       </h2>
       <div className="pricing-grid">
         {tiers.map((t, i) => (

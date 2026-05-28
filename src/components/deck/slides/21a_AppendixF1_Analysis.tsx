@@ -38,10 +38,9 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
 
   const cr_baseline = synth.projection_6m?.citation_rate_baseline;
   const cr_target = synth.projection_6m?.citation_rate_target;
-  // Respostas LLM reais analisadas (exclui circuit/fail/no-key). Honesto e
-  // específico — substitui o antigo "Top concorrente" que mostrava um vendor
-  // (Profound) como se fosse concorrente directo.
-  const realResponses = deck.auditRuns.filter((r) => r.brand_present !== null).length;
+  // Marca mais citada nas respostas da categoria — NÃO é "concorrente"
+  // (pode ser uma ferramenta de medição como Profound). Label honesto.
+  const topCited = deck.audit?.summary?.top_competitors?.[0] ?? "—";
   const findings_count = synth.critical_findings?.length ?? 0;
 
   return (
@@ -89,8 +88,8 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
           </div>
         </div>
         <div>
-          <div className="kpi__label">Respostas analisadas</div>
-          <div className="kpi__value">{realResponses}</div>
+          <div className="kpi__label">Marca mais citada</div>
+          <div className="kpi__value" style={{ fontSize: 26 }}>{topCited}</div>
         </div>
         <div>
           <div className="kpi__label">Findings críticos</div>
