@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Maximize2, Minimize2, Download } from "lucide-react";
 import { DeckNav } from "./DeckNav";
 import { buildSlides } from "./slides";
+import { SlidePositionContext } from "./SlidePosition";
 import type { DeckData } from "./types";
 import { trackEvent } from "@/lib/analytics/track";
 
@@ -193,7 +194,9 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <SlideComponent deck={deck} active />
+          <SlidePositionContext.Provider value={{ index: current + 1, total }}>
+            <SlideComponent deck={deck} active />
+          </SlidePositionContext.Provider>
         </motion.div>
       </AnimatePresence>
 

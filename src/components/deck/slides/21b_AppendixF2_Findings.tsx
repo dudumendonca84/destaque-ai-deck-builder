@@ -5,9 +5,10 @@ import ReactMarkdown from "react-markdown";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps, DeckData } from "../types";
 
-// 2 por página: why_md tem 100-200 palavras, precisa de meia-largura
-// a altura completa para caber sem scroll. Mais findings → mais slides.
-const FINDINGS_PER_PAGE = 2;
+// 1 por página: cada finding é um argumento e merece o slide inteiro —
+// título grande, why completo, benchmark em destaque. Mais findings →
+// mais slides (paginação no buildSlides).
+const FINDINGS_PER_PAGE = 1;
 
 /** Nº de slides Findings necessários para mostrar todos os findings. */
 export function findingsPageCount(deck: DeckData): number {
@@ -37,87 +38,78 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
 
   return (
     <SlideShell
-      index={19}
-      total={26}
-      eyebrow={`Análise · findings críticos${pageCount > 1 ? ` ${page + 1}/${pageCount}` : ""}`}
+      eyebrow={`Findings críticos${pageCount > 1 ? ` · ${page + 1} de ${pageCount}` : ""}`}
     >
-      <h2 className="tx-h2" style={{ marginBottom: 24, maxWidth: 900 }}>
-        Onde está o problema.
-      </h2>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 24,
-          maxWidth: 1100,
-        }}
-      >
-        {findings.map((f, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.05 * i }}
+      {findings.map((f) => (
+        <motion.div
+          key={f.title}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          style={{ maxWidth: 940 }}
+        >
+          <span
             style={{
-              borderTop: "1px solid var(--rule-soft)",
-              paddingTop: 12,
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "var(--amber, #d97706)",
+              fontWeight: 500,
             }}
           >
-            <span
-              style={{
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "var(--amber, #d97706)",
-                fontWeight: 500,
+            {DIMENSION_LABEL[f.dimension] ?? f.dimension}
+          </span>
+          <h2
+            className="tx-h2"
+            style={{ marginTop: 10, marginBottom: 20, maxWidth: 900 }}
+          >
+            {f.title}
+          </h2>
+          <div
+            className="body-m"
+            style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", maxWidth: 820 }}
+          >
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p style={{ margin: "0 0 0.9em" }}>{children}</p>,
+                strong: ({ children }) => <strong style={{ color: "var(--ink)" }}>{children}</strong>,
               }}
             >
-              {DIMENSION_LABEL[f.dimension] ?? f.dimension}
-            </span>
-            <h3
-              className="tx-h3"
-              style={{ marginTop: 6, marginBottom: 10, fontSize: 18, lineHeight: 1.3 }}
-            >
-              {f.title}
-            </h3>
+              {f.why_md ?? f.why ?? ""}
+            </ReactMarkdown>
+          </div>
+          {f.benchmark_md && (
             <div
               style={{
-                fontSize: 13,
-                lineHeight: 1.55,
-                color: "var(--ink-3)",
+                marginTop: 24,
+                padding: "12px 16px",
+                fontSize: 14,
+                color: "var(--ink-2)",
+                background: "var(--paper-2)",
+                borderLeft: "3px solid var(--amber, #d97706)",
+                maxWidth: 820,
               }}
             >
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => (
-                    <p style={{ margin: "0 0 0.6em" }}>{children}</p>
-                  ),
-                  strong: ({ children }) => (
-                    <strong style={{ color: "var(--ink-2)" }}>{children}</strong>
-                  ),
-                }}
-              >
-                {f.why_md ?? f.why ?? ""}
-              </ReactMarkdown>
-            </div>
-            {f.benchmark_md && (
-              <div
+              <span
                 style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  color: "var(--ink-2)",
-                  fontFamily: "var(--font-mono-jetbrains)",
-                  borderLeft: "2px solid var(--amber, #d97706)",
-                  paddingLeft: 8,
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "var(--amber, #d97706)",
+                  display: "block",
+                  marginBottom: 4,
                 }}
               >
-                {f.benchmark_md.replace(/[*_`#]/g, "").replace(/3HASH[\s-]*grade/gi, "benchmark")}
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
+                Benchmark
+              </span>
+              {(f.benchmark_md ?? "")
+                .replace(/[*_`#]/g, "")
+                .replace(/3HASH[\s-]*grade/gi, "benchmark")
+                .replace(/^\s*benchmark[:\s]*/i, "")}
+            </div>
+          )}
+        </motion.div>
+      ))}
     </SlideShell>
   );
 }

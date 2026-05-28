@@ -16,7 +16,7 @@ export function AppendixB({ deck }: SlideProps) {
       <ul className="deck-list">
         <li>
           <b>Técnico</b>
-          <span>Schema.org, dados estruturados, llms.txt e infraestrutura GEO.</span>
+          <span>Correção de entidade e higiene técnica (schema, sameAs, llms.txt) — base, não alavanca de citação.</span>
         </li>
         <li>
           <b>Editorial</b>

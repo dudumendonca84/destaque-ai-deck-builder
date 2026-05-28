@@ -6,8 +6,6 @@ import type { SlideProps, DeckData } from "../types";
 import { ENGINES, ENGINE_LABEL, type Engine } from "@/lib/llm/models";
 import type { AuditRun } from "@/lib/supabase/types";
 
-const PROMPTS_PER_PAGE = 3;
-
 /** Prompts com pelo menos 1 motor com resposta real (exclui circuit/fail/no-key). */
 export function liveAuditPrompts(deck: DeckData): string[] {
   const all = deck.prompts.length ? deck.prompts : [];
@@ -19,9 +17,15 @@ export function liveAuditPrompts(deck: DeckData): string[] {
   );
 }
 
-/** Nº de slides LiveAudit necessários para mostrar todos os prompts com dados. */
+/** Slide 04 é agora invertido (0% herói + 2 prompts) numa só página.
+ * Os prompts completos vão para o Apêndice A. Sempre 1 página. */
 export function liveAuditPageCount(deck: DeckData): number {
-  return Math.max(1, Math.ceil(liveAuditPrompts(deck).length / PROMPTS_PER_PAGE));
+  return liveAuditPrompts(deck).length > 0 ? 1 : 0;
+}
+
+/** Todos os prompts auditados (para o Apêndice A). */
+export function allAuditedPrompts(deck: DeckData): string[] {
+  return liveAuditPrompts(deck);
 }
 
 /** Parte o texto realçando a marca (you) e os concorrentes (comp). */
@@ -89,7 +93,7 @@ function useTyping(full: string, active: boolean) {
   return state.text === full ? full.slice(0, state.shown) : "";
 }
 
-export function LiveAudit({ deck, active, page = 0, pageCount = 1 }: SlideProps) {
+export function LiveAudit({ deck, active }: SlideProps) {
   const brand = deck.companyName;
   const competitors = deck.competitors;
 
@@ -115,117 +119,114 @@ export function LiveAudit({ deck, active, page = 0, pageCount = 1 }: SlideProps)
     )[0];
   };
 
-  // Paginação: todos os prompts com dados, fatiados em páginas de 3.
+  // Invertido (P2 #9): 0% é o herói; 2 prompts representativos como prova.
+  // Os prompts completos vivem no Apêndice A.
   const withData = deck.prompts.filter((p) => enginesFor(p).length > 0);
-  const pageStart = page * PROMPTS_PER_PAGE;
-  const prompts = withData.slice(pageStart, pageStart + PROMPTS_PER_PAGE);
+  const shown = withData.slice(0, 2);
+  const s = deck.audit?.summary;
+  const citePct = s ? Math.round(s.citation_rate * 100) : 0;
+  const sovPct = s ? Math.round(s.share_of_voice * 100) : 0;
 
-  const firstPrompt = prompts[0];
+  const firstPrompt = shown[0];
   const firstEngine = firstPrompt ? bestEngineFor(firstPrompt) : undefined;
   const firstRun = firstPrompt && firstEngine ? runOf(firstPrompt, firstEngine) : undefined;
   const typedFirst = useTyping(firstRun?.response ?? "", active);
 
+  const HERO: Array<{ label: string; value: string }> = [
+    { label: "Taxa de citação", value: `${citePct}%` },
+    { label: "Share of voice", value: `${sovPct}%` },
+    { label: "Posição média", value: s?.avg_position != null ? `#${s.avg_position}` : "—" },
+  ];
+
   return (
     <div className="slide" data-tone="paper">
       <div className="slide__inner slide__inner--audit">
-        <div className="slide__eyebrow" style={{ marginBottom: 16 }}>
-          <span className="num">Auditoria{pageCount > 1 ? ` ${page + 1}/${pageCount}` : ""}</span>
+        <div className="slide__eyebrow" style={{ marginBottom: 20 }}>
+          <span className="num">Auditoria personalizada</span>
           <span className="bar" />
-          <span>Auditoria personalizada · {brand}</span>
+          <span>{brand}</span>
         </div>
 
-        <div className="la-scroll">
-          {prompts.map((prompt, pi) => {
-            const engines = enginesFor(prompt);
+        <h2 className="tx-h2" style={{ marginBottom: 28 }}>
+          O que a IA diz sobre ti, <em className="mark">hoje</em>.
+        </h2>
+
+        {/* Herói: 0% grande */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, auto)",
+            gap: 56,
+            marginBottom: 36,
+          }}
+        >
+          {HERO.map((h, i) => (
+            <motion.div
+              key={h.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: active ? 1 : 0, y: active ? 0 : 12 }}
+              transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }}
+            >
+              <div className="kpi__label">{h.label}</div>
+              <div
+                style={{
+                  fontFamily: "var(--font-fraunces), Georgia, serif",
+                  fontSize: 84,
+                  lineHeight: 1,
+                  color: "var(--ink)",
+                  marginTop: 6,
+                }}
+              >
+                {h.value}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* 2 prompts representativos */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 980 }}>
+          {shown.map((prompt, pi) => {
             const bestEngine = bestEngineFor(prompt);
             const bestRun = bestEngine ? runOf(prompt, bestEngine) : undefined;
             return (
-              <motion.div
-                className="la-card"
+              <div
                 key={pi}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
-                transition={{ duration: 0.45, delay: 0.1 + pi * 0.08 }}
+                style={{ borderTop: "1px solid var(--rule-soft)", paddingTop: 12 }}
               >
-                <div className="la-card__head">
-                  <span className="la-card__n">
-                    PROMPT {String(pageStart + pi + 1).padStart(2, "0")}
-                  </span>
-                  <span className="la-card__prompt">{prompt}</span>
+                <div
+                  className="la-card__prompt"
+                  style={{ fontSize: 15, marginBottom: 6, color: "var(--ink)" }}
+                >
+                  «{prompt}»
                 </div>
-                <div style={{ padding: "12px 16px" }}>
-                  {bestRun && bestEngine && (
-                    <div style={{ marginBottom: 10 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 6,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: "var(--font-mono-jetbrains)",
-                            fontSize: 10,
-                            letterSpacing: "0.06em",
-                            color: "var(--ink-2)",
-                          }}
-                        >
-                          {ENGINE_LABEL[bestEngine]}
-                        </span>
-                        <span
-                          className={`la-flag ${bestRun.brand_present ? "is-present" : "is-absent"}`}
-                        >
-                          {bestRun.brand_present ? "PRESENTE" : "AUSENTE"}
-                        </span>
-                      </div>
+                {bestRun && bestEngine && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                    <span
+                      className={`la-flag ${bestRun.brand_present ? "is-present" : "is-absent"}`}
+                    >
+                      {bestRun.brand_present ? "PRESENTE" : "AUSENTE"}
+                    </span>
+                    <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--ink-3)" }}>
                       <Excerpt
                         run={bestRun}
                         brand={brand}
                         competitors={competitors}
                         typed={pi === 0 ? typedFirst : null}
                       />
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 12,
-                      paddingTop: 8,
-                      borderTop: "1px solid var(--rule-soft)",
-                      fontSize: 10,
-                      fontFamily: "var(--font-mono-jetbrains)",
-                      color: "var(--ink-3)",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {engines.map((engine) => {
-                      const present = runOf(prompt, engine)?.brand_present;
-                      return (
-                        <span
-                          key={engine}
-                          style={{ display: "inline-flex", gap: 4, alignItems: "center" }}
-                        >
-                          {ENGINE_LABEL[engine]}
-                          <span
-                            style={{
-                              color: present ? "var(--status-active)" : "var(--red)",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {present ? "✓" : "✗"}
-                          </span>
-                        </span>
-                      );
-                    })}
+                    </span>
                   </div>
-                </div>
-              </motion.div>
+                )}
+              </div>
             );
           })}
         </div>
+
+        <p style={{ marginTop: 28, fontSize: 14, color: "var(--ink-3)", maxWidth: 820 }}>
+          Auditámos os prompts que decidem a tua categoria. Não apareces em nenhum.{" "}
+          <span style={{ color: "var(--ink-2)" }}>
+            ({withData.length} prompts completos no Apêndice A.)
+          </span>
+        </p>
       </div>
     </div>
   );

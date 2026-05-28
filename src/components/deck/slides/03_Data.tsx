@@ -80,6 +80,18 @@ export function Data({ deck, active }: SlideProps) {
           );
         })}
       </div>
+      <p
+        style={{
+          marginTop: 28,
+          fontSize: 12,
+          color: "var(--ink-3)",
+          maxWidth: 720,
+          fontStyle: "italic",
+        }}
+      >
+        Estudos US-EN; evidência PT-PT específica ainda é escassa — tratamos estes
+        números como direccionais, não como garantia local.
+      </p>
     </SlideShell>
   );
 }

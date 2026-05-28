@@ -30,7 +30,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
   const targetQueries = Math.round((citation_rate_target ?? 0) * 100);
 
   return (
-    <SlideShell index={10} total={18} eyebrow="Potencial · 6 meses">
+    <SlideShell eyebrow="Potencial · 6 meses">
       <h2 className="tx-h2" style={{ marginBottom: 12, maxWidth: 900 }}>
         O que está em <em className="mark">cima da mesa</em>.
       </h2>
@@ -185,39 +185,24 @@ export function AppendixFPotential({ deck }: SlideProps) {
       >
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             textTransform: "uppercase",
             letterSpacing: "0.08em",
             color: "var(--amber, #d97706)",
-            marginBottom: 6,
+            marginBottom: 8,
             fontWeight: 500,
           }}
         >
-          Delta · +{deltaPct} pontos percentuais
+          +{deltaPct} pontos · meta condicional, não garantia
         </div>
         {methodology_note_md && (
-          <div style={{ fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" }}>
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => <p style={{ margin: "0 0 0.5em" }}>{children}</p>,
-                strong: ({ children }) => (
-                  <strong style={{ color: "var(--ink-2)" }}>{children}</strong>
-                ),
-                a: ({ children, href }) => (
-                  <a
-                    href={href ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "var(--ink-2)", textDecoration: "underline" }}
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {methodology_note_md.split("\n\n").slice(0, 2).join("\n\n")}
-            </ReactMarkdown>
-          </div>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)", margin: 0 }}>
+            {methodology_note_md
+              .replace(/[*_`#]/g, "")
+              .split(/(?<=[.!?])\s+/)
+              .slice(0, 2)
+              .join(" ")}
+          </p>
         )}
       </motion.div>
     </SlideShell>

@@ -25,12 +25,12 @@ export function Phases12() {
           <span className="phase__n">Fase 02 · Conteúdo</span>
           <span className="phase__dur">4-6 semanas</span>
           <p className="phase__lead">
-            Tornamos a tua marca legível e citável pela IA.
+            Corrigimos a entidade e a higiene técnica; criamos conteúdo extraível.
           </p>
           <ul className="phase__list">
-            <li>Schema.org e dados estruturados</li>
-            <li>Conteúdo extraível, llms.txt</li>
-            <li>Páginas-resposta para intenções-chave</li>
+            <li>Correção de entidade (schema, sameAs, NAP) — higiene</li>
+            <li>Conteúdo extraível e páginas-resposta</li>
+            <li>Corpus citável: dados originais, comparações</li>
           </ul>
         </div>
       </div>
