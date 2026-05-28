@@ -2,9 +2,27 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import type { SlideProps } from "../types";
+import type { SlideProps, DeckData } from "../types";
 import { ENGINES, ENGINE_LABEL, type Engine } from "@/lib/llm/models";
 import type { AuditRun } from "@/lib/supabase/types";
+
+const PROMPTS_PER_PAGE = 3;
+
+/** Prompts com pelo menos 1 motor com resposta real (exclui circuit/fail/no-key). */
+export function liveAuditPrompts(deck: DeckData): string[] {
+  const all = deck.prompts.length ? deck.prompts : [];
+  return all.filter((prompt) =>
+    ENGINES.some((engine) => {
+      const r = deck.auditRuns.find((x) => x.prompt === prompt && x.engine === engine);
+      return r?.response && r.brand_present !== null;
+    }),
+  );
+}
+
+/** Nº de slides LiveAudit necessários para mostrar todos os prompts com dados. */
+export function liveAuditPageCount(deck: DeckData): number {
+  return Math.max(1, Math.ceil(liveAuditPrompts(deck).length / PROMPTS_PER_PAGE));
+}
 
 /** Parte o texto realçando a marca (you) e os concorrentes (comp). */
 function highlight(text: string, brand: string, competitors: string[]) {
@@ -71,8 +89,7 @@ function useTyping(full: string, active: boolean) {
   return state.text === full ? full.slice(0, state.shown) : "";
 }
 
-export function LiveAudit({ deck, active }: SlideProps) {
-  const allPrompts = deck.prompts.length ? deck.prompts : ["(sem prompts)"];
+export function LiveAudit({ deck, active, page = 0, pageCount = 1 }: SlideProps) {
   const brand = deck.companyName;
   const competitors = deck.competitors;
 
@@ -98,7 +115,10 @@ export function LiveAudit({ deck, active }: SlideProps) {
     )[0];
   };
 
-  const prompts = allPrompts.filter((p) => enginesFor(p).length > 0).slice(0, 5);
+  // Paginação: todos os prompts com dados, fatiados em páginas de 3.
+  const withData = deck.prompts.filter((p) => enginesFor(p).length > 0);
+  const pageStart = page * PROMPTS_PER_PAGE;
+  const prompts = withData.slice(pageStart, pageStart + PROMPTS_PER_PAGE);
 
   const firstPrompt = prompts[0];
   const firstEngine = firstPrompt ? bestEngineFor(firstPrompt) : undefined;
@@ -109,7 +129,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
     <div className="slide" data-tone="paper">
       <div className="slide__inner slide__inner--audit">
         <div className="slide__eyebrow" style={{ marginBottom: 16 }}>
-          <span className="num">Auditoria</span>
+          <span className="num">Auditoria{pageCount > 1 ? ` ${page + 1}/${pageCount}` : ""}</span>
           <span className="bar" />
           <span>Auditoria personalizada · {brand}</span>
         </div>
@@ -128,7 +148,9 @@ export function LiveAudit({ deck, active }: SlideProps) {
                 transition={{ duration: 0.45, delay: 0.1 + pi * 0.08 }}
               >
                 <div className="la-card__head">
-                  <span className="la-card__n">PROMPT {String(pi + 1).padStart(2, "0")}</span>
+                  <span className="la-card__n">
+                    PROMPT {String(pageStart + pi + 1).padStart(2, "0")}
+                  </span>
                   <span className="la-card__prompt">{prompt}</span>
                 </div>
                 <div style={{ padding: "12px 16px" }}>

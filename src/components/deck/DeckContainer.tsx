@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Maximize2, Minimize2, Download } from "lucide-react";
 import { DeckNav } from "./DeckNav";
-import { SLIDES } from "./slides";
+import { buildSlides } from "./slides";
 import type { DeckData } from "./types";
 import { trackEvent } from "@/lib/analytics/track";
 
@@ -15,9 +15,12 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
   const deckOpenedAt = useRef<number>(0);
   const wheelLock = useRef(false);
   const touchStart = useRef<number | null>(null);
-  const total = SLIDES.length;
 
-  const slide = SLIDES[current];
+  // Sequência dinâmica: pagina LiveAudit/Findings e salta slides sem dados.
+  const slides = useMemo(() => buildSlides(deck), [deck]);
+  const total = slides.length;
+
+  const slide = slides[current] ?? slides[0];
 
   /** Envia o tempo passado no slide actual e reposiciona o cronómetro. */
   const flushDuration = useCallback(
@@ -27,13 +30,13 @@ export function DeckContainer({ deck }: { deck: DeckData }) {
         trackEvent(deck.token, {
           event_type: "slide_viewed",
           slide_number: slideIndex + 1,
-          slide_id: SLIDES[slideIndex]?.id,
+          slide_id: slides[slideIndex]?.id,
           duration_seconds: seconds,
         });
       }
       enteredAt.current = Date.now();
     },
-    [deck.token],
+    [deck.token, slides],
   );
 
   const goTo = useCallback(
