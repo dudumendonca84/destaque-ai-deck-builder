@@ -4,11 +4,62 @@ import {
   View,
   Text,
   StyleSheet,
+  Font,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import fs from "fs";
+import path from "path";
 import type { DeckData } from "@/components/deck/types";
 import { eur, eurOrPlaceholder, pct } from "@/lib/utils/format";
 import { ENGINE_COUNT } from "@/lib/llm/models";
+
+// Regista as fontes da marca para o PDF não cair em Times/Helvetica.
+// Ficheiros .woff bundlados em public/fonts (react-pdf lê woff; woff2 não).
+// Lidos do filesystem (sem fetch em runtime); public/ está no deploy Vercel
+// e process.cwd() aponta para a raiz do projecto.
+const FONT_DIR = path.join(process.cwd(), "public", "fonts");
+const woff = (f: string) => path.join(FONT_DIR, f);
+try {
+  if (fs.existsSync(woff("inter-latin-400-normal.woff"))) {
+    Font.register({
+      family: "Fraunces",
+      fonts: [{ src: woff("fraunces-latin-600-normal.woff"), fontWeight: 600 }],
+    });
+    Font.register({
+      family: "FrauncesItalic",
+      fonts: [{ src: woff("fraunces-latin-600-italic.woff"), fontWeight: 600 }],
+    });
+    Font.register({
+      family: "Inter",
+      fonts: [
+        { src: woff("inter-latin-400-normal.woff"), fontWeight: 400 },
+        { src: woff("inter-latin-500-normal.woff"), fontWeight: 500 },
+      ],
+    });
+    Font.register({
+      family: "InterSemiBold",
+      fonts: [{ src: woff("inter-latin-600-normal.woff"), fontWeight: 600 }],
+    });
+    Font.register({
+      family: "Geist",
+      fonts: [{ src: woff("geist-latin-600-normal.woff"), fontWeight: 600 }],
+    });
+    Font.registerHyphenationCallback((w) => [w]);
+  }
+} catch {
+  // Se faltar algum ficheiro, react-pdf cai nas built-in — o PDF ainda
+  // gera (Helvetica/Times). Não bloqueia o download.
+}
+
+// Famílias da marca (com fallback implícito para built-in se o register
+// acima não correr). Headlines Fraunces; corpo Inter.
+const HAS_BRAND_FONTS = (() => {
+  try {
+    return fs.existsSync(woff("inter-latin-400-normal.woff"));
+  } catch {
+    return false;
+  }
+})();
 
 // Paleta da marca.
 const CREAM = "#F5F1E8";
@@ -20,12 +71,12 @@ const INK4 = "#999999";
 const RULE = "#D4CFC0";
 const PAPER2 = "#FFFFFF";
 
-// Fontes built-in do react-pdf (sem ficheiros externos):
-// Times — serif editorial para headlines; Helvetica — corpo e labels.
-const SERIF = "Times-Roman";
-const SERIF_I = "Times-Italic";
-const SANS = "Helvetica";
-const SANS_B = "Helvetica-Bold";
+// Famílias: Fraunces (headlines) + Inter (corpo). Fallback built-in
+// (Times/Helvetica) se as fontes da marca não estiverem disponíveis.
+const SERIF = HAS_BRAND_FONTS ? "Fraunces" : "Times-Roman";
+const SERIF_I = HAS_BRAND_FONTS ? "FrauncesItalic" : "Times-Italic";
+const SANS = HAS_BRAND_FONTS ? "Inter" : "Helvetica";
+const SANS_B = HAS_BRAND_FONTS ? "InterSemiBold" : "Helvetica-Bold";
 
 const s = StyleSheet.create({
   page: { backgroundColor: CREAM, padding: 56, fontFamily: SANS, color: INK },
