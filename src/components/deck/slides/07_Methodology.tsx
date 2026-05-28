@@ -18,10 +18,13 @@ const PILLARS = [
 
 export function Methodology({ active }: SlideProps) {
   return (
-    <SlideShell index={7} total={22} eyebrow="Metodologia">
-      <h2 className="tx-h2" style={{ marginBottom: 28 }}>
-        Quatro disciplinas, <em className="mark">um sistema</em>
+    <SlideShell eyebrow="Metodologia · SINAL">
+      <h2 className="tx-h2" style={{ marginBottom: 10 }}>
+        <em className="mark">SINAL</em>: quatro disciplinas, um sistema.
       </h2>
+      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 28, maxWidth: 720 }}>
+        Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs.
+      </p>
       <div className="method-grid">
         {PILLARS.map((p, i) => (
           <motion.div

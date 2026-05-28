@@ -7,11 +7,10 @@ import { pct } from "@/lib/utils/format";
 
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;
-  // Métricas reais do audit. "Top concorrente" foi removido — o aggregator
-  // não distinguia vendor platforms (Profound, AthenaHQ) de consultorias
-  // peer, induzindo o cliente em erro. Análise competitiva real fica para
-  // os slides F (Routine output) quando tiver classificação semântica.
-  const findings_count = deck.synthesized?.critical_findings?.length ?? 0;
+  // "Marca mais citada na categoria" — label honesto. NÃO é "concorrente":
+  // pode ser uma ferramenta de medição (ex: Profound). Mostra o que o dado
+  // realmente diz, sem erro de categoria.
+  const topCited = s?.top_competitors?.[0] ?? "—";
   const cards = [
     { label: "Taxa de citação", value: s ? pct(s.citation_rate) : "—", note: "respostas onde és citado" },
     {
@@ -25,15 +24,15 @@ export function KPIs({ deck, active }: SlideProps) {
       note: "ordem em que apareces",
     },
     {
-      label: "Findings críticos",
-      value: findings_count > 0 ? String(findings_count) : "—",
-      note: "dimensões SINAL com gap claro",
+      label: "Marca mais citada na categoria",
+      value: topCited,
+      note: "quem a IA nomeia hoje — não um concorrente directo",
     },
   ];
   return (
-    <SlideShell index={10} total={22} eyebrow="Ponto de partida">
+    <SlideShell eyebrow="Ponto de partida">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
-        Onde a <em className="mark">{deck.companyName}</em> está hoje
+        Onde a <em className="mark">destaque.ai</em> está hoje
       </h2>
       <div className="kpi-grid">
         {cards.map((c, i) => (

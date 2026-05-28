@@ -9,12 +9,15 @@ import { Methodology } from "./07_Methodology";
 import { Phases12 } from "./08_Phases12";
 import { Phases34 } from "./09_Phases34";
 import { KPIs } from "./10_KPIs";
+import { CostOfInvisibility } from "./10b_CostOfInvisibility";
 import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings, findingsPageCount } from "./21b_AppendixF2_Findings";
 import { AppendixFLandscape } from "./21y_AppendixF_Landscape";
 import { AppendixFPotential } from "./21x_AppendixF_Potential";
 import { AppendixFActionHorizon, actionsFor, type Horizon } from "./21f_AppendixF_ActionHorizon";
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
+import { AppendixAPrompts } from "./15a_AppendixA_Prompts";
+import { allAuditedPrompts } from "./04_LiveAudit";
 import { Tracker } from "./19_Tracker";
 import { ThankYou } from "./22_ThankYou";
 
@@ -67,6 +70,7 @@ export function buildSlides(deck: DeckData): SlideDef[] {
   out.push(
     ...paginated("live-audit", "Auditoria personalizada", "paper", LiveAudit, liveAuditPageCount(deck)),
     { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
+    { id: "cost-invisibility", title: "O custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
   );
   if (synth) {
     if (synth.executive_reading_md || synth.executive_reading) {
@@ -112,6 +116,10 @@ export function buildSlides(deck: DeckData): SlideDef[] {
     );
   }
   out.push({ id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker });
+  // Apêndice A — prompts auditados completos (movidos do slide 04 invertido).
+  if (allAuditedPrompts(deck).length > 0) {
+    out.push({ id: "appendix-a-prompts", title: "Apêndice A · prompts", tone: "paper", Component: AppendixAPrompts });
+  }
 
   // ACT 4 — Closing
   out.push({ id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou });
