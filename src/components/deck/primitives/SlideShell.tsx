@@ -1,17 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSlidePosition } from "../SlidePosition";
 
 type Props = {
-  index: number;
-  total: number;
+  /** @deprecated — posição real vem do SlidePositionContext. Mantido por compat. */
+  index?: number;
+  total?: number;
   eyebrow: string;
   tone?: "paper" | "ink";
   children: React.ReactNode;
 };
 
 /** Moldura comum de slide: numeração mono no topo, animação de entrada sóbria. */
-export function SlideShell({ index, total, eyebrow, tone = "paper", children }: Props) {
+export function SlideShell({ eyebrow, tone = "paper", children }: Props) {
+  const pos = useSlidePosition();
   return (
     <div className="slide" data-tone={tone}>
       <div className="slide__inner">
@@ -21,9 +24,11 @@ export function SlideShell({ index, total, eyebrow, tone = "paper", children }: 
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <span className="num">
-            {String(index).padStart(2, "0")} / {String(total).padStart(2, "0")}
-          </span>
+          {pos && (
+            <span className="num">
+              {String(pos.index).padStart(2, "0")} / {String(pos.total).padStart(2, "0")}
+            </span>
+          )}
           <span className="bar" />
           <span>{eyebrow}</span>
         </motion.div>

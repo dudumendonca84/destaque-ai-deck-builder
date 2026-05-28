@@ -13,11 +13,10 @@ import type { SlideProps } from "../types";
  */
 export function AppendixF1Analysis({ deck }: SlideProps) {
   const synth = deck.synthesized;
-  const total = 26;
 
   if (!synth) {
     return (
-      <SlideShell index={18} total={total} eyebrow="Análise · plano personalizado">
+      <SlideShell eyebrow="Análise · plano personalizado">
         <h2 className="tx-h1" style={{ marginBottom: 12 }}>
           Plano personalizado — <em className="mark">por gerar</em>.
         </h2>
@@ -39,11 +38,14 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
 
   const cr_baseline = synth.projection_6m?.citation_rate_baseline;
   const cr_target = synth.projection_6m?.citation_rate_target;
-  const top_comp = deck.audit?.summary?.top_competitors?.[0] ?? "—";
+  // Respostas LLM reais analisadas (exclui circuit/fail/no-key). Honesto e
+  // específico — substitui o antigo "Top concorrente" que mostrava um vendor
+  // (Profound) como se fosse concorrente directo.
+  const realResponses = deck.auditRuns.filter((r) => r.brand_present !== null).length;
   const findings_count = synth.critical_findings?.length ?? 0;
 
   return (
-    <SlideShell index={18} total={total} eyebrow="Análise · plano personalizado SINAL">
+    <SlideShell eyebrow="Análise · plano personalizado SINAL">
       <h2 className="tx-h2" style={{ marginBottom: 24, maxWidth: 900 }}>
         Análise editorial.
       </h2>
@@ -87,10 +89,8 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
           </div>
         </div>
         <div>
-          <div className="kpi__label">Top concorrente</div>
-          <div className="kpi__value" style={{ fontSize: 26 }}>
-            {top_comp}
-          </div>
+          <div className="kpi__label">Respostas analisadas</div>
+          <div className="kpi__value">{realResponses}</div>
         </div>
         <div>
           <div className="kpi__label">Findings críticos</div>
