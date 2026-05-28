@@ -86,6 +86,20 @@ export function AppendixF2Findings({ deck }: SlideProps) {
                 {f.why_md ?? f.why ?? ""}
               </ReactMarkdown>
             </div>
+            {f.benchmark_md && (
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  color: "var(--ink-2)",
+                  fontFamily: "var(--font-mono-jetbrains)",
+                  borderLeft: "2px solid var(--amber, #d97706)",
+                  paddingLeft: 8,
+                }}
+              >
+                {f.benchmark_md.replace(/[*_`#]/g, "")}
+              </div>
+            )}
           </motion.div>
         ))}
       </div>

@@ -71,6 +71,19 @@ export function AppendixF3ActionH1({ deck }: SlideProps) {
             <div style={{ fontSize: 15, lineHeight: 1.4, color: "var(--ink)" }}>
               {a.title}
             </div>
+            {a.benchmark_md && (
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 10,
+                  color: "var(--ink-3)",
+                  fontFamily: "var(--font-mono-jetbrains)",
+                  lineHeight: 1.4,
+                }}
+              >
+                3HASH-grade: {a.benchmark_md.replace(/[*_`#]/g, "").replace(/^.*?3HASH-grade:?\s*/i, "")}
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
