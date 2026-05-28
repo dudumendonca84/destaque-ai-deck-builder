@@ -62,6 +62,16 @@ export type SynthesizedDeck = {
   };
   /** Markdown — research adicional ao vivo (Wikipedia, PR PT, podcasts). */
   research_additional_md?: string;
+  /** Concorrentes classificados (Routine separa peer de vendor de hallucinated). */
+  competitor_profiles?: Array<{
+    name: string;
+    classification: "peer_consultancy" | "vendor_platform" | "adjacent" | "hallucinated";
+    positioning_md?: string;
+    mention_count?: number;
+    real_engine_mentions?: number;
+  }>;
+  /** Markdown — leitura honesta do landscape competitivo. */
+  competitive_landscape_md?: string;
   projection_6m: {
     citation_rate_baseline: number;
     citation_rate_target: number;
