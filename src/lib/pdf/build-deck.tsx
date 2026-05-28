@@ -261,72 +261,68 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         body="Os teus clientes deixaram de escrever no Google. Perguntam ao ChatGPT, ao Claude, ao Gemini — e a IA responde com nomes."
       />
 
-      {/* 03 — O contexto */}
+      {/* 03 — O contexto (stats citados — mesma fonte que o HTML) */}
       <ContentPage n={3} eyebrow="O contexto">
         <Text style={s.h2}>
           Não é uma tendência. É <Mark>já</Mark>.
         </Text>
         <View style={[s.row, { marginTop: 36 }]}>
-          {[
-            ["13%", "da pesquisa global já passa por motores de IA."],
-            ["40%", "dos utilizadores confiam na IA sem clicar num link."],
-            ["70%", "das decisões B2B começam com investigação por IA."],
-          ].map(([v, d]) => (
-            <View key={v} style={s.statCol}>
-              <Text style={s.statValue}>{v}</Text>
-              <Text style={s.statLabel}>{d}</Text>
+          {deck.benchmarks.slice(0, 3).map((b) => (
+            <View key={b.key} style={s.statCol}>
+              <Text style={s.statValue}>{b.value}</Text>
+              <Text style={s.statLabel}>{b.caption}</Text>
+              <Text style={{ fontFamily: SANS, fontSize: 8, color: INK4, marginTop: 6 }}>
+                {b.source_name}
+              </Text>
             </View>
           ))}
         </View>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22, fontStyle: "italic" }}>
+          Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
+        </Text>
       </ContentPage>
 
-      {/* 04 — Auditoria personalizada */}
+      {/* 04 — Auditoria personalizada (invertido: 0% é o herói) */}
       <ContentPage n={4} eyebrow={`Auditoria personalizada · ${deck.companyName}`}>
         <Text style={s.h2}>
           O que a IA diz sobre ti, <Mark>hoje</Mark>.
         </Text>
-        <View style={[s.row, { marginTop: 24 }]}>
-          <View style={{ flex: 1.4, paddingRight: 24 }}>
-            <Text style={[s.cardLabel, { marginBottom: 10 }]}>PROMPTS AUDITADOS</Text>
-            {(deck.prompts.length ? deck.prompts : ["(sem prompts)"])
-              .slice(0, 5)
-              .map((p, i) => (
-                <Text
-                  key={i}
-                  style={{
-                    fontFamily: SERIF,
-                    fontSize: 13,
-                    color: INK,
-                    marginBottom: 9,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {String(i + 1).padStart(2, "0")}   {p}
-                </Text>
-              ))}
-          </View>
-          <View style={{ flex: 1 }}>
-            {[
-              ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
-              ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
-              [
-                "Posição média",
-                summary?.avg_position != null ? `#${summary.avg_position}` : "—",
-              ],
-            ].map(([l, v]) => (
-              <View key={l} style={{ marginBottom: 14 }}>
-                <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
-                <Text style={{ fontFamily: SERIF, fontSize: 34, color: INK }}>{v}</Text>
-              </View>
-            ))}
-          </View>
+        <View style={[s.row, { marginTop: 28 }]}>
+          {[
+            ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
+            ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
+            ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
+          ].map(([l, v], i, arr) => (
+            <View key={l} style={{ flex: 1, paddingRight: i === arr.length - 1 ? 0 : 24 }}>
+              <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
+              <Text style={{ fontFamily: SERIF, fontSize: 64, color: INK, marginTop: 4 }}>{v}</Text>
+            </View>
+          ))}
         </View>
+        <View style={{ marginTop: 28 }}>
+          {(deck.prompts.length ? deck.prompts : []).slice(0, 2).map((p, i) => (
+            <Text
+              key={i}
+              style={{ fontFamily: SERIF, fontSize: 13, color: INK2, marginBottom: 8, lineHeight: 1.35 }}
+            >
+              «{p}»
+            </Text>
+          ))}
+        </View>
+        <Text style={{ fontFamily: SANS, fontSize: 10, color: INK3, marginTop: 16 }}>
+          Auditámos os prompts que decidem a tua categoria. Não apareces em nenhum.
+          ({(deck.prompts.length || 0)} prompts completos no Apêndice A.)
+        </Text>
       </ContentPage>
 
       {/* 05 — SEO vs GEO */}
       <ContentPage n={5} eyebrow="SEO vs GEO">
         <Text style={s.h2}>
-          Não substitui o SEO. <Mark>Sucede-o</Mark>.
+          O GEO <Mark>assenta</Mark> sobre o SEO.
+        </Text>
+        <Text style={[s.body, { marginTop: 12, maxWidth: 720 }]}>
+          54% das citações em AI Overviews vêm do top-10 orgânico. O SEO é o substrato;
+          o GEO é a camada que te torna citável. Precisas dos dois. (BrightEdge, 2026.)
         </Text>
         <View style={[s.row, { marginTop: 26 }]}>
           {(
@@ -404,9 +400,12 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       </Page>
 
       {/* 07 — Metodologia */}
-      <ContentPage n={7} eyebrow="Metodologia">
+      <ContentPage n={7} eyebrow="Metodologia · SINAL">
         <Text style={s.h2}>
-          Quatro disciplinas, um <Mark>sistema</Mark>.
+          <Mark>SINAL</Mark>: quatro disciplinas, um sistema.
+        </Text>
+        <Text style={[s.body, { marginTop: 10 }]}>
+          Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs.
         </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {(
@@ -439,7 +438,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
           {(
             [
               ["Fase 01 · Auditoria", "2 semanas", "Auditoria GEO completa, benchmark competitivo e roadmap priorizado por impacto."],
-              ["Fase 02 · Conteúdo", "4-6 semanas", "Schema.org, dados estruturados, llms.txt e páginas-resposta para as intenções-chave."],
+              ["Fase 02 · Conteúdo", "4-6 semanas", "Correção de entidade e higiene técnica (schema, sameAs, llms.txt) e páginas-resposta extraíveis — base, não alavanca de citação."],
             ] as const
           ).map(([t, dur, d]) => (
             <View
@@ -493,14 +492,14 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       {/* 10 — Ponto de partida */}
       <ContentPage n={10} eyebrow="Ponto de partida">
         <Text style={s.h2}>
-          Onde a <Mark>{deck.companyName}</Mark> está hoje.
+          Onde a <Mark>destaque.ai</Mark> está hoje.
         </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {[
             ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
             ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
             ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
-            ["Top concorrente", summary?.top_competitors[0] ?? "—"],
+            ["Marca mais citada na categoria", summary?.top_competitors[0] ?? "—"],
           ].map(([l, v], i, arr) => (
             <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
               <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
@@ -513,7 +512,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       {/* 11 — Investimento */}
       <ContentPage n={11} eyebrow="Investimento">
         <Text style={s.h2}>
-          Três fases, um <Mark>número claro</Mark>.
+          Três fases, uma <Mark>decisão de cada vez</Mark>.
         </Text>
         <View style={[s.row, { marginTop: 30 }]}>
           {[
@@ -621,7 +620,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
                 ? `4-6 semanas · ${eur(deck.pricing.sprint)}`
                 : "4-6 semanas · Sob consulta",
             rows: [
-              ["Técnico", "Schema.org, dados estruturados, llms.txt."],
+              ["Técnico", "Correção de entidade e higiene técnica (schema, sameAs, llms.txt)."],
               ["Editorial", "Conteúdo extraível e páginas-resposta."],
               ["Autoridade", "Sinais externos e fontes que a IA cita."],
             ],
@@ -660,6 +659,19 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
               </View>
             ))}
           </View>
+          {ap.code === "A" && deck.prompts.length > 0 && (
+            <View style={{ marginTop: 18 }}>
+              <Text style={[s.cardLabel, { marginBottom: 8 }]}>PROMPTS AUDITADOS</Text>
+              {deck.prompts.slice(0, 5).map((p, i) => (
+                <Text
+                  key={i}
+                  style={{ fontFamily: SERIF, fontSize: 11, color: INK2, marginBottom: 6, lineHeight: 1.3 }}
+                >
+                  {String(i + 1).padStart(2, "0")}   {p}
+                </Text>
+              ))}
+            </View>
+          )}
         </ContentPage>
       ))}
 
