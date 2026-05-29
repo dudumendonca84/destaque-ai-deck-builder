@@ -379,18 +379,45 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 06 — Definição */}
+      {/* 06 — Definição (SEO · GEO · AEO · AISO) */}
       <Page size={[960, 540]} style={s.pageInk}>
         <Eyebrow num="06" label="A definição" ink />
         <View style={s.center}>
-          <View style={{ backgroundColor: AMBER, alignSelf: "flex-start", paddingHorizontal: 24, paddingVertical: 8 }}>
-            <Text style={{ fontFamily: SERIF, fontSize: 120, color: INK, letterSpacing: -4 }}>
-              GEO
-            </Text>
+          <Text style={[s.h2, { color: CREAM, maxWidth: 720 }]}>
+            A categoria tem <Mark>vários nomes</Mark>.
+          </Text>
+          <View style={{ marginTop: 26 }}>
+            {(
+              [
+                [
+                  ["SEO", "", "Search Engine Optimization.", "Pesquisa clássica — Google, Bing. A base sobre a qual o GEO se constrói."],
+                  ["GEO", "", "Generative Engine Optimization.", "Aparecer em respostas geradas por IA — ChatGPT, Claude, Gemini, Grok."],
+                ],
+                [
+                  ["AEO", "", "Answer Engine Optimization.", "Otimizar conteúdo para resposta directa (snippets, voice, AI Overviews)."],
+                  ["AISO", " / LLM SEO", "AI Search Optimization.", "Termo guarda-chuva. SINAL trata os três como uma só disciplina integrada."],
+                ],
+              ] as const
+            ).map((pair, ri) => (
+              <View key={ri} style={[s.row, { marginBottom: ri === 0 ? 22 : 0 }]}>
+                {pair.map(([code, suffix, full, desc]) => (
+                  <View key={code} style={{ flex: 1, paddingRight: 28 }}>
+                    <Text style={{ fontFamily: SERIF, fontSize: 24, color: CREAM }}>
+                      {code}
+                      {suffix ? (
+                        <Text style={{ fontFamily: SANS, fontSize: 11, color: INK4 }}>{suffix}</Text>
+                      ) : null}
+                    </Text>
+                    <Text style={{ fontFamily: SANS, fontSize: 10, lineHeight: 1.5, color: INK4, marginTop: 5 }}>
+                      <Text style={{ fontFamily: SANS_B, color: CREAM }}>{full}</Text> {desc}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ))}
           </View>
-          <Text style={[s.leadInk, { marginTop: 24, maxWidth: 620 }]}>
-            Generative Engine Optimization — as práticas técnicas e editoriais que tornam
-            uma marca citável pelos modelos de IA generativa.
+          <Text style={{ fontFamily: SANS, fontSize: 9, color: INK4, marginTop: 26, maxWidth: 640 }}>
+            Nomes distintos, problema único — ser <Mark>citável</Mark> pelos motores que decidem por quem clica.
           </Text>
         </View>
         <View style={s.footer} fixed>
