@@ -151,6 +151,15 @@ Cross-repo contract canónico em `geo-seo-aeo-master/INTERFACES.md`. Resumido:
 - Injectar `model id` em cada engine client wrapper
 - Fallback: hardcoded em `src/lib/skill/models.ts` (`FALLBACK_MAPPINGS`)
 
+### Deck público — números + método vivos da skill (Contratos 3 + 4)
+
+O deck (`/proposta/[token]` e o PDF) também consome a skill em runtime — não hardcoda conhecimento GEO:
+
+- **Benchmarks** (`src/lib/skill/benchmarks.ts` → `loadCoreBenchmarks` / `findBenchmark`): parse de `## Deck Builder core stats` em `references/benchmarks.md`. Slide 03 (3 headline), Slide 05 (`aio_top10_share`), Slide 10b (`b2b_ai_answer`). Fallback `FALLBACK_BENCHMARKS`.
+- **Método** (`src/lib/skill/method.ts` → `loadMethod`): parse de `## Deck Builder method` em `SKILL.md` — glossário (SEO/GEO/AEO) + 8 dimensões client-facing. Slide 06 (glossário), Slide 07 (8 dimensões). Fallback `FALLBACK_METHOD`.
+
+Ambos carregados server-side em `page.tsx` + na route do PDF, injectados em `DeckData`. Regra: **número ou definição GEO no deck = vem da skill**, nunca literal no slide. Copy estrutural/narrativa (capa, fases, CTA) pode ficar no componente. Síntese personalizada (análise + plano de acções) vem de `synthesize-deck.ts` (fetch de `SKILL.md` + `metrics`/`benchmarks`/`gap_action_mapping`/`news-feed`).
+
 ### Engines actuais (TS owns SET)
 
 `chatgpt`, `claude`, `gemini`, `grok`, `deepseek`, `mistral` — 6 motores. Adicionar um motor (ex: `perplexity`, `copilot`, `meta`) = code change neste repo (novo cliente + env var + switch case + `ENGINES`). Mudar a versão de modelo de um motor existente = apenas commit no skill.

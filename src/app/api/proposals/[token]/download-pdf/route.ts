@@ -9,6 +9,7 @@ import type {
   Prospect,
 } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
+import { loadMethod } from "@/lib/skill/method";
 import type { ScanResult } from "@/lib/scan/types";
 import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
@@ -55,6 +56,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     .eq("proposal_id", proposal.id);
 
   const { items: benchmarks } = await loadCoreBenchmarks();
+  const { method } = await loadMethod();
 
   const { data: scanRow } = await supabase
     .from("sinal_scans")
@@ -80,6 +82,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns: (runRows ?? []) as AuditRun[],
     benchmarks,
+    method,
     sinalScan,
     synthesized: (proposal.deck_blocks as SynthesizedDeck | null) ?? null,
   };
