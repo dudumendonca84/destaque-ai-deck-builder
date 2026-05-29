@@ -76,7 +76,7 @@ export default async function AuditDetailPage(props: { params: Promise<{ id: str
             <div className="kpi">
               <div className="kpi__label">Top concorrente</div>
               <div className="kpi__value" style={{ fontSize: 22 }}>
-                {audit.summary.top_competitors[0] ?? "—"}
+                {audit.summary.top_competitors?.[0] ?? "—"}
               </div>
             </div>
           </div>

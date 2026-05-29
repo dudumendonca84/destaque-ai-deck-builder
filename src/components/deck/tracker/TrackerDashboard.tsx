@@ -87,7 +87,7 @@ export function TrackerDashboard({ audit, active }: Props) {
     },
     {
       label: "Concorrentes na tua frente",
-      value: String(summary?.top_competitors.length ?? 0),
+      value: String(summary?.top_competitors?.length ?? 0),
       target: "→ 0",
     },
   ];

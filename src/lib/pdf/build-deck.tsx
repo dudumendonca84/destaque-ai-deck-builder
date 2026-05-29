@@ -491,7 +491,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
             ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
             ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
-            ["Marca mais citada na categoria", summary?.top_competitors[0] ?? "—"],
+            ["Marca mais citada na categoria", summary?.top_competitors?.[0] ?? "—"],
           ].map(([l, v], i, arr) => (
             <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
               <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
