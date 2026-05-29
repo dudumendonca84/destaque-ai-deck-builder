@@ -49,6 +49,37 @@ const FALLBACK_BENCHMARKS: Benchmark[] = [
   },
 ];
 
+const CORE_STATS_HEADER = "## Deck Builder core stats";
+
+/**
+ * Parse a tabela `## Deck Builder core stats` de benchmarks.md.
+ * Header: `| key | value | caption | source | url | date |`. Cells podem
+ * vir em backticks (`b2b_ai_answer`) — strip-os. Pára na próxima secção
+ * `## `. Devolve [] se a tabela faltar — o caller decide o fallback.
+ */
+function parseCoreBenchmarks(body: string): Benchmark[] {
+  const idx = body.indexOf(CORE_STATS_HEADER);
+  if (idx < 0) return [];
+  const lines = body.slice(idx + CORE_STATS_HEADER.length).split("\n");
+  const out: Benchmark[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("## ")) break; // próxima secção termina a tabela
+    if (!trimmed.startsWith("|")) continue;
+    if (/^\|[\s\-:|]+\|$/.test(trimmed)) continue; // separador
+    const cells = trimmed
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim().replace(/^`|`$/g, ""));
+    if (cells.length < 6) continue;
+    const [key, value, caption, source_name, source_url, date] = cells;
+    if (key.toLowerCase() === "key") continue; // linha de cabeçalho
+    if (!key || !value || !caption) continue;
+    out.push({ key, value, caption, source_name, source_url, date });
+  }
+  return out;
+}
+
 export async function loadCoreBenchmarks(): Promise<{
   items: Benchmark[];
   source: "skill" | "fallback";
@@ -60,9 +91,10 @@ export async function loadCoreBenchmarks(): Promise<{
   if (result.source === "fallback" || !result.body) {
     return { items: FALLBACK_BENCHMARKS, source: "fallback" };
   }
-  // Por agora servimos os 3 stats core via fallback determinístico —
-  // o parsing detalhado de benchmarks.md (com selector por key) chega
-  // num PR futuro. Mantém-se a fonte da skill checada (fetch ok = up to
-  // date contract) e cai para hardcoded se mudou.
-  return { items: FALLBACK_BENCHMARKS, source: "skill" };
+  const parsed = parseCoreBenchmarks(result.body);
+  // Skill alcançável mas tabela ausente/incompleta → fallback seguro.
+  if (parsed.length < FALLBACK_BENCHMARKS.length) {
+    return { items: FALLBACK_BENCHMARKS, source: "fallback" };
+  }
+  return { items: parsed, source: "skill" };
 }
