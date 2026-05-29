@@ -277,7 +277,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             </View>
           ))}
         </View>
-        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22, fontStyle: "italic" }}>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22 }}>
           Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
         </Text>
       </ContentPage>
