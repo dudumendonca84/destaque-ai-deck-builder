@@ -1,19 +1,12 @@
 "use client";
 
 import { SlideShell } from "../primitives/SlideShell";
-import { ENGINE_COUNT } from "@/lib/llm/models";
 import { findBenchmark } from "@/lib/skill/benchmarks";
 import type { SlideProps } from "../types";
 
-const ROWS = [
-  { seo: "Otimizas para 10 links azuis", geo: "Otimizas para 1 resposta" },
-  { seo: "O utilizador escolhe entre resultados", geo: "A IA escolhe por ele" },
-  { seo: "Palavras-chave e backlinks", geo: "Estrutura, autoridade e citabilidade" },
-  { seo: "Medes posições no Google", geo: `Medes menções em ${ENGINE_COUNT} motores de IA` },
-];
-
 export function SEOvsGEO({ deck }: SlideProps) {
   const top10 = findBenchmark(deck.benchmarks, "aio_top10_share");
+  const rows = deck.method.seoVsGeo;
   return (
     <SlideShell eyebrow="SEO vs GEO">
       <h2 className="tx-h2" style={{ marginBottom: 12 }}>
@@ -40,7 +33,7 @@ export function SEOvsGEO({ deck }: SlideProps) {
       <div className="compare">
         <div className="compare__col">
           <span className="compare__head">SEO</span>
-          {ROWS.map((r) => (
+          {rows.map((r) => (
             <span className="compare__cell" key={r.seo}>
               {r.seo}
             </span>
@@ -48,7 +41,7 @@ export function SEOvsGEO({ deck }: SlideProps) {
         </div>
         <div className="compare__col compare__col--accent">
           <span className="compare__head">GEO</span>
-          {ROWS.map((r) => (
+          {rows.map((r) => (
             <span className="compare__cell" key={r.geo}>
               {r.geo}
             </span>

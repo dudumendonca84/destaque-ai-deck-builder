@@ -107,3 +107,76 @@ export async function loadPromptDirectives(): Promise<{
   const slice = sliceMarkdown(result.body, "## 1. Princípios", "## 4. Catálogo destaque.ai");
   return { body: slice, source: "skill" };
 }
+
+export type TierDistribution = Record<PromptCategory, number>;
+
+/**
+ * Parse a tabela de `## 3. Distribuição por tier` do prompts.md. As colunas
+ * a seguir a "Total" correspondem, por ordem, a PROMPT_CATEGORIES — o
+ * contrato §3 obriga a tabela e a constante TS a baterem certo. O header
+ * (Tier/Total), o separador e tiers desconhecidos são ignorados; uma linha
+ * com counts inválidos é descartada.
+ */
+function parseTierDistribution(body: string): Partial<Record<AuditTier, TierDistribution>> {
+  const start = body.indexOf("## 3.");
+  if (start < 0) return {};
+  let section = body.slice(start + 4);
+  const next = section.indexOf("\n## ");
+  if (next >= 0) section = section.slice(0, next);
+
+  const out: Partial<Record<AuditTier, TierDistribution>> = {};
+  const knownTiers = new Set<string>(["free", "diagnostic", "premium"]);
+  for (const raw of section.split("\n")) {
+    const line = raw.trim();
+    if (!line.startsWith("|")) continue;
+    if (/^\|[\s\-:|]+\|$/.test(line)) continue; // separador
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim().replace(/`/g, "").toLowerCase());
+    const tier = cells[0];
+    if (!knownTiers.has(tier)) continue; // salta header e ruído
+    const counts = cells.slice(2); // dropa [tier, total] → fica [generic..price]
+    if (counts.length < PROMPT_CATEGORIES.length) continue;
+    const dist = {} as TierDistribution;
+    let ok = true;
+    PROMPT_CATEGORIES.forEach((cat, i) => {
+      const n = Number.parseInt(counts[i], 10);
+      if (!Number.isFinite(n) || n < 0) ok = false;
+      dist[cat] = n;
+    });
+    if (ok) out[tier as AuditTier] = dist;
+  }
+  return out;
+}
+
+/**
+ * Distribuição de prompts por tier, viva da skill (§3 de prompts.md). É a
+ * config que o gerador segue — a constante `TIER_DISTRIBUTION` passa a ser
+ * só o fallback (fetch falhou, tabela ausente/inválida, ou free/diagnostic
+ * em falta). `premium` espelha `diagnostic` quando ausente da tabela.
+ */
+export async function loadPromptConfig(): Promise<{
+  distribution: Record<AuditTier, TierDistribution>;
+  source: "skill" | "fallback";
+}> {
+  const result = await loadSkillFile({
+    path: "references/prompts.md",
+    fallback: FALLBACK_PROMPTS_MD,
+  });
+  if (result.source === "fallback") {
+    return { distribution: TIER_DISTRIBUTION, source: "fallback" };
+  }
+  const parsed = parseTierDistribution(result.body);
+  if (!parsed.free || !parsed.diagnostic) {
+    return { distribution: TIER_DISTRIBUTION, source: "fallback" };
+  }
+  return {
+    distribution: {
+      free: parsed.free,
+      diagnostic: parsed.diagnostic,
+      premium: parsed.premium ?? parsed.diagnostic,
+    },
+    source: "skill",
+  };
+}

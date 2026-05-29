@@ -331,24 +331,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         <View style={[s.row, { marginTop: 26 }]}>
           {(
             [
-              [
-                "SEO",
-                [
-                  "Otimizas para 10 links azuis",
-                  "O utilizador escolhe",
-                  "Palavras-chave e backlinks",
-                  "Posições no Google",
-                ],
-              ],
-              [
-                "GEO",
-                [
-                  "Otimizas para 1 resposta",
-                  "A IA escolhe por ele",
-                  "Estrutura e citabilidade",
-                  `Menções em ${ENGINE_COUNT} motores`,
-                ],
-              ],
+              ["SEO", deck.method.seoVsGeo.map((r) => r.seo)],
+              ["GEO", deck.method.seoVsGeo.map((r) => r.geo)],
             ] as const
           ).map(([head, rows], ci) => (
             <View key={head} style={{ flex: 1, paddingRight: ci === 0 ? 24 : 0 }}>

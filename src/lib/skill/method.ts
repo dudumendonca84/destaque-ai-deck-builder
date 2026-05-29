@@ -10,10 +10,12 @@ import { loadSkillFile } from "./loader";
 
 export type Acronym = { sigla: string; nome: string; definicao: string };
 export type Dimension = { n: string; dimensao: string; foco: string };
+export type SeoRow = { seo: string; geo: string };
 export type Method = {
   sinal: string;
   glossary: Acronym[];
   dimensions: Dimension[];
+  seoVsGeo: SeoRow[];
 };
 
 /**
@@ -49,6 +51,12 @@ const FALLBACK_METHOD: Method = {
     { n: "7", dimensao: "Medição e feedback", foco: "GSC, GA4 (canal IA), Bing AI Performance, auditorias mensais." },
     { n: "8", dimensao: "Posicionamento estratégico", foco: "Share-of-voice, estratégia no-click, mapeamento ao funil." },
   ],
+  seoVsGeo: [
+    { seo: "Otimizas para 10 links azuis", geo: "Otimizas para 1 resposta" },
+    { seo: "O utilizador escolhe entre resultados", geo: "A IA escolhe por ele" },
+    { seo: "Palavras-chave e backlinks", geo: "Estrutura, autoridade e citabilidade" },
+    { seo: "Medes posições no Google", geo: "Medes menções nos motores de IA" },
+  ],
 };
 
 const METHOD_HEADER = "## Deck Builder method";
@@ -65,10 +73,15 @@ function parseCells(line: string): string[] {
  * tabela pelo seu cabeçalho (`sigla` → glossário; `dimensao` → dimensões).
  * Linhas não-tabela (separador, headings, prosa) são ignoradas.
  */
-function parseMethodTables(section: string): { glossary: Acronym[]; dimensions: Dimension[] } {
+function parseMethodTables(section: string): {
+  glossary: Acronym[];
+  dimensions: Dimension[];
+  seoVsGeo: SeoRow[];
+} {
   const glossary: Acronym[] = [];
   const dimensions: Dimension[] = [];
-  let mode: "none" | "glossary" | "dims" = "none";
+  const seoVsGeo: SeoRow[] = [];
+  let mode: "none" | "glossary" | "dims" | "seo" = "none";
 
   for (const raw of section.split("\n")) {
     const line = raw.trim();
@@ -84,16 +97,24 @@ function parseMethodTables(section: string): { glossary: Acronym[]; dimensions: 
       mode = "dims";
       continue;
     }
-    if (cells.length < 3) continue;
+    // header da tabela SEO vs GEO: exactamente `| seo | geo |`
+    if (lower.length === 2 && lower.includes("seo") && lower.includes("geo")) {
+      mode = "seo";
+      continue;
+    }
+    if (cells.length < 2) continue;
     if (mode === "glossary") {
       const [sigla, nome, definicao] = cells;
       if (sigla && nome && definicao) glossary.push({ sigla, nome, definicao });
     } else if (mode === "dims") {
       const [n, dimensao, foco] = cells;
       if (n && dimensao && foco) dimensions.push({ n, dimensao, foco });
+    } else if (mode === "seo") {
+      const [seo, geo] = cells;
+      if (seo && geo) seoVsGeo.push({ seo, geo });
     }
   }
-  return { glossary, dimensions };
+  return { glossary, dimensions, seoVsGeo };
 }
 
 export async function loadMethod(): Promise<{ method: Method; source: "skill" | "fallback" }> {
@@ -110,7 +131,7 @@ export async function loadMethod(): Promise<{ method: Method; source: "skill" | 
   if (nextHeading >= 0) section = section.slice(0, nextHeading);
 
   const sinalMatch = section.match(/^SINAL:\s*(.+)$/m);
-  const { glossary, dimensions } = parseMethodTables(section);
+  const { glossary, dimensions, seoVsGeo } = parseMethodTables(section);
 
   // Skill alcançável mas secção ausente/incompleta → fallback seguro.
   if (glossary.length < 3 || dimensions.length < 8) {
@@ -122,6 +143,9 @@ export async function loadMethod(): Promise<{ method: Method; source: "skill" | 
       sinal: sinalMatch?.[1]?.trim() || FALLBACK_METHOD.sinal,
       glossary,
       dimensions,
+      // Tabela SEO vs GEO é mais recente — fallback parcial só deste campo
+      // se uma versão antiga da skill ainda não a tiver.
+      seoVsGeo: seoVsGeo.length >= 4 ? seoVsGeo : FALLBACK_METHOD.seoVsGeo,
     },
     source: "skill",
   };
