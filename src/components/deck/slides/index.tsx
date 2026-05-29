@@ -16,7 +16,7 @@ import { AppendixFLandscape } from "./21y_AppendixF_Landscape";
 import { AppendixFPotential } from "./21x_AppendixF_Potential";
 import { AppendixFActionHorizon, actionsFor, type Horizon } from "./21f_AppendixF_ActionHorizon";
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
-import { AppendixAPrompts } from "./15a_AppendixA_Prompts";
+import { AppendixAPrompts, appendixAPromptsPageCount } from "./15a_AppendixA_Prompts";
 import { allAuditedPrompts } from "./04_LiveAudit";
 import { Tracker } from "./19_Tracker";
 import { ThankYou } from "./22_ThankYou";
@@ -118,7 +118,15 @@ export function buildSlides(deck: DeckData): SlideDef[] {
   out.push({ id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker });
   // Apêndice A — prompts auditados completos (movidos do slide 04 invertido).
   if (allAuditedPrompts(deck).length > 0) {
-    out.push({ id: "appendix-a-prompts", title: "Apêndice A · prompts", tone: "paper", Component: AppendixAPrompts });
+    out.push(
+      ...paginated(
+        "appendix-a-prompts",
+        "Apêndice A · prompts",
+        "paper",
+        AppendixAPrompts,
+        appendixAPromptsPageCount(deck),
+      ),
+    );
   }
 
   // ACT 4 — Closing

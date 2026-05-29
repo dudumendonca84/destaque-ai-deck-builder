@@ -238,7 +238,7 @@ function buildUserPrompt(input: SynthesizeInput): string {
 - Citation rate global: ${(audit.summary.citation_rate * 100).toFixed(0)}%
 - Share of voice: ${(audit.summary.share_of_voice * 100).toFixed(0)}% (intra-resposta)
 - Posição média: ${audit.summary.avg_position ?? "—"}
-- Top competitors (filtrados por relevância GEO): ${audit.summary.top_competitors.join(", ") || "nenhum"}
+- Top competitors (filtrados por relevância GEO): ${audit.summary.top_competitors?.join(", ") || "nenhum"}
 
 Por motor:
 ${Object.entries(audit.by_engine)

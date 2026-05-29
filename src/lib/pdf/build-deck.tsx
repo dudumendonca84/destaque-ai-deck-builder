@@ -12,6 +12,7 @@ import path from "path";
 import type { DeckData } from "@/components/deck/types";
 import { eur, eurOrPlaceholder, pct } from "@/lib/utils/format";
 import { ENGINE_COUNT } from "@/lib/llm/models";
+import { findBenchmark } from "@/lib/skill/benchmarks";
 
 // Regista as fontes da marca para o PDF não cair em Times/Helvetica.
 // Ficheiros .woff bundlados em public/fonts (react-pdf lê woff; woff2 não).
@@ -218,6 +219,8 @@ function StatementPage({
 
 export async function buildPdf(deck: DeckData): Promise<Buffer> {
   const summary = deck.audit?.summary;
+  const top10 = findBenchmark(deck.benchmarks, "aio_top10_share");
+  const { glossary, dimensions } = deck.method;
 
   const doc = (
     <Document
@@ -277,7 +280,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             </View>
           ))}
         </View>
-        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22, fontStyle: "italic" }}>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22 }}>
           Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
         </Text>
       </ContentPage>
@@ -321,30 +324,15 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
           O GEO <Mark>assenta</Mark> sobre o SEO.
         </Text>
         <Text style={[s.body, { marginTop: 12, maxWidth: 720 }]}>
-          54% das citações em AI Overviews vêm do top-10 orgânico. O SEO é o substrato;
-          o GEO é a camada que te torna citável. Precisas dos dois. (BrightEdge, 2026.)
+          {top10 ? `${top10.value} ${top10.caption}. ` : ""}O SEO é o substrato;
+          o GEO é a camada que te torna citável. Precisas dos dois.
+          {top10 ? ` (${top10.source_name}.)` : ""}
         </Text>
         <View style={[s.row, { marginTop: 26 }]}>
           {(
             [
-              [
-                "SEO",
-                [
-                  "Otimizas para 10 links azuis",
-                  "O utilizador escolhe",
-                  "Palavras-chave e backlinks",
-                  "Posições no Google",
-                ],
-              ],
-              [
-                "GEO",
-                [
-                  "Otimizas para 1 resposta",
-                  "A IA escolhe por ele",
-                  "Estrutura e citabilidade",
-                  `Menções em ${ENGINE_COUNT} motores`,
-                ],
-              ],
+              ["SEO", deck.method.seoVsGeo.map((r) => r.seo)],
+              ["GEO", deck.method.seoVsGeo.map((r) => r.geo)],
             ] as const
           ).map(([head, rows], ci) => (
             <View key={head} style={{ flex: 1, paddingRight: ci === 0 ? 24 : 0 }}>
@@ -379,18 +367,26 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 06 — Definição */}
+      {/* 06 — Definição (glossário vivo da skill: SEO · GEO · AEO) */}
       <Page size={[960, 540]} style={s.pageInk}>
         <Eyebrow num="06" label="A definição" ink />
         <View style={s.center}>
-          <View style={{ backgroundColor: AMBER, alignSelf: "flex-start", paddingHorizontal: 24, paddingVertical: 8 }}>
-            <Text style={{ fontFamily: SERIF, fontSize: 120, color: INK, letterSpacing: -4 }}>
-              GEO
-            </Text>
+          <Text style={[s.h2, { color: CREAM, maxWidth: 720 }]}>
+            A categoria tem <Mark>vários nomes</Mark>.
+          </Text>
+          <View style={[s.row, { marginTop: 26 }]}>
+            {glossary.map((g) => (
+              <View key={g.sigla} style={{ flex: 1, paddingRight: 28 }}>
+                <Text style={{ fontFamily: SERIF, fontSize: 24, color: CREAM }}>{g.sigla}</Text>
+                <Text style={{ fontFamily: SANS, fontSize: 10, lineHeight: 1.5, color: INK4, marginTop: 5 }}>
+                  <Text style={{ fontFamily: SANS_B, color: CREAM }}>{g.nome}.</Text> {g.definicao}
+                </Text>
+              </View>
+            ))}
           </View>
-          <Text style={[s.leadInk, { marginTop: 24, maxWidth: 620 }]}>
-            Generative Engine Optimization — as práticas técnicas e editoriais que tornam
-            uma marca citável pelos modelos de IA generativa.
+          <Text style={{ fontFamily: SANS, fontSize: 9, color: INK4, marginTop: 26, maxWidth: 640 }}>
+            Nomes distintos, problema único — ser <Mark>citável</Mark> pelos motores que decidem por quem clica.
+            O SINAL trata-os como uma só disciplina integrada.
           </Text>
         </View>
         <View style={s.footer} fixed>
@@ -399,34 +395,30 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </Page>
 
-      {/* 07 — Metodologia */}
+      {/* 07 — Metodologia (8 dimensões vivas da skill) */}
       <ContentPage n={7} eyebrow="Metodologia · SINAL">
         <Text style={s.h2}>
-          <Mark>SINAL</Mark>: quatro disciplinas, um sistema.
+          <Mark>SINAL</Mark>: oito dimensões, um sistema.
         </Text>
-        <Text style={[s.body, { marginTop: 10 }]}>
-          Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs.
+        <Text style={[s.body, { marginTop: 8 }]}>{deck.method.sinal}</Text>
+        {[dimensions.slice(0, 4), dimensions.slice(4, 8)].map((rowDims, ri) => (
+          <View key={ri} style={[s.row, { marginTop: ri === 0 ? 22 : 16 }]}>
+            {rowDims.map((d) => (
+              <View key={d.n} style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontFamily: SANS, fontSize: 9, color: "#A16207", letterSpacing: 1 }}>
+                  {d.n.padStart(2, "0")}
+                </Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 14, color: INK, marginTop: 6 }}>
+                  {d.dimensao}
+                </Text>
+                <Text style={[s.body, { marginTop: 5, fontSize: 8.5 }]}>{d.foco}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 18 }}>
+          As acções saem num plano de 4 horizontes — semana 1-2, 3-6, 7-12 e 90+ dias.
         </Text>
-        <View style={[s.row, { marginTop: 30 }]}>
-          {(
-            [
-              ["01", "Auditoria", `Medimos a visibilidade real em ${ENGINE_COUNT} motores.`],
-              ["02", "Conteúdo", "Tornamos a marca extraível pela IA."],
-              ["03", "Distribuição", "Construímos autoridade onde a IA procura."],
-              ["04", "Medição", "Monitorizamos e iteramos com dados."],
-            ] as const
-          ).map(([n, t, d]) => (
-            <View key={n} style={{ flex: 1, paddingRight: 18 }}>
-              <Text style={{ fontFamily: SANS, fontSize: 10, color: "#A16207", letterSpacing: 1 }}>
-                {n}
-              </Text>
-              <Text style={{ fontFamily: SERIF, fontSize: 20, color: INK, marginTop: 8 }}>
-                {t}
-              </Text>
-              <Text style={[s.body, { marginTop: 8 }]}>{d}</Text>
-            </View>
-          ))}
-        </View>
       </ContentPage>
 
       {/* 08 — Fases 1 e 2 */}
@@ -499,7 +491,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
             ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
             ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
-            ["Marca mais citada na categoria", summary?.top_competitors[0] ?? "—"],
+            ["Marca mais citada na categoria", summary?.top_competitors?.[0] ?? "—"],
           ].map(([l, v], i, arr) => (
             <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
               <Text style={s.cardLabel}>{l.toUpperCase()}</Text>

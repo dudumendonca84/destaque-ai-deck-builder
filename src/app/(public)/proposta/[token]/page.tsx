@@ -5,6 +5,7 @@ import { DeckContainer } from "@/components/deck/DeckContainer";
 import type { DeckData } from "@/components/deck/types";
 import type { AuditResults, AuditRun, AuditTier, Proposal, Prospect } from "@/lib/supabase/types";
 import { loadCoreBenchmarks } from "@/lib/skill/benchmarks";
+import { loadMethod } from "@/lib/skill/method";
 import type { ScanResult } from "@/lib/scan/types";
 import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
@@ -68,6 +69,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
   const auditRuns = (runRows ?? []) as AuditRun[];
 
   const { items: benchmarks } = await loadCoreBenchmarks();
+  const { method } = await loadMethod();
 
   const { data: scanRow } = await supabase
     .from("sinal_scans")
@@ -93,6 +95,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
     audit: (proposal.audit_results as AuditResults | null) ?? null,
     auditRuns,
     benchmarks,
+    method,
     sinalScan,
     synthesized: (proposal.deck_blocks as SynthesizedDeck | null) ?? null,
   };

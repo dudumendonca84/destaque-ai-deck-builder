@@ -1,5 +1,6 @@
 import type { AuditResults, AuditRun, AuditTier, Engine } from "@/lib/supabase/types";
 import type { Benchmark } from "@/lib/skill/benchmarks";
+import type { Method } from "@/lib/skill/method";
 import type { ScanResult } from "@/lib/scan/types";
 import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
@@ -20,6 +21,7 @@ export type DeckData = {
   audit: AuditResults | null;
   auditRuns: AuditRun[];
   benchmarks: Benchmark[];
+  method: Method;
   sinalScan: ScanResult | null;
   synthesized: SynthesizedDeck | null;
 };

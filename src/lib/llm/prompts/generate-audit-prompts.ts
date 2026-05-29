@@ -1,13 +1,13 @@
 import { claudeJson, hasAnthropicKey } from "../anthropic";
 import { fallbackPrompts } from "../fallback-prompts";
-import { loadPromptDirectives } from "@/lib/skill/prompts";
-import type { AuditTier, IntentStage, PromptCategory } from "@/lib/skill/prompts";
-import {
-  PROMPT_CATEGORIES,
-  INTENT_STAGES,
-  TIER_DISTRIBUTION,
-  tierTotal,
+import { loadPromptDirectives, loadPromptConfig } from "@/lib/skill/prompts";
+import type {
+  AuditTier,
+  IntentStage,
+  PromptCategory,
+  TierDistribution,
 } from "@/lib/skill/prompts";
+import { PROMPT_CATEGORIES, INTENT_STAGES } from "@/lib/skill/prompts";
 
 export type PromptContext = {
   business_type?: string | null;
@@ -38,13 +38,16 @@ function buildSystem(directives: string): string {
   return `${SYSTEM_BASE}\n\n${directives}\n\nIntent stages canónicos: ${INTENT_STAGES.join(", ")}. Cada prompt deve receber um intent_stage que reflicta o estágio do funil que a query expressa.`;
 }
 
-function distributionTable(tier: AuditTier): string {
-  const dist = TIER_DISTRIBUTION[tier];
+function sumDist(dist: TierDistribution): number {
+  return Object.values(dist).reduce((a, b) => a + b, 0);
+}
+
+function distributionTable(dist: TierDistribution): string {
   return PROMPT_CATEGORIES.map((cat) => `- ${cat}: ${dist[cat]}`).join("\n");
 }
 
-function buildPrompt(ctx: PromptContext, tier: AuditTier): string {
-  const total = tierTotal(tier);
+function buildPrompt(ctx: PromptContext, tier: AuditTier, dist: TierDistribution): string {
+  const total = sumDist(dist);
   return `CLIENTE:
 - Negócio: ${ctx.business_type ?? "não especificado"}
 - Localização: ${ctx.location ?? "não especificada"}
@@ -55,7 +58,7 @@ function buildPrompt(ctx: PromptContext, tier: AuditTier): string {
 TIER: ${tier} (${total} prompts no total)
 
 DISTRIBUIÇÃO POR CATEGORIA (segue exactamente):
-${distributionTable(tier)}
+${distributionTable(dist)}
 
 TAREFA: Gera ${total} prompts em conformidade com a distribuição acima. Cada prompt segue os princípios SINAL e tem category + intent_stage. Sem nomear a marca do cliente. PT-PT por defeito; PT-BR só se o público-alvo for tipicamente brasileiro.
 
@@ -87,11 +90,12 @@ async function attempt(opts: {
   system: string;
   ctx: PromptContext;
   tier: AuditTier;
+  dist: TierDistribution;
 }): Promise<GeneratedPrompt[]> {
-  const total = tierTotal(opts.tier);
+  const total = sumDist(opts.dist);
   const { data } = await claudeJson<{ prompts: GeneratedPrompt[] }>({
     system: opts.system,
-    prompt: buildPrompt(opts.ctx, opts.tier),
+    prompt: buildPrompt(opts.ctx, opts.tier, opts.dist),
     schema: SCHEMA,
     maxTokens: opts.tier === "free" ? 1024 : 4096,
   });
@@ -119,7 +123,6 @@ export async function generateAuditPrompts(
   ctx: PromptContext,
 ): Promise<GeneratePromptsResult> {
   const tier: AuditTier = ctx.tier ?? "free";
-  const total = tierTotal(tier);
 
   if (!hasAnthropicKey()) {
     const fallback = fallbackPrompts(ctx);
@@ -132,14 +135,18 @@ export async function generateAuditPrompts(
     };
   }
 
+  // Sequencial: o 1.º fetch popula a cache do loader; o 2.º (mesmo path) é hit.
   const directives = await loadPromptDirectives();
+  const config = await loadPromptConfig();
+  const dist = config.distribution[tier];
+  const total = sumDist(dist);
   const system = buildSystem(directives.body);
 
   const minAcceptable = tier === "free" ? 3 : Math.max(5, total - 5);
 
   for (let i = 0; i < 2; i++) {
     try {
-      const prompts_detailed = await attempt({ system, ctx, tier });
+      const prompts_detailed = await attempt({ system, ctx, tier, dist });
       if (prompts_detailed.length >= minAcceptable) {
         return {
           prompts: prompts_detailed.map((p) => p.text),

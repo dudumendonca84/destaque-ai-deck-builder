@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "smoke:llm": "tsx --env-file=.env.local scripts/smoke-llm.mts"
+    "smoke:llm": "tsx --env-file=.env.local scripts/smoke-llm.mts",
+    "smoke:deck": "tsx scripts/smoke-deck.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",

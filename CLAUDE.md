@@ -82,7 +82,7 @@ A skill **não é estática**. Evolui sozinha. Quando este repo faz fetch da ski
 
 **SINAL** — *Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs*. Proprietário, evolutivo, aplicado a B2B SaaS em Portugal com PT-PT contextual relevance. Sintetiza Princeton GEO (Aggarwal et al. KDD 2024) + arXiv follow-ups + vendor primary docs (Google, OpenAI, Anthropic, Perplexity, Microsoft) + industry primary research (BrightEdge, Ahrefs, Profound, Semrush, Pew, Seer, NetElixir) + Schema App / WordLift / Kalicube tradition + 3HASH audit format.
 
-- **8 dimensões** (technical · content · entity · authority · UX · measurement · positioning · operational excellence)
+- **8 dimensões** (technical · content · entity · authority · social · authority-on-site · measurement · positioning) — lista canónica de `SKILL.md` §116-130
 - **12 categorias scorecard**
 - **16 secções audit workflow**
 - **4 horizontes action plan** (semana 1-2 / 3-6 / 7-12 / 90+ dias)
@@ -101,10 +101,10 @@ Esta secção existe para impedir uma sessão futura de **estreitar o produto a 
 | 2 | **Content & topical authority** | Original statistics published, comparative content, topic clusters, content cadence |
 | 3 | **Entity & brand foundation** | **Wikidata QID**, **Wikipedia article**, Knowledge Panel, sameAs depth, NAP consistency |
 | 4 | **Authority & digital PR** | **Tier-1 PT media coverage** (Observador, ECO, Público), **podcast appearances**, conference speaking, branded anchor text |
-| 5 | **UX & engagement** | Conversion funnel, bounce, time on site (when measurable) |
-| 6 | **Measurement & feedback** | GSC, GA4 AI channel, Bing Webmaster Tools AI Performance |
-| 7 | **Strategic positioning** | Share-of-voice trend, no-click strategy, pipeline-stage mapping |
-| 8 | **Operational excellence** | Cadência editorial, process, hand-offs |
+| 5 | **Social & community signals** | LinkedIn, GitHub, Reddit, Hacker News, X — plataformas que os motores citam (Reddit ~47% das citações Perplexity) |
+| 6 | **Authority signals on site** | Autores declarados com `Person` schema + `sameAs`, credenciais nomeadas (E-E-A-T "Experience"), casos com resultados verificáveis |
+| 7 | **Measurement & feedback** | GSC, GA4 AI channel, Bing Webmaster Tools AI Performance |
+| 8 | **Strategic positioning** | Share-of-voice trend, no-click strategy, pipeline-stage mapping |
 
 **Implicação dura para qualquer PR / slide / acção:**
 
@@ -150,6 +150,15 @@ Cross-repo contract canónico em `geo-seo-aeo-master/INTERFACES.md`. Resumido:
   - `diagnostic` / `premium` → coluna `production` (paid deliverable, fidelity)
 - Injectar `model id` em cada engine client wrapper
 - Fallback: hardcoded em `src/lib/skill/models.ts` (`FALLBACK_MAPPINGS`)
+
+### Deck público — números + método vivos da skill (Contratos 3 + 4)
+
+O deck (`/proposta/[token]` e o PDF) também consome a skill em runtime — não hardcoda conhecimento GEO:
+
+- **Benchmarks** (`src/lib/skill/benchmarks.ts` → `loadCoreBenchmarks` / `findBenchmark`): parse de `## Deck Builder core stats` em `references/benchmarks.md`. Slide 03 (3 headline), Slide 05 (`aio_top10_share`), Slide 10b (`b2b_ai_answer`). Fallback `FALLBACK_BENCHMARKS`.
+- **Método** (`src/lib/skill/method.ts` → `loadMethod`): parse de `## Deck Builder method` em `SKILL.md` — glossário (SEO/GEO/AEO) + 8 dimensões client-facing. Slide 06 (glossário), Slide 07 (8 dimensões). Fallback `FALLBACK_METHOD`.
+
+Ambos carregados server-side em `page.tsx` + na route do PDF, injectados em `DeckData`. Regra: **número ou definição GEO no deck = vem da skill**, nunca literal no slide. Copy estrutural/narrativa (capa, fases, CTA) pode ficar no componente. Síntese personalizada (análise + plano de acções) vem de `synthesize-deck.ts` (fetch de `SKILL.md` + `metrics`/`benchmarks`/`gap_action_mapping`/`news-feed`).
 
 ### Engines actuais (TS owns SET)
 

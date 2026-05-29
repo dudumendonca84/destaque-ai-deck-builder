@@ -2,44 +2,37 @@
 
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
-import { ENGINE_COUNT } from "@/lib/llm/models";
 import type { SlideProps } from "../types";
 
-const PILLARS = [
-  {
-    n: "01",
-    t: "Auditoria",
-    d: `Medimos a tua visibilidade real em ${ENGINE_COUNT} motores de IA.`,
-  },
-  { n: "02", t: "Conteúdo", d: "Tornamos a tua marca extraível e citável pela IA." },
-  { n: "03", t: "Distribuição", d: "Construímos autoridade onde os modelos vão buscar." },
-  { n: "04", t: "Medição", d: "Monitorizamos e iteramos com dados, todos os meses." },
-];
+export function Methodology({ deck, active }: SlideProps) {
+  const { sinal, dimensions } = deck.method;
 
-export function Methodology({ active }: SlideProps) {
   return (
     <SlideShell eyebrow="Metodologia · SINAL">
       <h2 className="tx-h2" style={{ marginBottom: 10 }}>
-        <em className="mark">SINAL</em>: quatro disciplinas, um sistema.
+        <em className="mark">SINAL</em>: oito dimensões, um sistema.
       </h2>
-      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 28, maxWidth: 720 }}>
-        Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs.
+      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24, maxWidth: 720 }}>
+        {sinal}
       </p>
-      <div className="method-grid">
-        {PILLARS.map((p, i) => (
+      <div className="dim-grid">
+        {dimensions.map((d, i) => (
           <motion.div
-            className="method-card"
-            key={p.n}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
-            transition={{ duration: 0.45, delay: 0.12 + i * 0.1 }}
+            className="dim-card"
+            key={d.n}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: active ? 1 : 0, y: active ? 0 : 12 }}
+            transition={{ duration: 0.4, delay: 0.1 + i * 0.05 }}
           >
-            <span className="method-card__n">{p.n}</span>
-            <span className="method-card__t">{p.t}</span>
-            <span className="method-card__d">{p.d}</span>
+            <span className="dim-card__n">{d.n.padStart(2, "0")}</span>
+            <span className="dim-card__t">{d.dimensao}</span>
+            <span className="dim-card__d">{d.foco}</span>
           </motion.div>
         ))}
       </div>
+      <p style={{ marginTop: 22, fontSize: 12, color: "var(--ink-3)", opacity: 0.7 }}>
+        As acções saem num plano de 4 horizontes — semana 1-2, 3-6, 7-12 e 90+ dias.
+      </p>
     </SlideShell>
   );
 }

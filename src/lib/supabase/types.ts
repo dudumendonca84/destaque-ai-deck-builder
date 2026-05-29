@@ -39,7 +39,9 @@ export type AuditEngineSummary = {
   citation_rate: number;
   share_of_voice: number;
   avg_position: number | null;
-  top_competitors: string[];
+  // Pode faltar em audit_results antigos (JSONB esparso). Opcional força
+  // os leitores a guardar com `?.` — evita crashes tipo PDF download 500.
+  top_competitors?: string[];
 };
 
 export type EngineRunStatus = {
