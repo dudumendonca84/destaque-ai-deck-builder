@@ -134,29 +134,3 @@ export function buildSlides(deck: DeckData): SlideDef[] {
 
   return out;
 }
-
-/**
- * Lista estática (page-agnostic) — usada por consumidores de metadata
- * (PDF, analytics) que só precisam dos ids/títulos base, não da paginação.
- * O runtime de render usa `buildSlides(deck)`.
- */
-export const SLIDES: SlideDef[] = [
-  { id: "cover", title: "Capa", tone: "paper", Component: Cover },
-  { id: "problem", title: "O problema", tone: "ink", Component: Problem },
-  { id: "data", title: "O contexto", tone: "paper", Component: Data },
-  { id: "seo-vs-geo", title: "SEO vs GEO", tone: "paper", Component: SEOvsGEO },
-  { id: "definition", title: "O que é GEO", tone: "ink", Component: Definition },
-  { id: "live-audit", title: "Auditoria personalizada", tone: "paper", Component: LiveAudit },
-  { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
-  { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },
-  { id: "appendix-f2", title: "Findings críticos", tone: "paper", Component: AppendixF2Findings },
-  { id: "appendix-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape },
-  { id: "appendix-potential", title: "Potencial · 6 meses", tone: "paper", Component: AppendixFPotential },
-  { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
-  { id: "phases-1-2", title: "Fases 1 e 2", tone: "paper", Component: Phases12 },
-  { id: "phases-3-4", title: "Fases 3 e 4", tone: "paper", Component: Phases34 },
-  { id: "appendix-action-h1", title: "Plano H1 · semana 1-2", tone: "paper", Component: AppendixFActionHorizon },
-  { id: "appendix-f5", title: "Perguntas frequentes", tone: "paper", Component: AppendixFFAQ },
-  { id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker },
-  { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
-];
