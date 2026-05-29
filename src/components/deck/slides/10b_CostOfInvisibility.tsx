@@ -1,17 +1,19 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
+import { findBenchmark } from "@/lib/skill/benchmarks";
 import type { SlideProps } from "../types";
 
 /**
  * Converte o 0% citação numa aposta concreta — sem fabricar números de
- * pipeline do cliente. Usa apenas a estatística de categoria citada
- * (BrightEdge 82%). Aparece logo após o slide de KPIs (0%).
+ * pipeline do cliente. A estatística de categoria (B2B já aciona resposta
+ * de IA) vem viva da skill (`b2b_ai_answer`). Aparece logo após o slide de
+ * KPIs (0%).
  */
 export function CostOfInvisibility({ deck }: SlideProps) {
   const cr = deck.audit?.summary?.citation_rate ?? 0;
   const pct = Math.round(cr * 100);
+  const b2b = findBenchmark(deck.benchmarks, "b2b_ai_answer");
 
   return (
     <SlideShell tone="ink" eyebrow="O custo da invisibilidade">
@@ -23,11 +25,25 @@ export function CostOfInvisibility({ deck }: SlideProps) {
         style={{ maxWidth: 760, color: "var(--ink-4)", lineHeight: 1.6 }}
       >
         Quando os teus compradores perguntam à IA pela tua categoria, a resposta
-        traz nomes — e o teu não está lá. Em tech B2B,{" "}
-        <strong style={{ color: "var(--paper)" }}>
-          82% dessas pesquisas já acionam uma resposta de IA
-        </strong>{" "}
-        (BrightEdge, 2026). Cada uma é uma decisão a formar-se sem ti.
+        traz nomes — e o teu não está lá.{" "}
+        {b2b ? (
+          <>
+            <strong style={{ color: "var(--paper)" }}>
+              {b2b.value} {b2b.caption}
+            </strong>{" "}
+            <a
+              href={b2b.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--ink-4)", textDecoration: "underline", textUnderlineOffset: 3 }}
+            >
+              {b2b.source_name}
+            </a>
+            . Cada uma é uma decisão a formar-se sem ti.
+          </>
+        ) : (
+          "Cada uma é uma decisão a formar-se sem ti."
+        )}
       </p>
     </SlideShell>
   );

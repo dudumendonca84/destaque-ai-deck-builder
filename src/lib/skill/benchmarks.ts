@@ -47,9 +47,26 @@ const FALLBACK_BENCHMARKS: Benchmark[] = [
     source_url: "https://www.seerinteractive.com/insights",
     date: "2026-01-01",
   },
+  {
+    key: "aio_top10_share",
+    value: "54%",
+    caption: "das citações em AI Overviews vêm de URLs no top-10 orgânico",
+    source_name: "BrightEdge, 2025 (rank overlap, 16 meses)",
+    source_url:
+      "https://www.brightedge.com/resources/weekly-ai-search-insights/rank-overlap-after-16-months-of-aio",
+    date: "2025-11-01",
+  },
 ];
 
 const CORE_STATS_HEADER = "## Deck Builder core stats";
+
+/**
+ * Mínimo de linhas válidas para confiar na tabela da skill: os 3 stats
+ * headline do Slide 03. Stats adicionais (ex. `aio_top10_share` no Slide
+ * 05) são lookups opcionais por `key` — a sua ausência esconde o número
+ * nesse slide, não invalida a tabela inteira.
+ */
+const MIN_VALID_BENCHMARKS = 3;
 
 /**
  * Parse a tabela `## Deck Builder core stats` de benchmarks.md.
@@ -93,8 +110,16 @@ export async function loadCoreBenchmarks(): Promise<{
   }
   const parsed = parseCoreBenchmarks(result.body);
   // Skill alcançável mas tabela ausente/incompleta → fallback seguro.
-  if (parsed.length < FALLBACK_BENCHMARKS.length) {
+  if (parsed.length < MIN_VALID_BENCHMARKS) {
     return { items: FALLBACK_BENCHMARKS, source: "fallback" };
   }
   return { items: parsed, source: "skill" };
+}
+
+/**
+ * Procura um stat por `key` (ex. "aio_top10_share"). Devolve undefined se
+ * ausente — o slide renderiza graciosamente sem o número, nunca o inventa.
+ */
+export function findBenchmark(items: Benchmark[], key: string): Benchmark | undefined {
+  return items.find((b) => b.key === key);
 }

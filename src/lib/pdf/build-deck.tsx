@@ -12,6 +12,7 @@ import path from "path";
 import type { DeckData } from "@/components/deck/types";
 import { eur, eurOrPlaceholder, pct } from "@/lib/utils/format";
 import { ENGINE_COUNT } from "@/lib/llm/models";
+import { findBenchmark } from "@/lib/skill/benchmarks";
 
 // Regista as fontes da marca para o PDF não cair em Times/Helvetica.
 // Ficheiros .woff bundlados em public/fonts (react-pdf lê woff; woff2 não).
@@ -218,6 +219,7 @@ function StatementPage({
 
 export async function buildPdf(deck: DeckData): Promise<Buffer> {
   const summary = deck.audit?.summary;
+  const top10 = findBenchmark(deck.benchmarks, "aio_top10_share");
 
   const doc = (
     <Document
@@ -321,8 +323,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
           O GEO <Mark>assenta</Mark> sobre o SEO.
         </Text>
         <Text style={[s.body, { marginTop: 12, maxWidth: 720 }]}>
-          54% das citações em AI Overviews vêm do top-10 orgânico. O SEO é o substrato;
-          o GEO é a camada que te torna citável. Precisas dos dois. (BrightEdge, 2026.)
+          {top10 ? `${top10.value} ${top10.caption}. ` : ""}O SEO é o substrato;
+          o GEO é a camada que te torna citável. Precisas dos dois.
+          {top10 ? ` (${top10.source_name}.)` : ""}
         </Text>
         <View style={[s.row, { marginTop: 26 }]}>
           {(
