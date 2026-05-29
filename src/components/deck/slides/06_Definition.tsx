@@ -45,7 +45,7 @@ export function Definition() {
               SEO
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-              <b style={{ color: "var(--paper)" }}>Search Engine Optimization.</b> Pesquisa clássica — Google, Bing. Otimizar para 10 links azuis.
+              <b style={{ color: "var(--paper)" }}>Search Engine Optimization.</b> Pesquisa clássica — Google, Bing. A base sobre a qual o GEO se constrói.
             </div>
           </div>
 
