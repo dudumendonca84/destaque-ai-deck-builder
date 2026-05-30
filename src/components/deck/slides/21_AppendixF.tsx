@@ -16,16 +16,7 @@ import type { ActionItem } from "@/lib/llm/synthesize-deck";
  * legacy (string simples).
  */
 
-const DIMENSION_LABEL: Record<string, string> = {
-  technical: "Técnica",
-  content: "Conteúdo",
-  entity: "Entidade",
-  authority: "Autoridade",
-  ux: "UX",
-  measurement: "Medição",
-  positioning: "Posicionamento",
-  operational: "Operacional",
-};
+import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 const HORIZON_LABEL: Record<"h1" | "h2" | "h3" | "ongoing", string> = {
   h1: "H1 · Semana 1-2",
