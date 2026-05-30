@@ -73,8 +73,8 @@ A skill **não é estática**. Evolui sozinha. Quando este repo faz fetch da ski
 ### Loop 2 — Self-audit (semanal)
 `routines/destaque-ai-self-audit-weekly.md` corre segundas 09:00 Lisboa. Usa o catálogo `prompts.md §4` como test suite contra os motores do SINAL, mede share-of-voice do destaque.ai vs concorrentes, escreve `destaque-ai-self/audit-baseline.md` + `improvements-backlog.md` + `audit-history.md`. **Eating own dog food**: a destaque.ai aplica SINAL a si própria toda a semana.
 
-### Loop 3 — Learning from real work (futuro)
-`destaque-ai-ops/learnings/` recolhe patterns anonimizados dos engagements reais. Uma Routine `synthesis-weekly` futura (ainda por configurar) lerá esta camada e proporá updates a `references/` ou `prompts.md §4`. Trazendo a inteligência operacional para o cérebro público.
+### Loop 3 — Learning from real work
+`destaque-ai-ops/learnings/` recolhe patterns anonimizados dos engagements reais. A Routine `synthesis-weekly` (spec em `geo-seo-aeo-master/routines/synthesis-weekly.md`, corre sextas 10:00 Lisboa) lê esta camada e propõe updates a `references/gap_action_mapping.md` / `prompts.md §4` / `benchmarks.md` via **PR draft** (humano triage; mexer em `references/` propaga em ≤1h no deck). Inerte até MCP scope incluir `destaque-ai-ops` no Claude Code Web Routine — depois disso, traz a inteligência operacional para o cérebro público.
 
 **Implicação para sessões Claude**: a versão da skill que vês agora é um snapshot. Se algo te parece inconsistente entre dois ficheiros (ex: `references/models.md` vs `daily-agent/news-feed.md`), o news-feed tem precedência por estar mais fresco — e a contradição deve trigger uma proposed-update à `references/`.
 
@@ -82,7 +82,7 @@ A skill **não é estática**. Evolui sozinha. Quando este repo faz fetch da ski
 
 **SINAL** — *Sistema Integrado destaque.ai de Notabilidade em AI search e LLMs*. Proprietário, evolutivo, aplicado a B2B SaaS em Portugal com PT-PT contextual relevance. Sintetiza Princeton GEO (Aggarwal et al. KDD 2024) + arXiv follow-ups + vendor primary docs (Google, OpenAI, Anthropic, Perplexity, Microsoft) + industry primary research (BrightEdge, Ahrefs, Profound, Semrush, Pew, Seer, NetElixir) + Schema App / WordLift / Kalicube tradition + 3HASH audit format.
 
-- **8 dimensões** (technical · content · entity · authority · social · authority-on-site · measurement · positioning) — lista canónica de `SKILL.md` §116-130
+- **8 dimensões** (technical · content · entity · authority · social · authority-on-site · measurement · positioning) — lista canónica de `SKILL.md` §116-130. Em código TS, vivem em `src/lib/skill/dimensions.ts` (`DIMENSION_KEYS`, `DIMENSION_LABEL`) — único sítio hardcoded; espelha `## Deck Builder method` da skill. Quando a skill rebalancear a taxonomia, actualiza-se este ficheiro só.
 - **12 categorias scorecard**
 - **16 secções audit workflow**
 - **4 horizontes action plan** (semana 1-2 / 3-6 / 7-12 / 90+ dias)
@@ -198,7 +198,7 @@ Steps futuros conforme roadmap do founder:
 | 13 | Renderização dinâmica do deck a partir de `deck_blocks` | Depois de 12 |
 | 15 | Admin UI publicar/snapshot + commit em ops | Depois de 13 |
 | 17 | TrackerPreview (componente recorrente do Visibility Tracker) | Paralelo a 13 |
-| Future | Routine `synthesis-weekly` (ops/learnings → skill/references) | Configurada noutra sessão |
+| Future | Routine `synthesis-weekly` (ops/learnings → skill/references) | Spec em `geo-seo-aeo-master/routines/synthesis-weekly.md` — activar com MCP scope para `destaque-ai-ops` |
 
 Quando uma sessão futura abrir um destes, este CLAUDE.md continua válido — só adiciona detalhe ao executor, não muda o cérebro.
 
