@@ -5,12 +5,37 @@ import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import { pct } from "@/lib/utils/format";
 
+/**
+ * Lista de plataformas conhecidas de tracking/medição GEO. Quando a marca
+ * mais citada na categoria é uma destas, o card muda o label para
+ * "Ferramenta de referência citada" — evita apresentar uma ferramenta
+ * como se fosse consultora concorrente.
+ */
+const GEO_TOOLS = [
+  "profound",
+  "otterly.ai",
+  "otterly",
+  "peec ai",
+  "peec.ai",
+  "athenahq",
+  "athena hq",
+  "brightedge",
+  "conductor",
+  "semrush",
+  "ahrefs",
+  "kalicube",
+  "searchmetrics",
+];
+
+function isGeoTool(brand: string): boolean {
+  const norm = brand.trim().toLowerCase();
+  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
+}
+
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;
-  // "Marca mais citada na categoria" — label honesto. NÃO é "concorrente":
-  // pode ser uma ferramenta de medição (ex: Profound). Mostra o que o dado
-  // realmente diz, sem erro de categoria.
   const topCited = s?.top_competitors?.[0] ?? "—";
+  const topIsTool = topCited !== "—" && isGeoTool(topCited);
   const cards = [
     { label: "Taxa de citação", value: s ? pct(s.citation_rate) : "—", note: "respostas onde és citado" },
     {
@@ -23,11 +48,17 @@ export function KPIs({ deck, active }: SlideProps) {
       value: s?.avg_position != null ? `#${s.avg_position}` : "—",
       note: "ordem em que apareces",
     },
-    {
-      label: "Marca mais citada na categoria",
-      value: topCited,
-      note: "quem a IA nomeia hoje — não um concorrente directo",
-    },
+    topIsTool
+      ? {
+          label: "Ferramenta de referência citada",
+          value: topCited,
+          note: "plataforma de medição GEO — não consultora concorrente",
+        }
+      : {
+          label: "Marca mais citada na categoria",
+          value: topCited,
+          note: "quem a IA nomeia hoje — não um concorrente directo",
+        },
   ];
   return (
     <SlideShell eyebrow="Ponto de partida">

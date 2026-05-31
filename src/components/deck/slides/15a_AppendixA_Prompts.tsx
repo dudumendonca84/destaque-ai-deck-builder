@@ -3,6 +3,7 @@
 import { SlideShell } from "../primitives/SlideShell";
 import type { DeckData, SlideProps } from "../types";
 import { allAuditedPrompts } from "./04_LiveAudit";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 /**
  * Apêndice A — os prompts auditados completos, movidos do slide 04
@@ -32,7 +33,7 @@ export function AppendixAPrompts({ deck, page = 0, pageCount = 1 }: SlideProps) 
         Os prompts que <em className="mark">decidem</em> a categoria.
       </h2>
       <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 28, maxWidth: 760 }}>
-        {all.length} prompts × 6 motores. A marca não aparece em nenhum.
+        {all.length} prompts × {ENGINE_COUNT} motores. A marca não aparece em nenhum.
       </p>
       <ol
         // Continua a numeração entre páginas: pág. 2 começa em #11, não em #1.
