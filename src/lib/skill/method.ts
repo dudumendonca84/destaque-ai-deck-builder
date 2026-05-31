@@ -33,7 +33,7 @@ const FALLBACK_METHOD: Method = {
     {
       sigla: "GEO",
       nome: "Generative Engine Optimization",
-      definicao: "Aparecer em respostas geradas por IA — ChatGPT, Claude, Gemini, Grok.",
+      definicao: "Aparecer em respostas geradas por IA — ChatGPT, Claude, Gemini, Grok, Perplexity, Copilot.",
     },
     {
       sigla: "AEO",

@@ -1,5 +1,6 @@
 import { claudeJson, hasAnthropicKey } from "./anthropic";
 import { loadSkillFile } from "@/lib/skill/loader";
+import { DIMENSION_KEYS, type Dimension } from "@/lib/skill/dimensions";
 import type { AuditResults, AuditRun } from "@/lib/supabase/types";
 import type { ScanResult } from "@/lib/scan/types";
 
@@ -12,15 +13,9 @@ import type { ScanResult } from "@/lib/scan/types";
  * persiste; é Claude com a skill que decide o que dizer e como.
  */
 
-export type Dimension =
-  | "technical"
-  | "content"
-  | "entity"
-  | "authority"
-  | "ux"
-  | "measurement"
-  | "positioning"
-  | "operational";
+// Re-export para compat com slides que importam `Dimension` daqui via
+// ActionItem.dimension. A definição canónica vive em `@/lib/skill/dimensions`.
+export type { Dimension };
 
 export type ActionItem = {
   title: string;
@@ -107,16 +102,8 @@ export type SynthesizeInput = {
   sinalScan: ScanResult | null;
 };
 
-const DIMENSION_ENUM: Dimension[] = [
-  "technical",
-  "content",
-  "entity",
-  "authority",
-  "ux",
-  "measurement",
-  "positioning",
-  "operational",
-];
+// Alias para clareza no SCHEMA — DIMENSION_KEYS é a fonte única.
+const DIMENSION_ENUM = DIMENSION_KEYS;
 
 const SCHEMA = {
   type: "object",
@@ -224,7 +211,7 @@ ${skill.news}
 - Numbers over adjectives. Cita fonte quando há (URL ou ano + estudo).
 - No fabricated benchmarks. Se não há fonte, omite.
 - Honest about uncertainty. "Vendor data, treat as directional" quando se aplica.
-- 8 dimensões SINAL: technical, content, entity, authority, ux, measurement, positioning, operational. **Action plan tem de cobrir múltiplas dimensões**, não apenas technical. Inclui obrigatoriamente: schema/llms.txt/robots (technical); Wikidata/Wikipedia/sameAs (entity); Tier-1 PT media outreach OU podcast pitching (authority).
+- 8 dimensões SINAL: ${DIMENSION_KEYS.join(", ")}. **Action plan tem de cobrir múltiplas dimensões**, não apenas technical. Inclui obrigatoriamente: schema/llms.txt/robots (technical); Wikidata/Wikipedia/sameAs (entity); Tier-1 PT media outreach OU podcast pitching (authority); presença Reddit/GitHub/comunidades que os motores citam (social); \`Person\` schema com bios e credenciais E-E-A-T (authority_on_site).
 - 4 horizontes: H1 (semana 1-2, quick wins), H2 (semana 3-8, foundation), H3 (mês 2-6, compounding), ongoing (manutenção).
 - Cada acção: title, why (mecanismo), effort estimate, impact típico, dimension (uma das 8), source (citação ao mapping ou estudo quando aplicável).`;
 }

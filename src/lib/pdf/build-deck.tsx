@@ -79,6 +79,61 @@ const SERIF_I = HAS_BRAND_FONTS ? "FrauncesItalic" : "Times-Italic";
 const SANS = HAS_BRAND_FONTS ? "Inter" : "Helvetica";
 const SANS_B = HAS_BRAND_FONTS ? "InterSemiBold" : "Helvetica-Bold";
 
+// Total de páginas do deck. Centralizado para os rodapés "NN / TOTAL".
+const TOTAL = 21;
+
+// URL do estudo próprio citado no slide da prova (B4).
+const STUDY_URL = "https://destaque.ai/estudo/visibilidade-ia-saas-portugal-2026";
+
+/**
+ * Plataformas conhecidas de tracking/medição GEO. Quando a marca mais
+ * citada na categoria é uma destas, o card do "ponto de partida" muda o
+ * rótulo — evita apresentar uma ferramenta como consultora concorrente.
+ * Espelha `GEO_TOOLS` em components/deck/slides/10_KPIs.tsx (B2).
+ */
+const GEO_TOOLS = [
+  "profound",
+  "otterly.ai",
+  "otterly",
+  "peec ai",
+  "peec.ai",
+  "athenahq",
+  "athena hq",
+  "brightedge",
+  "conductor",
+  "semrush",
+  "ahrefs",
+  "kalicube",
+  "searchmetrics",
+];
+
+function isGeoTool(brand: string): boolean {
+  const norm = brand.trim().toLowerCase();
+  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
+}
+
+/**
+ * Normaliza pontuação fora do subset latino das fontes .woff embebidas
+ * (Inter/Fraunces) para equivalentes seguros. Sem isto, glifos como `→`
+ * (presente em dados da skill, ex: "36% → 82%") caem para Helvetica e
+ * renderizam como lixo. O deck web não precisa — usa Inter completo via
+ * next/font. Aqui sanitizamos só os campos dinâmicos vindos da skill/DB.
+ */
+const GLYPH_MAP: Array<[RegExp, string]> = [
+  [/[→➜➔➙➡➙]/g, "—"], // setas → em-dash (no subset)
+  [/[←]/g, "—"], // seta esquerda
+  [/[‘’‛]/g, "'"], // aspas simples curvas → recta
+  [/[“”‟]/g, '"'], // aspas duplas curvas → recta
+  [/…/g, "..."], // reticências
+  [/[   ]/g, " "], // espaços estreitos/insecáveis
+];
+
+function san(input: string): string {
+  let out = input;
+  for (const [re, rep] of GLYPH_MAP) out = out.replace(re, rep);
+  return out;
+}
+
 const s = StyleSheet.create({
   page: { backgroundColor: CREAM, padding: 56, fontFamily: SANS, color: INK },
   pageInk: { backgroundColor: INK, padding: 56, fontFamily: SANS, color: CREAM },
@@ -159,7 +214,7 @@ function Foot({ n }: { n: number }) {
   return (
     <View style={s.footer} fixed>
       <Text style={s.footerText}>DESTAQUE.AI</Text>
-      <Text style={s.footerText}>{String(n).padStart(2, "0")} / 18</Text>
+      <Text style={s.footerText}>{`${String(n).padStart(2, "0")} / ${TOTAL}`}</Text>
     </View>
   );
 }
@@ -210,7 +265,7 @@ function StatementPage({
       <View style={s.footer} fixed>
         <Text style={[s.footerText, { color: INK4 }]}>DESTAQUE.AI</Text>
         <Text style={[s.footerText, { color: INK4 }]}>
-          {String(n).padStart(2, "0")} / 18
+          {`${String(n).padStart(2, "0")} / ${TOTAL}`}
         </Text>
       </View>
     </Page>
@@ -221,6 +276,10 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
   const summary = deck.audit?.summary;
   const top10 = findBenchmark(deck.benchmarks, "aio_top10_share");
   const { glossary, dimensions } = deck.method;
+
+  // Ponto de partida (slide 13): rótulo honesto da marca mais citada.
+  const topCited = summary?.top_competitors?.[0] ?? "—";
+  const topIsTool = topCited !== "—" && isGeoTool(topCited);
 
   const doc = (
     <Document
@@ -237,10 +296,10 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
           </Text>
           <Text style={[s.h1, { fontSize: 54 }]}>
             {deck.customMessage?.trim() ? (
-              deck.customMessage.trim()
+              san(deck.customMessage.trim())
             ) : (
               <>
-                Proposta para <Mark>{deck.companyName}</Mark>
+                Proposta para <Mark>{san(deck.companyName)}</Mark>
               </>
             )}
           </Text>
@@ -264,31 +323,68 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         body="Os teus clientes deixaram de escrever no Google. Perguntam ao ChatGPT, ao Claude, ao Gemini — e a IA responde com nomes."
       />
 
-      {/* 03 — O contexto (stats citados — mesma fonte que o HTML) */}
-      <ContentPage n={3} eyebrow="O contexto">
+      {/* 03 — O vilão concreto (cria tensão; nomes vêm do nosso estudo) */}
+      <ContentPage n={3} eyebrow="Quem aparece">
         <Text style={s.h2}>
-          Não é uma tendência. É <Mark>já</Mark>.
+          E o nome não é o <Mark>teu</Mark>.
         </Text>
-        <View style={[s.row, { marginTop: 36 }]}>
-          {deck.benchmarks.slice(0, 3).map((b) => (
-            <View key={b.key} style={s.statCol}>
-              <Text style={s.statValue}>{b.value}</Text>
-              <Text style={s.statLabel}>{b.caption}</Text>
-              <Text style={{ fontFamily: SANS, fontSize: 8, color: INK4, marginTop: 6 }}>
-                {b.source_name}
+        <Text style={[s.body, { marginTop: 14, maxWidth: 760 }]}>
+          Agora mesmo, um comprador pergunta à IA pela tua categoria. A resposta traz
+          três nomes — e hoje são os teus concorrentes.
+        </Text>
+        <View style={[s.row, { marginTop: 30 }]}>
+          {(
+            [
+              ["Pagamentos", "Stripe"],
+              ["Hotelaria", "Cloudbeds"],
+              ["Indústria", "UpKeep"],
+            ] as const
+          ).map(([cat, name], i, arr) => (
+            <View key={cat} style={{ flex: 1, paddingRight: i === arr.length - 1 ? 0 : 24 }}>
+              <Text style={{ fontFamily: SANS, fontSize: 9, letterSpacing: 1, color: INK3 }}>
+                {cat.toUpperCase()}
+              </Text>
+              <Text style={{ fontFamily: SERIF, fontSize: 32, color: INK, marginTop: 6 }}>
+                {name}
               </Text>
             </View>
           ))}
         </View>
-        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22 }}>
-          Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
+        <Text style={{ fontFamily: SERIF, fontSize: 17, color: INK, marginTop: 30 }}>
+          A marca portuguesa ficava de fora.
+        </Text>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK4, marginTop: 14 }}>
+          Estudo destaque.ai, 2026 — 45 SaaS B2B portuguesas, 3 motores de IA.
         </Text>
       </ContentPage>
 
-      {/* 04 — Auditoria personalizada (invertido: 0% é o herói) */}
-      <ContentPage n={4} eyebrow={`Auditoria personalizada · ${deck.companyName}`}>
+      {/* 04 — A prova própria (momento de viragem; 60% herói) */}
+      <ContentPage n={4} eyebrow="A prova">
         <Text style={s.h2}>
-          O que a IA diz sobre ti, <Mark>hoje</Mark>.
+          Não é teoria. Fizemos o <Mark>estudo</Mark>.
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 22 }}>
+          <Text style={{ fontFamily: SERIF, fontSize: 96, color: INK, letterSpacing: -3 }}>
+            60
+          </Text>
+          <Text style={[s.mark, { fontFamily: SERIF, fontSize: 64, marginBottom: 10 }]}>%</Text>
+        </View>
+        <Text style={[s.body, { marginTop: 12, maxWidth: 780, fontSize: 12 }]}>
+          Auditámos 45 SaaS B2B portuguesas em 3 motores de IA. 60% não é recomendada por
+          nenhum. 31% é completamente invisível — a IA nem as nomeia.
+        </Text>
+        <Text style={{ fontFamily: SERIF, fontSize: 22, color: INK, marginTop: 22 }}>
+          Estás nos 40%, ou nos <Mark>60%</Mark>?
+        </Text>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK4, marginTop: 16 }}>
+          Estudo destaque.ai, 2026 · {STUDY_URL}
+        </Text>
+      </ContentPage>
+
+      {/* 05 — O espelho (auditoria personalizada do cliente — resposta ao "60%?") */}
+      <ContentPage n={5} eyebrow={`Auditoria personalizada · ${san(deck.companyName)}`}>
+        <Text style={s.h2}>
+          E sobre ti, o que diz a <Mark>IA</Mark>?
         </Text>
         <View style={[s.row, { marginTop: 28 }]}>
           {[
@@ -308,7 +404,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
               key={i}
               style={{ fontFamily: SERIF, fontSize: 13, color: INK2, marginBottom: 8, lineHeight: 1.35 }}
             >
-              «{p}»
+              «{san(p)}»
             </Text>
           ))}
         </View>
@@ -318,15 +414,49 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 05 — SEO vs GEO */}
-      <ContentPage n={5} eyebrow="SEO vs GEO">
+      {/* 06 — A esperança (o destino) */}
+      <StatementPage
+        n={6}
+        eyebrow="O destino"
+        title={
+          <>
+            Imagina o <Mark>contrário</Mark>.
+          </>
+        }
+        body="Um comprador pergunta à IA pela tua categoria. A resposta começa com o teu nome. Não pagaste por isso — foste citado porque a IA confia em ti. É isto que o GEO constrói: estar na resposta, não na página 2 que ninguém abre."
+      />
+
+      {/* 07 — O contexto (stats de terceiros — reforço, depois da prova própria) */}
+      <ContentPage n={7} eyebrow="O contexto">
+        <Text style={s.h2}>
+          Não é uma tendência. É <Mark>já</Mark>.
+        </Text>
+        <View style={[s.row, { marginTop: 36 }]}>
+          {deck.benchmarks.slice(0, 3).map((b) => (
+            <View key={b.key} style={s.statCol}>
+              <Text style={s.statValue}>{san(b.value)}</Text>
+              <Text style={s.statLabel}>{san(b.caption)}</Text>
+              <Text style={{ fontFamily: SANS, fontSize: 8, color: INK4, marginTop: 6 }}>
+                {san(b.source_name)}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22 }}>
+          Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
+          Os nossos dados PT (slide 04) vêm primeiro; estes reforçam.
+        </Text>
+      </ContentPage>
+
+      {/* 08 — SEO vs GEO */}
+      <ContentPage n={8} eyebrow="SEO vs GEO">
         <Text style={s.h2}>
           O GEO <Mark>assenta</Mark> sobre o SEO.
         </Text>
         <Text style={[s.body, { marginTop: 12, maxWidth: 720 }]}>
-          {top10 ? `${top10.value} ${top10.caption}. ` : ""}O SEO é o substrato;
+          {top10 ? `${san(top10.value)} ${san(top10.caption)}. ` : ""}O SEO é o substrato;
           o GEO é a camada que te torna citável. Precisas dos dois.
-          {top10 ? ` (${top10.source_name}.)` : ""}
+          {top10 ? ` (${san(top10.source_name)}.)` : ""}
         </Text>
         <View style={[s.row, { marginTop: 26 }]}>
           {(
@@ -359,7 +489,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
                     borderColor: RULE,
                   }}
                 >
-                  {r}
+                  {san(r)}
                 </Text>
               ))}
             </View>
@@ -367,9 +497,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 06 — Definição (glossário vivo da skill: SEO · GEO · AEO) */}
+      {/* 09 — Definição (glossário vivo da skill: SEO · GEO · AEO) */}
       <Page size={[960, 540]} style={s.pageInk}>
-        <Eyebrow num="06" label="A definição" ink />
+        <Eyebrow num="09" label="A definição" ink />
         <View style={s.center}>
           <Text style={[s.h2, { color: CREAM, maxWidth: 720 }]}>
             A categoria tem <Mark>vários nomes</Mark>.
@@ -377,9 +507,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
           <View style={[s.row, { marginTop: 26 }]}>
             {glossary.map((g) => (
               <View key={g.sigla} style={{ flex: 1, paddingRight: 28 }}>
-                <Text style={{ fontFamily: SERIF, fontSize: 24, color: CREAM }}>{g.sigla}</Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 24, color: CREAM }}>{san(g.sigla)}</Text>
                 <Text style={{ fontFamily: SANS, fontSize: 10, lineHeight: 1.5, color: INK4, marginTop: 5 }}>
-                  <Text style={{ fontFamily: SANS_B, color: CREAM }}>{g.nome}.</Text> {g.definicao}
+                  <Text style={{ fontFamily: SANS_B, color: CREAM }}>{san(g.nome)}.</Text> {san(g.definicao)}
                 </Text>
               </View>
             ))}
@@ -391,16 +521,16 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
         <View style={s.footer} fixed>
           <Text style={[s.footerText, { color: INK4 }]}>DESTAQUE.AI</Text>
-          <Text style={[s.footerText, { color: INK4 }]}>06 / 18</Text>
+          <Text style={[s.footerText, { color: INK4 }]}>{`09 / ${TOTAL}`}</Text>
         </View>
       </Page>
 
-      {/* 07 — Metodologia (8 dimensões vivas da skill) */}
-      <ContentPage n={7} eyebrow="Metodologia · SINAL">
+      {/* 10 — Metodologia (8 dimensões vivas da skill) */}
+      <ContentPage n={10} eyebrow="Metodologia · SINAL">
         <Text style={s.h2}>
-          <Mark>SINAL</Mark>: oito dimensões, um sistema.
+          <Mark>SINAL</Mark>: o sistema que te põe na resposta.
         </Text>
-        <Text style={[s.body, { marginTop: 8 }]}>{deck.method.sinal}</Text>
+        <Text style={[s.body, { marginTop: 8 }]}>{san(deck.method.sinal)}</Text>
         {[dimensions.slice(0, 4), dimensions.slice(4, 8)].map((rowDims, ri) => (
           <View key={ri} style={[s.row, { marginTop: ri === 0 ? 22 : 16 }]}>
             {rowDims.map((d) => (
@@ -409,9 +539,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
                   {d.n.padStart(2, "0")}
                 </Text>
                 <Text style={{ fontFamily: SERIF, fontSize: 14, color: INK, marginTop: 6 }}>
-                  {d.dimensao}
+                  {san(d.dimensao)}
                 </Text>
-                <Text style={[s.body, { marginTop: 5, fontSize: 8.5 }]}>{d.foco}</Text>
+                <Text style={[s.body, { marginTop: 5, fontSize: 8.5 }]}>{san(d.foco)}</Text>
               </View>
             ))}
           </View>
@@ -421,8 +551,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 08 — Fases 1 e 2 */}
-      <ContentPage n={8} eyebrow="Fases 1 e 2">
+      {/* 11 — Fases 1 e 2 */}
+      <ContentPage n={11} eyebrow="Fases 1 e 2">
         <Text style={s.h2}>
           Diagnóstico e <Mark>conteúdo</Mark>.
         </Text>
@@ -451,8 +581,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 09 — Fases 3 e 4 */}
-      <ContentPage n={9} eyebrow="Fases 3 e 4">
+      {/* 12 — Fases 3 e 4 */}
+      <ContentPage n={12} eyebrow="Fases 3 e 4">
         <Text style={s.h2}>
           Distribuição e <Mark>medição</Mark>.
         </Text>
@@ -481,8 +611,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 10 — Ponto de partida */}
-      <ContentPage n={10} eyebrow="Ponto de partida">
+      {/* 13 — Ponto de partida */}
+      <ContentPage n={13} eyebrow="Ponto de partida">
         <Text style={s.h2}>
           Onde a <Mark>destaque.ai</Mark> está hoje.
         </Text>
@@ -491,18 +621,21 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
             ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
             ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
-            ["Marca mais citada na categoria", summary?.top_competitors?.[0] ?? "—"],
+            [topIsTool ? "Ferramenta de referência" : "Marca mais citada", san(topCited)],
           ].map(([l, v], i, arr) => (
             <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
               <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
               <Text style={s.cardValue}>{v}</Text>
+              {i === arr.length - 1 && topIsTool ? (
+                <Text style={s.cardNote}>ferramenta de medição, não consultora</Text>
+              ) : null}
             </View>
           ))}
         </View>
       </ContentPage>
 
-      {/* 11 — Investimento */}
-      <ContentPage n={11} eyebrow="Investimento">
+      {/* 14 — Investimento */}
+      <ContentPage n={14} eyebrow="Investimento">
         <Text style={s.h2}>
           Três fases, uma <Mark>decisão de cada vez</Mark>.
         </Text>
@@ -542,8 +675,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 12 — Próximos passos */}
-      <ContentPage n={12} eyebrow="A seguir">
+      {/* 15 — Próximos passos */}
+      <ContentPage n={15} eyebrow="A seguir">
         <Text style={s.h2}>
           O que acontece <Mark>a partir daqui</Mark>.
         </Text>
@@ -571,9 +704,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 13 — Apêndices */}
+      {/* 16 — Apêndices */}
       <StatementPage
-        n={13}
+        n={16}
         eyebrow="Apêndices"
         title={
           <>
@@ -583,11 +716,11 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         body="As próximas páginas abrem cada fase — entregáveis, duração e investimento."
       />
 
-      {/* 14-16 — Apêndices A/B/C */}
+      {/* 17-19 — Apêndices A/B/C */}
       {(
         [
           {
-            n: 14,
+            n: 17,
             code: "A",
             title: "Diagnóstico",
             meta:
@@ -604,7 +737,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             ],
           },
           {
-            n: 15,
+            n: 18,
             code: "B",
             title: "Sprint",
             meta:
@@ -618,7 +751,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
             ],
           },
           {
-            n: 16,
+            n: 19,
             code: "C",
             title: "Retainer",
             meta:
@@ -659,7 +792,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
                   key={i}
                   style={{ fontFamily: SERIF, fontSize: 11, color: INK2, marginBottom: 6, lineHeight: 1.3 }}
                 >
-                  {String(i + 1).padStart(2, "0")}   {p}
+                  {`${String(i + 1).padStart(2, "0")}   ${san(p)}`}
                 </Text>
               ))}
             </View>
@@ -667,8 +800,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </ContentPage>
       ))}
 
-      {/* 17 — Apêndice D · Investimento */}
-      <ContentPage n={17} eyebrow="Apêndice D · Investimento">
+      {/* 20 — Apêndice D · Investimento */}
+      <ContentPage n={20} eyebrow="Apêndice D · Investimento">
         <Text style={s.h2}>
           Resumo do <Mark>investimento</Mark>.
         </Text>
@@ -713,9 +846,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 18 — Fecho */}
+      {/* 21 — Fecho */}
       <Page size={[960, 540]} style={s.pageInk}>
-        <Eyebrow num="18" label="Vamos a isto" ink />
+        <Eyebrow num="21" label="Vamos a isto" ink />
         <View style={s.center}>
           <Text style={[s.h1, { color: CREAM, maxWidth: 760 }]}>
             Vamos pôr a tua marca <Mark>no parágrafo</Mark>.
@@ -723,7 +856,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
         <View style={s.footer} fixed>
           <Text style={[s.footerText, { color: INK4 }]}>DESTAQUE.AI</Text>
-          <Text style={[s.footerText, { color: INK4 }]}>18 / 18</Text>
+          <Text style={[s.footerText, { color: INK4 }]}>{`21 / ${TOTAL}`}</Text>
         </View>
       </Page>
     </Document>

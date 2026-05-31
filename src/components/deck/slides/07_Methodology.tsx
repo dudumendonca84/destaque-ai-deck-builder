@@ -10,7 +10,7 @@ export function Methodology({ deck, active }: SlideProps) {
   return (
     <SlideShell eyebrow="Metodologia · SINAL">
       <h2 className="tx-h2" style={{ marginBottom: 10 }}>
-        <em className="mark">SINAL</em>: oito dimensões, um sistema.
+        <em className="mark">SINAL</em>: o sistema que te põe na resposta.
       </h2>
       <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24, maxWidth: 720 }}>
         {sinal}

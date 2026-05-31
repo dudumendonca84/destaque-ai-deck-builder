@@ -7,16 +7,7 @@ import type { ActionItem } from "@/lib/llm/synthesize-deck";
 
 export type Horizon = "h1" | "h2" | "h3" | "ongoing";
 
-const DIMENSION_LABEL: Record<string, string> = {
-  technical: "Técnica",
-  content: "Conteúdo",
-  entity: "Entidade",
-  authority: "Autoridade",
-  ux: "UX",
-  measurement: "Medição",
-  positioning: "Posicionamento",
-  operational: "Operacional",
-};
+import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 const HORIZON: Record<Horizon, { eyebrow: string; title: string }> = {
   h1: { eyebrow: "Plano · H1 · semana 1-2", title: "O que fazemos primeiro." },

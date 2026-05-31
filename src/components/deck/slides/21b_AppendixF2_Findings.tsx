@@ -16,16 +16,7 @@ export function findingsPageCount(deck: DeckData): number {
   return n === 0 ? 0 : Math.ceil(n / FINDINGS_PER_PAGE);
 }
 
-const DIMENSION_LABEL: Record<string, string> = {
-  technical: "Técnica",
-  content: "Conteúdo",
-  entity: "Entidade",
-  authority: "Autoridade",
-  ux: "UX",
-  measurement: "Medição",
-  positioning: "Posicionamento",
-  operational: "Operacional",
-};
+import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps) {
   const synth = deck.synthesized;

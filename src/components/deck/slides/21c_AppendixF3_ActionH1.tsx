@@ -4,16 +4,7 @@ import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 
-const DIMENSION_LABEL: Record<string, string> = {
-  technical: "Técnica",
-  content: "Conteúdo",
-  entity: "Entidade",
-  authority: "Autoridade",
-  ux: "UX",
-  measurement: "Medição",
-  positioning: "Posicionamento",
-  operational: "Operacional",
-};
+import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 export function AppendixF3ActionH1({ deck }: SlideProps) {
   const synth = deck.synthesized;

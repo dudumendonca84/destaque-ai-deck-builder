@@ -57,10 +57,6 @@ export const TIER_DISTRIBUTION: Record<AuditTier, Record<PromptCategory, number>
   },
 };
 
-export function tierTotal(tier: AuditTier): number {
-  return Object.values(TIER_DISTRIBUTION[tier]).reduce((a, b) => a + b, 0);
-}
-
 /**
  * Fallback hardcoded da §1-3 do prompts.md. Usado quando o fetch falha
  * (rede, GH down, repo privado, etc.). Reflicte o conteúdo conhecido à

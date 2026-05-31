@@ -148,7 +148,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
         </div>
 
         <h2 className="tx-h2" style={{ marginBottom: 28 }}>
-          O que a IA diz sobre ti, <em className="mark">hoje</em>.
+          E sobre ti, o que diz a <em className="mark">IA</em>?
         </h2>
 
         {/* Herói: 0% grande */}

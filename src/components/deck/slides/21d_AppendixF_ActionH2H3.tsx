@@ -5,16 +5,7 @@ import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import type { ActionItem } from "@/lib/llm/synthesize-deck";
 
-const DIMENSION_LABEL: Record<string, string> = {
-  technical: "Técnica",
-  content: "Conteúdo",
-  entity: "Entidade",
-  authority: "Autoridade",
-  ux: "UX",
-  measurement: "Medição",
-  positioning: "Posicionamento",
-  operational: "Operacional",
-};
+import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 function ActionRow({ action, delay }: { action: ActionItem; delay: number }) {
   return (
