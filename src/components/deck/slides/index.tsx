@@ -17,7 +17,7 @@ import { Pricing } from "./11_Pricing";
 import { NextSteps } from "./12_NextSteps";
 import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings, findingsPageCount } from "./21b_AppendixF2_Findings";
-import { AppendixFLandscape } from "./21y_AppendixF_Landscape";
+import { AppendixFLandscape, landscapePageCount } from "./21y_AppendixF_Landscape";
 import { AppendixFPotential } from "./21x_AppendixF_Potential";
 import { AppendixFActionHorizon, actionsPageCount, type Horizon } from "./21f_AppendixF_ActionHorizon";
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
@@ -81,14 +81,15 @@ export function buildSlides(deck: DeckData): SlideDef[] {
     { id: "our-study", title: "A prova", tone: "paper", Component: OurStudy },
     ...paginated("live-audit", "E sobre ti?", "paper", LiveAudit, liveAuditPageCount(deck)),
   );
-  if (synth && (synth.competitor_profiles?.length ?? 0) > 0) {
-    out.push({
-      id: "appendix-landscape",
-      title: "Landscape competitivo",
-      tone: "paper",
-      Component: AppendixFLandscape,
-    });
-  }
+  out.push(
+    ...paginated(
+      "appendix-landscape",
+      "Landscape competitivo",
+      "paper",
+      AppendixFLandscape,
+      landscapePageCount(deck),
+    ),
+  );
   out.push(
     { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
     { id: "cost-invisibility", title: "Custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
