@@ -126,11 +126,17 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
       }
       // Settle: hidratação + fontes + estado final das animações.
       await new Promise((r) => setTimeout(r, 1200));
+      // Página PDF = exactamente 1280×720, margens zero. NÃO usar
+      // preferCSSPageSize: combinado com width/height fazia o chromium
+      // ignorar as dimensões e paginar por tamanho default (Letter) →
+      // 2 slides por página (44 slides saíam em 22 páginas). Com width/
+      // height explícitos + margin 0, cada .print-page (720px + break-
+      // after:page) mapeia 1:1 para uma página PDF.
       const pdf = await page.pdf({
         width: `${PAGE_W}px`,
         height: `${PAGE_H}px`,
         printBackground: true,
-        preferCSSPageSize: true,
+        margin: { top: "0", right: "0", bottom: "0", left: "0" },
       });
       const filename = `proposta-${slug(token)}.pdf`;
       return new Response(new Uint8Array(pdf), {
