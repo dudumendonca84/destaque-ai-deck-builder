@@ -52,3 +52,28 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
 
   return NextResponse.json({ ok: true, queued: true });
 }
+
+/**
+ * Cancela uma síntese pendente: limpa `deck_synthesis_pending=false`. A
+ * Routine no Claude Code Web já não a apanhará. Útil quando a Routine
+ * partiu silenciosamente e o operador precisa de destrancar o estado.
+ */
+export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const sb = createServiceClient();
+  const { error } = await sb
+    .from("proposals")
+    .update({ deck_synthesis_pending: false })
+    .eq("id", id);
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, cancelled: true });
+}

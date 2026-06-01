@@ -1306,8 +1306,21 @@ em.mark {
   color: var(--ink);
 }
 
-/* ---------- print mode (chromium → PDF) ---------- */
-/* Cada slide = uma página fixa 1280×720 (16:9). Reutiliza os componentes
+/* ---------- ponto pulsante (estados de processamento no admin) ---------- */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+
+/* ---------- print mode (chromium → PDF) ----------
+   Cada slide = uma página fixa 1280×720 (16:9). Reutiliza os componentes
    de slide do deck web → web == PDF por construção. As animações de
    entrada (framer-motion, opacity/transform) são forçadas ao estado final
    para o chromium nunca capturar um frame a meio do fade. */

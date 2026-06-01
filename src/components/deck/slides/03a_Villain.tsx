@@ -3,39 +3,23 @@
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { DeckData, SlideProps } from "../types";
-
-const GEO_TOOLS = [
-  "profound",
-  "otterly.ai",
-  "otterly",
-  "peec ai",
-  "peec.ai",
-  "athenahq",
-  "athena hq",
-  "brightedge",
-  "conductor",
-  "semrush",
-  "ahrefs",
-  "kalicube",
-  "searchmetrics",
-];
-
-function isGeoTool(brand: string): boolean {
-  const norm = brand.trim().toLowerCase();
-  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
-}
+import { isGeoTool, ptPeerScore } from "@/lib/skill/geo-tools";
 
 export function villainNames(deck: DeckData): string[] {
-  // 1. Concorrentes peer classificados pela síntese (filtrado de vendor tools).
+  // 1. Peers classificados pela síntese, REORDENADOS para liderar com PT.
   const peers =
     deck.synthesized?.competitor_profiles?.filter((p) => p.classification === "peer_consultancy") ??
     [];
-  if (peers.length > 0) return peers.slice(0, 3).map((p) => p.name);
+  if (peers.length > 0) {
+    const ranked = peers
+      .map((p, i) => ({ p, i, score: ptPeerScore(p.positioning_md) }))
+      // score desc; empate mantém ordem original (estável via índice)
+      .sort((a, b) => b.score - a.score || a.i - b.i)
+      .map((x) => x.p.name);
+    return ranked.slice(0, 3);
+  }
 
   // 2. Concorrentes declarados manualmente no admin (ProposalWizard).
-  //    Quando a síntese não classifica peers (ou ainda não correu) mas o
-  //    operador já sabe quem são os concorrentes reais do cliente —
-  //    UniK SEO / Gabriel Cunha / Infinidata / Flowup para destaque.ai, etc.
   const declared = (deck.competitors ?? []).filter((n) => n.trim().length > 0 && !isGeoTool(n));
   if (declared.length > 0) return declared.slice(0, 3);
 
