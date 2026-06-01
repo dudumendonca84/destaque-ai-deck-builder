@@ -4,6 +4,7 @@ import { Topbar } from "@/components/admin/Topbar";
 import { AuditRunner } from "@/components/admin/AuditRunner";
 import { SendProposalButton } from "@/components/admin/SendProposalButton";
 import { SynthesisProgress } from "@/components/admin/SynthesisProgress";
+import { SynthesizeDeckButton } from "@/components/admin/SynthesizeDeckButton";
 import { createClient } from "@/lib/supabase/server";
 import type { AuditStatus } from "@/lib/supabase/types";
 
@@ -88,6 +89,14 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
             deckBlocksExists={Boolean(proposal.deck_blocks)}
             deckSynthesizedAt={proposal.deck_synthesized_at}
           />
+          {proposal.audit_status === "completed" && (
+            <SynthesizeDeckButton
+              proposalId={proposal.id}
+              hasExisting={Boolean(proposal.deck_blocks)}
+              synthesizedAt={proposal.deck_synthesized_at}
+              source={null}
+            />
+          )}
         </div>
 
         <div
