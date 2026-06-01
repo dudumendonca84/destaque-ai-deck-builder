@@ -1136,6 +1136,14 @@ em.mark {
   gap: 20px;
   padding: 18px 24px;
   z-index: 60;
+  /* Fundo sólido (mesma cor do slide → sem costura visual em slides curtos,
+     mas opaco para o conteúdo nunca transbordar por cima da paginação em
+     slides altos). Rede de segurança: a correcção primária é paginar. */
+  background: var(--paper);
+}
+.deck[data-tone="ink"] .deck-nav,
+.deck-nav[data-tone="ink"] {
+  background: var(--bg-inverted);
 }
 .deck-nav__arrow {
   display: inline-flex;
