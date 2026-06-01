@@ -19,7 +19,7 @@ import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings, findingsPageCount } from "./21b_AppendixF2_Findings";
 import { AppendixFLandscape } from "./21y_AppendixF_Landscape";
 import { AppendixFPotential } from "./21x_AppendixF_Potential";
-import { AppendixFActionHorizon, actionsFor, type Horizon } from "./21f_AppendixF_ActionHorizon";
+import { AppendixFActionHorizon, actionsPageCount, type Horizon } from "./21f_AppendixF_ActionHorizon";
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
 import { AppendixAPrompts, appendixAPromptsPageCount } from "./15a_AppendixA_Prompts";
 import { allAuditedPrompts } from "./04_LiveAudit";
@@ -128,13 +128,10 @@ export function buildSlides(deck: DeckData): SlideDef[] {
       { key: "ongoing", title: "Plano contínuo" },
     ];
     for (const h of horizons) {
-      if (actionsFor(deck, h.key).length > 0) {
-        out.push({
-          id: `appendix-action-${h.key}`,
-          title: h.title,
-          tone: "paper",
-          Component: (props: SlideProps) => <AppendixFActionHorizon {...props} horizon={h.key} />,
-        });
+      const pageCount = actionsPageCount(deck, h.key);
+      if (pageCount > 0) {
+        const Base = (props: SlideProps) => <AppendixFActionHorizon {...props} horizon={h.key} />;
+        out.push(...paginated(`appendix-action-${h.key}`, h.title, "paper", Base, pageCount));
       }
     }
     if (synth.projection_6m) {
