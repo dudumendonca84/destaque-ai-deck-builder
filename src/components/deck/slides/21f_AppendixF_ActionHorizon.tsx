@@ -16,8 +16,20 @@ const HORIZON: Record<Horizon, { eyebrow: string; title: string }> = {
   ongoing: { eyebrow: "Plano · contínuo", title: "Manutenção." },
 };
 
+/** Acções por página do slide de horizonte. Defensivo: cada linha pode
+ * ter título de 2 linhas + why de 2 linhas + dimensão + effort, dando
+ * facilmente 110-130px por acção. Slide útil ronda 540px, 4 cabe sem
+ * o último ser tapado pela barra de navegação fixa. */
+const ACTIONS_PER_PAGE = 4;
+
 export function actionsFor(deck: DeckData, horizon: Horizon): ActionItem[] {
   return deck.synthesized?.action_plan?.[horizon] ?? [];
+}
+
+export function actionsPageCount(deck: DeckData, horizon: Horizon): number {
+  const total = actionsFor(deck, horizon).length;
+  if (total === 0) return 0;
+  return Math.max(1, Math.ceil(total / ACTIONS_PER_PAGE));
 }
 
 /** Condensa o why a 1 frase para a vista de plano (a profundidade vive
@@ -29,13 +41,24 @@ function oneLine(md: string): string {
     ?.trim() ?? "";
 }
 
-export function AppendixFActionHorizon({ deck, horizon = "h1" }: SlideProps & { horizon?: Horizon }) {
-  const actions = actionsFor(deck, horizon);
+export function AppendixFActionHorizon({
+  deck,
+  horizon = "h1",
+  page = 0,
+  pageCount = 1,
+}: SlideProps & { horizon?: Horizon }) {
+  const allActions = actionsFor(deck, horizon);
+  if (allActions.length === 0) return null;
+
+  const start = page * ACTIONS_PER_PAGE;
+  const actions = allActions.slice(start, start + ACTIONS_PER_PAGE);
   if (actions.length === 0) return null;
+
   const meta = HORIZON[horizon];
+  const eyebrow = pageCount > 1 ? `${meta.eyebrow} · ${page + 1}/${pageCount}` : meta.eyebrow;
 
   return (
-    <SlideShell eyebrow={meta.eyebrow}>
+    <SlideShell eyebrow={eyebrow}>
       <h2 className="tx-h2" style={{ marginBottom: 28, maxWidth: 900 }}>
         {meta.title}
       </h2>
@@ -43,7 +66,7 @@ export function AppendixFActionHorizon({ deck, horizon = "h1" }: SlideProps & { 
       <div style={{ maxWidth: 1040 }}>
         {actions.map((a, i) => (
           <motion.div
-            key={`${a.title}-${i}`}
+            key={`${a.title}-${start + i}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05 * i }}

@@ -26,11 +26,20 @@ function isGeoTool(brand: string): boolean {
 }
 
 export function villainNames(deck: DeckData): string[] {
+  // 1. Concorrentes peer classificados pela síntese (filtrado de vendor tools).
   const peers =
     deck.synthesized?.competitor_profiles?.filter((p) => p.classification === "peer_consultancy") ??
     [];
   if (peers.length > 0) return peers.slice(0, 3).map((p) => p.name);
 
+  // 2. Concorrentes declarados manualmente no admin (ProposalWizard).
+  //    Quando a síntese não classifica peers (ou ainda não correu) mas o
+  //    operador já sabe quem são os concorrentes reais do cliente —
+  //    UniK SEO / Gabriel Cunha / Infinidata / Flowup para destaque.ai, etc.
+  const declared = (deck.competitors ?? []).filter((n) => n.trim().length > 0 && !isGeoTool(n));
+  if (declared.length > 0) return declared.slice(0, 3);
+
+  // 3. Top competitors agregados do audit summary, filtrando vendor tools.
   const top = (deck.audit?.summary?.top_competitors ?? []).filter((n) => !isGeoTool(n));
   return top.slice(0, 3);
 }
