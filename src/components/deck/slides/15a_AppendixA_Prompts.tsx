@@ -6,15 +6,15 @@ import { allAuditedPrompts } from "./04_LiveAudit";
 import { ENGINE_COUNT } from "@/lib/llm/models";
 
 /**
- * Apêndice A — prompts auditados em layout de 2 colunas com cards
- * compactos tipo input de LLM. Densidade horizontal evita correr a
- * altura para baixo da barra de navegação fixa.
+ * Apêndice A — lista de prompts sobre régua, padrão v12. SEM cartões,
+ * SEM caixas. Cada prompt = uma linha com número mono esbatido à
+ * esquerda + texto Inter à direita; divisória 1px var(--rule-paper)
+ * entre itens. Layout 2 colunas para densidade horizontal.
  *
- * 10 prompts por página (5 por coluna × 2 colunas). Para 25 prompts
- * dá 3 páginas com folga vertical em todas — a quinta linha fecha
- * acima da barra com respiro.
+ * 8/página com folga vertical em 1280×720 do print; mantém 3-4 páginas
+ * para 25 prompts, numeração contínua entre páginas.
  */
-const PROMPTS_PER_PAGE = 10;
+const PROMPTS_PER_PAGE = 8;
 const COLUMNS = 2;
 
 export function appendixAPromptsPageCount(deck: DeckData): number {
@@ -35,42 +35,39 @@ export function AppendixAPrompts({ deck, page = 0, pageCount = 1 }: SlideProps) 
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Os prompts que <em className="mark">decidem</em> a categoria.
       </h2>
-      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 20, maxWidth: 760 }}>
+      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24, maxWidth: 760 }}>
         {all.length} prompts × {ENGINE_COUNT} motores. A marca não aparece em nenhum.
       </p>
       <div
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${COLUMNS}, 1fr)`,
-          gap: 10,
+          columnGap: 36,
         }}
       >
         {prompts.map((p, i) => {
-          const num = String(start + i + 1).padStart(2, "0");
+          const n = start + i + 1;
           return (
             <div
               key={start + i}
               style={{
                 display: "grid",
-                gridTemplateColumns: "32px 1fr",
-                gap: 10,
-                padding: "10px 14px",
-                background: "#FFFFFF",
-                border: "1px solid var(--rule-soft)",
-                borderRadius: 10,
-                alignItems: "flex-start",
+                gridTemplateColumns: "28px 1fr",
+                gap: 12,
+                padding: "12px 0",
+                borderTop: "1px solid var(--rule-paper)",
+                alignItems: "baseline",
               }}
             >
               <span
                 style={{
                   fontFamily: "var(--font-mono-jetbrains), ui-monospace, monospace",
                   fontSize: 10,
-                  color: "var(--ink-3)",
+                  color: "var(--ink-muted)",
                   letterSpacing: "0.05em",
-                  paddingTop: 2,
                 }}
               >
-                {num}
+                {String(n).padStart(2, "0")}
               </span>
               <span
                 style={{

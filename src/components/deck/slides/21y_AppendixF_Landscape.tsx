@@ -56,68 +56,88 @@ export function AppendixFLandscape({ deck, page = 0, pageCount = 1 }: SlideProps
         Quem aparece quando perguntam.
       </h2>
 
+      {/* 7/1 — narrativa editorial. A spec v12 prefere 3 colunas estritas
+          (Orgânico PT / GEO declarado / Plataformas-ferramenta), mas isso
+          exigia synthesized.landscape_overview estruturado da routine —
+          não há hoje. Renderiza o markdown que a routine produz (já é o
+          sumário) e fecha com o bloc-close amarelo do v12. */}
       {showNarrative && (
-        <div
-          style={{
-            fontSize: 15,
-            lineHeight: 1.6,
-            color: "var(--ink-2)",
-            maxWidth: 880,
-          }}
-        >
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => <p style={{ margin: "0 0 0.85em" }}>{children}</p>,
-              strong: ({ children }) => <strong style={{ color: "var(--ink)" }}>{children}</strong>,
+        <>
+          <div
+            style={{
+              fontSize: 14,
+              lineHeight: 1.55,
+              color: "var(--ink-2)",
+              maxWidth: 880,
+              marginBottom: 24,
             }}
           >
-            {narrative}
-          </ReactMarkdown>
-        </div>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p style={{ margin: "0 0 0.7em" }}>{children}</p>,
+                strong: ({ children }) => <strong style={{ color: "var(--ink)" }}>{children}</strong>,
+              }}
+            >
+              {narrative}
+            </ReactMarkdown>
+          </div>
+          <div className="bloc-close" style={{ maxWidth: 800 }}>
+            O lugar está por preencher. Quem primeiro fixar entidade + prova de
+            terceiros torna-se esse nome — uma janela que se fecha.
+          </div>
+        </>
       )}
 
+      {/* 7/2 — buckets classificados em grelha 2x2, sistema bloc-rule.
+          Destaque do "peer_consultancy" por PESO (régua preta + etiqueta a
+          tinta cheia), não por caixa. */}
       {showBuckets && (
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 24,
+            gap: 28,
             maxWidth: 1080,
           }}
         >
           {BUCKETS.map((bucket, bi) => {
             const items = byBucket(bucket.key);
+            const isPeers = bucket.key === "peer_consultancy";
             return (
               <motion.div
                 key={bucket.key}
+                className="bloc-rule"
+                data-rule="grouped"
+                data-emphasis={isPeers ? "strong" : undefined}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.06 * bi }}
-                style={{ borderTop: "2px solid var(--rule-soft)", paddingTop: 10 }}
               >
-                <div
-                  style={{
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: bucket.key === "peer_consultancy" ? "var(--ink)" : "var(--ink-3)",
-                    fontWeight: 500,
-                    marginBottom: 2,
-                  }}
+                <span
+                  className="bloc-rule__label"
+                  data-tone={isPeers ? undefined : "category"}
+                  style={{ marginBottom: 4 }}
                 >
                   {bucket.label}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--ink-3)", marginBottom: 8 }}>
+                </span>
+                <div
+                  style={{
+                    fontSize: 10.5,
+                    color: "var(--ink-3)",
+                    marginBottom: 10,
+                    fontStyle: "italic",
+                  }}
+                >
                   {bucket.note}
                 </div>
                 {items.length === 0 ? (
                   <div style={{ fontSize: 13, color: "var(--ink-3)", fontStyle: "italic" }}>
-                    {bucket.key === "peer_consultancy" ? "Vácuo — oportunidade." : "—"}
+                    {isPeers ? "Vácuo — oportunidade." : "—"}
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     {items.slice(0, 6).map((p) => (
-                      <div key={p.name} style={{ fontSize: 14 }}>
+                      <div key={p.name} style={{ fontSize: 13.5 }}>
                         <span
                           style={{
                             fontFamily: "var(--font-fraunces), Georgia, serif",

@@ -63,6 +63,9 @@ export function AppendixFActionHorizon({
         {meta.title}
       </h2>
 
+      {/* v12: tabela compacta sobre régua. Dimensão âmbar 130px fixos +
+          acção em Fraunces (herói) + 1 linha de contexto (Inter 11.5px) +
+          esforço em mono à direita. As 4 acções/página cabem sem corte. */}
       <div style={{ maxWidth: 1040 }}>
         {actions.map((a, i) => (
           <motion.div
@@ -72,38 +75,47 @@ export function AppendixFActionHorizon({
             transition={{ duration: 0.3, delay: 0.05 * i }}
             style={{
               display: "grid",
-              gridTemplateColumns: "120px 1fr 130px",
-              gap: 20,
+              gridTemplateColumns: "130px 1fr 110px",
+              gap: 24,
               alignItems: "baseline",
-              padding: "14px 0",
-              borderTop: "1px solid var(--rule-soft)",
+              padding: "14px 0 12px",
+              borderTop: "1px solid var(--rule-paper)",
             }}
           >
             <span
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "var(--amber, #d97706)",
+                letterSpacing: "0.14em",
+                color: "var(--amber-label)",
                 fontWeight: 500,
               }}
             >
               {DIMENSION_LABEL[a.dimension] ?? a.dimension}
             </span>
             <div>
-              <div style={{ fontSize: 16, lineHeight: 1.35, color: "var(--ink)", marginBottom: 4 }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-fraunces), Georgia, serif",
+                  fontSize: 15,
+                  lineHeight: 1.3,
+                  color: "var(--ink)",
+                  marginBottom: 4,
+                }}
+              >
                 {a.title}
               </div>
-              <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" }}>
+              <div style={{ fontSize: 11.5, lineHeight: 1.5, color: "var(--ink-3)" }}>
                 {oneLine(a.why_md ?? a.why ?? "")}
               </div>
             </div>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 color: "var(--ink-3)",
                 textAlign: "right",
                 fontFamily: "var(--font-mono-jetbrains)",
+                letterSpacing: 0.5,
               }}
             >
               {a.effort}
