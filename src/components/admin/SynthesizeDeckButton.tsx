@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Botão para disparar o Step 12 — Claude sintetiza o deck consumindo
- * skill inteira + audit + scan + prospect data.
+ * Botão para enfileirar a síntese do deck (Step 12). NÃO chama Claude
+ * API — marca `deck_synthesis_pending = true` no DB. A síntese real
+ * corre na Routine "Synthesize-pending-decks" do Claude Code Web (plano
+ * Max, custo zero), que o operador dispara manualmente ("Run now") ou
+ * aguarda o cron diário das 9:00.
  *
- * Pode demorar ~30-60s. O estado "pending" vive no DB (proposals.
- * deck_synthesis_pending) para sobreviver a refresh / abas múltiplas.
- * Quando isPending=true, faz polling a cada 5s via router.refresh()
- * para o operador ver quando termina sem ter de refrescar à mão.
+ * O estado pending vive no DB para sobreviver a refresh / abas. Enquanto
+ * pending=true, faz polling a cada 10s para o operador ver quando a
+ * Routine concluir (deck_synthesized_at muda, pending baixa).
  */
 
 type Props = {
@@ -30,40 +32,34 @@ export function SynthesizeDeckButton({
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [justQueued, setJustQueued] = useState(false);
 
-  // Auto-refresh a cada 5s enquanto o servidor diz que está pending.
-  // Pára logo que o flag baixa (sucesso ou erro do endpoint).
+  // Enquanto pending, faz polling para apanhar a conclusão da Routine.
   useEffect(() => {
     if (!isPending) return;
-    const t = setInterval(() => router.refresh(), 5000);
+    const t = setInterval(() => router.refresh(), 10000);
     return () => clearInterval(t);
   }, [isPending, router]);
 
   async function trigger() {
     setError(null);
-    // Refresh imediato para puxar o flag pending=true e desactivar o botão.
-    router.refresh();
     try {
       const res = await fetch(`/api/audit/${proposalId}/synthesize`, {
         method: "POST",
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!data.ok) {
-        setError(data.error ?? "Falha a sintetizar.");
+        setError(data.error ?? "Falha a enfileirar.");
+      } else {
+        setJustQueued(true);
+        router.refresh();
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Falha a sintetizar.");
-    } finally {
-      router.refresh();
+      setError(e instanceof Error ? e.message : "Falha a enfileirar.");
     }
   }
 
-  const busy = isPending;
-  const label = busy
-    ? "A sintetizar… (~30-60s)"
-    : hasExisting
-      ? "Re-sintetizar deck"
-      : "Sintetizar deck (Step 12)";
+  const queued = isPending || justQueued;
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -71,19 +67,26 @@ export function SynthesizeDeckButton({
         type="button"
         className="btn"
         onClick={() => void trigger()}
-        disabled={busy}
+        disabled={queued}
       >
-        {label}
+        {queued
+          ? "Em fila para síntese"
+          : hasExisting
+            ? "Marcar para re-sintetizar"
+            : "Marcar para sintetizar (Step 12)"}
       </button>
-      {busy && (
+      {queued && (
         <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 8 }}>
-          A página actualiza-se automaticamente quando terminar — podes mudar de aba.
+          Proposta em fila. Corre a Routine <strong>Synthesize-pending-decks</strong> no
+          Claude Code Web (&ldquo;Run now&rdquo;) ou aguarda o run diário das 9:00. A página
+          actualiza-se sozinha quando a síntese concluir.
         </p>
       )}
-      {synthesizedAt && !busy && (
+      {synthesizedAt && !queued && (
         <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 8 }}>
           Última síntese: {new Date(synthesizedAt).toLocaleString("pt-PT")}
           {source ? ` · source: ${source}` : ""}
+          {source === "fallback" && " (fallback — re-sintetiza para deck completo)"}
         </p>
       )}
       {error && (

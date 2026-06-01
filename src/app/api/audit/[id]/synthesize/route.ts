@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { synthesizeDeck } from "@/lib/llm/synthesize-deck";
-import type {
-  AuditResults,
-  AuditRun,
-  Proposal,
-  Prospect,
-} from "@/lib/supabase/types";
-import type { ScanResult } from "@/lib/scan/types";
+import type { Proposal } from "@/lib/supabase/types";
 
-// Step 12 — Claude sintetiza o deck com a skill inteira + audit + scan.
-// Pode demorar ~30-60s (Claude call grande). Vercel maxDuration:
-export const maxDuration = 120;
-
+// Step 12 — enfileira a síntese do deck. NÃO chama Claude API aqui: a
+// síntese real corre na Routine "Synthesize-pending-decks" do Claude Code
+// Web (plano Max, custo zero, think-deeply 30-60min, qualidade 3HASH+).
+// Este endpoint só marca a proposta como pending; a Routine processa
+// `deck_synthesis_pending = true` no próximo run (manual via "Run now" ou
+// cron diário 9:00). Histórico: chamávamos Claude API aqui (Sonnet, sync,
+// 120s maxDuration) — duplicava o trabalho da Routine e queimava créditos
+// com 504 timeouts em audits grandes. Removido.
 export async function POST(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const supabase = await createClient();
@@ -23,78 +20,35 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // Service client para ler relations sem RLS bloquear.
   const sb = createServiceClient();
 
   const { data: proposalRow } = await sb
     .from("proposals")
-    .select("*")
+    .select("id,audit_status")
     .eq("id", id)
     .single();
   if (!proposalRow) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  const proposal = proposalRow as Proposal;
+  const proposal = proposalRow as Pick<Proposal, "id" | "audit_status">;
 
-  const { data: prospectRow } = await sb
-    .from("prospects")
-    .select("*")
-    .eq("id", proposal.prospect_id)
-    .single();
-  const prospect = prospectRow as Prospect | null;
-
-  const { data: runRows } = await sb
-    .from("audit_runs")
-    .select("*")
-    .eq("proposal_id", id);
-  const auditRuns = (runRows ?? []) as AuditRun[];
-
-  const { data: scanRow } = await sb
-    .from("sinal_scans")
-    .select("scan_results")
-    .eq("proposal_id", id)
-    .maybeSingle();
-  const sinalScan = (scanRow?.scan_results as ScanResult | null) ?? null;
-
-  // Marca pending no DB para o UI sobreviver a refresh / múltiplas abas.
-  // O botão lê este campo via server props — sem isto, refresh faz o
-  // operador clicar de novo enquanto a chamada anterior ainda corre.
-  await sb.from("proposals").update({ deck_synthesis_pending: true }).eq("id", id);
-
-  try {
-    const { deck, source } = await synthesizeDeck({
-      brandName: prospect?.company_name ?? "a marca",
-      businessType: prospect?.business_type ?? null,
-      location: prospect?.location ?? null,
-      targetAudience: prospect?.target_audience ?? null,
-      competitors: prospect?.competitors ?? [],
-      audit: (proposal.audit_results as AuditResults | null) ?? null,
-      auditRuns,
-      sinalScan,
-    });
-
-    const { error: updateError } = await sb
-      .from("proposals")
-      .update({
-        deck_blocks: deck,
-        deck_synthesized_at: new Date().toISOString(),
-        deck_synthesized_source: source,
-        deck_synthesis_pending: false,
-      })
-      .eq("id", id);
-
-    if (updateError) {
-      return NextResponse.json(
-        { ok: false, error: updateError.message },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({ ok: true, source, deck });
-  } catch (e) {
-    // Liberta pending em qualquer falha — senão o UI fica para sempre
-    // a achar que ainda está a sintetizar e o operador não pode tentar de novo.
-    await sb.from("proposals").update({ deck_synthesis_pending: false }).eq("id", id);
-    throw e;
+  // A Routine só processa propostas com audit completo — enfileirar antes
+  // disso seria inútil (sem audit_runs para sintetizar).
+  if (proposal.audit_status !== "completed") {
+    return NextResponse.json(
+      { ok: false, error: "Fase 1 (Auditoria GEO) ainda não terminou." },
+      { status: 409 },
+    );
   }
+
+  const { error: updateError } = await sb
+    .from("proposals")
+    .update({ deck_synthesis_pending: true })
+    .eq("id", id);
+
+  if (updateError) {
+    return NextResponse.json({ ok: false, error: updateError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, queued: true });
 }
