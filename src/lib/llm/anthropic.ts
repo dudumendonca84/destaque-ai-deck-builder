@@ -21,18 +21,30 @@ function textOf(message: Anthropic.Message): string {
     .join("");
 }
 
+/**
+ * Tool de web search server-side. Quando `enableWebSearch=true`, o Claude
+ * decide se procura na web em tempo real durante a resposta — alinha o
+ * audit com o comportamento do Claude.ai (que tem search ligado), em vez
+ * de só responder com o training data. Custo extra ~$10/1000 searches.
+ */
+const WEB_SEARCH_TOOL = { type: "web_search_20250305", name: "web_search", max_uses: 5 } as const;
+
 /** Geração de texto simples via Claude. */
 export async function claudeComplete(opts: {
   system?: string;
   prompt: string;
   maxTokens?: number;
   model?: string;
+  enableWebSearch?: boolean;
 }): Promise<{ text: string; tokens: number }> {
   const message = await client().messages.create({
     model: opts.model ?? CLAUDE_MODEL,
     max_tokens: opts.maxTokens ?? 1024,
     system: opts.system,
     messages: [{ role: "user", content: opts.prompt }],
+    ...(opts.enableWebSearch
+      ? { tools: [WEB_SEARCH_TOOL] as unknown as Anthropic.Messages.Tool[] }
+      : {}),
   });
   return {
     text: textOf(message),

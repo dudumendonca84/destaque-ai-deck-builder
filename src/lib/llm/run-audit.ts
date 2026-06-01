@@ -50,7 +50,15 @@ async function queryEngine(
   if (engine === "deepseek") return queryDeepSeek(prompt, model);
   if (engine === "mistral") return queryMistral(prompt, model);
   // claude
-  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024, model });
+  // Web search ligado para alinhar com Claude.ai conversational — captura
+  // citações de marcas que estão na web mas fora do training data
+  // (PMEs PT, players locais sem Wikipedia).
+  const { text, tokens } = await claudeComplete({
+    prompt,
+    maxTokens: 1024,
+    model,
+    enableWebSearch: true,
+  });
   return { response: text, tokens };
 }
 
