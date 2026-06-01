@@ -141,7 +141,9 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
                   style={{
                     height: "100%",
                     width: `${barRatio * 100}%`,
-                    background: barRatio <= 0.3 ? "var(--ink)" : "var(--accent)",
+                    /* v12.1: findings são alertas, barra é SEMPRE amarela —
+                       chama a atenção para o número desconfortável. */
+                    background: "var(--accent)",
                   }}
                 />
               </div>
