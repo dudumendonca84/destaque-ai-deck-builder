@@ -156,6 +156,24 @@ const SCHEMA = {
         required: ["q", "a"],
       },
     },
+    competitor_profiles: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          classification: {
+            type: "string",
+            enum: ["peer_consultancy", "vendor_platform", "adjacent", "hallucinated"],
+          },
+          positioning_md: { type: "string" },
+          mention_count: { type: "number" },
+        },
+        required: ["name", "classification"],
+      },
+    },
+    competitive_landscape_md: { type: "string" },
   },
   required: [
     "executive_reading",
@@ -163,6 +181,7 @@ const SCHEMA = {
     "action_plan",
     "projection_6m",
     "faq",
+    "competitor_profiles",
   ],
   $defs: {
     action: {
@@ -220,12 +239,29 @@ function buildUserPrompt(input: SynthesizeInput): string {
   const audit = input.audit;
   const scan = input.sinalScan;
 
+  // Agrega TODOS os nomes mencionados nas respostas (sem passar pelo filtro
+  // Claude). Conta por engine para o synthesize-deck ter contexto bruto e
+  // poder classificar mesmo nomes que o filtro descartaria como "SEO only".
+  const allMentions = new Map<string, number>();
+  for (const run of input.auditRuns) {
+    const mentions = run.competitors_mentioned ?? [];
+    for (const m of mentions) {
+      allMentions.set(m, (allMentions.get(m) ?? 0) + 1);
+    }
+  }
+  const rawMentions = [...allMentions.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 30)
+    .map(([name, count]) => `${name} (${count}×)`)
+    .join(", ");
+
   const auditSection = audit
     ? `## Resultados do audit em 6 motores LLM
 - Citation rate global: ${(audit.summary.citation_rate * 100).toFixed(0)}%
 - Share of voice: ${(audit.summary.share_of_voice * 100).toFixed(0)}% (intra-resposta)
 - Posição média: ${audit.summary.avg_position ?? "—"}
 - Top competitors (filtrados por relevância GEO): ${audit.summary.top_competitors?.join(", ") || "nenhum"}
+- Todas as marcas mencionadas nas respostas (RAW, sem filtro): ${rawMentions || "nenhuma"}
 
 Por motor:
 ${Object.entries(audit.by_engine)
@@ -270,7 +306,14 @@ Specifically:
 2. **critical_findings**: 3-5 findings críticos cross-dimensional. Cada um: title (curto), why (porquê importa, com mecanismo), dimension.
 3. **action_plan**: 4 horizontes (H1/H2/H3/ongoing). Cada horizonte tem 3-5 acções. Mistura obrigatoriamente dimensões — H1 não é só "fix schema"; inclui Wikidata/sameAs (entity), Tier-1 PT outreach OU podcast pitching (authority). Cita fonte do gap_action_mapping quando aplica.
 4. **projection_6m**: baseline = citation_rate actual. Target conservador (max 0.4 OR baseline + 0.2, o que for maior). methodology_note com disclaimer sigmoidal + honestidade.
-5. **faq**: 3-5 perguntas que o prospecto provavelmente fará (preço, prazo, riscos, garantias, ownership). Respostas curtas e honestas.`;
+5. **faq**: 3-5 perguntas que o prospecto provavelmente fará (preço, prazo, riscos, garantias, ownership). Respostas curtas e honestas.
+6. **competitor_profiles**: lista TODOS os nomes da secção "Todas as marcas mencionadas nas respostas (RAW)" acima — não filtres. Para cada nome, classifica:
+   - "peer_consultancy" — agência, consultora ou freelancer que oferece serviços relacionados (SEO clássico, GEO, AEO, marketing digital, conteúdo) e é potencial concorrente directo. **NO MERCADO PT, agências SEO clássicas COMO UniK SEO, Flowup, Infinidata, ou freelancers conhecidos contam aqui** mesmo sem GEO/AEO declarado, porque um decisor PT põe-nas na mesma shortlist.
+   - "vendor_platform" — plataforma SaaS que se VENDE ao cliente (Profound, AthenaHQ, Otterly, Peec AI, Semrush, Ahrefs, BrightEdge, Conductor, Kalicube, Searchmetrics). O cliente compra-as; não concorrem com a consultoria.
+   - "adjacent" — empresas de áreas próximas mas não directamente competitivas (ex.: agência de PR puro, design studio).
+   - "hallucinated" — nomes que claramente não existem ou são genéricos demais ("Agência GEO", "Consultora IA").
+   Inclui mention_count quando relevante. positioning_md (opcional, 1 frase) descreve o que oferecem. Sê AGRESSIVO em classificar como peer_consultancy — o slide Villain do deck precisa de mostrar 3 nomes reais. Se a lista RAW estiver vazia, devolve [].
+7. **competitive_landscape_md** (opcional): 1-2 parágrafos PT-PT honestos sobre o que vês no landscape — quem domina o orgânico, quem está a fazer GEO, quem está só em SEO clássico, quem não existe.`;
 }
 
 const SKILL_FILES = {
