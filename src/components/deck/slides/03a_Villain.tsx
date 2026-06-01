@@ -2,65 +2,84 @@
 
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
-import type { SlideProps } from "../types";
+import type { DeckData, SlideProps } from "../types";
 
-/**
- * Slide do vilão concreto. Cria tensão antes da prova própria: a IA já
- * responde com nomes, e hoje são os concorrentes. Os nomes
- * (Stripe/Cloudbeds/UpKeep) vêm do nosso estudo real de 45 SaaS B2B PT.
- */
-const VILLAINS: Array<[string, string]> = [
-  ["Pagamentos", "Stripe"],
-  ["Hotelaria", "Cloudbeds"],
-  ["Indústria", "UpKeep"],
+const GEO_TOOLS = [
+  "profound",
+  "otterly.ai",
+  "otterly",
+  "peec ai",
+  "peec.ai",
+  "athenahq",
+  "athena hq",
+  "brightedge",
+  "conductor",
+  "semrush",
+  "ahrefs",
+  "kalicube",
+  "searchmetrics",
 ];
 
-export function Villain({ active }: SlideProps) {
+function isGeoTool(brand: string): boolean {
+  const norm = brand.trim().toLowerCase();
+  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
+}
+
+export function villainNames(deck: DeckData): string[] {
+  const peers =
+    deck.synthesized?.competitor_profiles?.filter((p) => p.classification === "peer_consultancy") ??
+    [];
+  if (peers.length > 0) return peers.slice(0, 3).map((p) => p.name);
+
+  const top = (deck.audit?.summary?.top_competitors ?? []).filter((n) => !isGeoTool(n));
+  return top.slice(0, 3);
+}
+
+export function hasVillainData(deck: DeckData): boolean {
+  return villainNames(deck).length > 0;
+}
+
+export function Villain({ deck, active }: SlideProps) {
+  const names = villainNames(deck);
+  if (names.length === 0) return null;
+
+  const countWord = names.length === 1 ? "um nome" : names.length === 2 ? "dois nomes" : "três nomes";
+  const isOne = names.length === 1;
+
   return (
     <SlideShell eyebrow="Quem aparece">
       <h2 className="tx-h2" style={{ marginBottom: 16 }}>
         E o nome não é o <em className="mark">teu</em>.
       </h2>
-      <p className="body-m" style={{ color: "var(--ink-3)", maxWidth: 760, marginBottom: 32 }}>
-        Agora mesmo, um comprador pergunta à IA pela tua categoria. A resposta traz três
-        nomes — e hoje são os teus concorrentes.
+      <p
+        className="body-m"
+        style={{ color: "var(--ink-3)", maxWidth: 760, marginBottom: 32 }}
+      >
+        Agora mesmo, um comprador pergunta à IA pela tua categoria. A resposta traz {countWord} —
+        e hoje {isOne ? "é o teu concorrente" : "são os teus concorrentes"}.
       </p>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "24px 40px",
           maxWidth: 820,
         }}
       >
-        {VILLAINS.map(([cat, name], i) => (
+        {names.map((name, i) => (
           <motion.div
-            key={cat}
+            key={name}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: active ? 1 : 0, y: active ? 0 : 14 }}
             transition={{ duration: 0.45, delay: 0.15 + i * 0.12 }}
+            style={{
+              fontFamily: "var(--font-fraunces), Georgia, serif",
+              fontSize: "clamp(28px, 5vw, 44px)",
+              lineHeight: 1.1,
+              color: "var(--ink)",
+            }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                color: "var(--ink-3)",
-              }}
-            >
-              {cat}
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-fraunces), Georgia, serif",
-                fontSize: "clamp(26px, 5vw, 40px)",
-                lineHeight: 1.1,
-                color: "var(--ink)",
-                marginTop: 6,
-              }}
-            >
-              {name}
-            </div>
+            {name}
           </motion.div>
         ))}
       </div>
@@ -72,10 +91,7 @@ export function Villain({ active }: SlideProps) {
           marginTop: 34,
         }}
       >
-        A marca portuguesa ficava de fora.
-      </p>
-      <p style={{ marginTop: 14, fontSize: 12, color: "var(--ink-4)" }}>
-        Estudo destaque.ai, 2026 — 45 SaaS B2B portuguesas, 3 motores de IA.
+        A <em className="mark">{deck.companyName}</em> ainda não está nessa lista.
       </p>
     </SlideShell>
   );
