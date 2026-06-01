@@ -23,7 +23,7 @@ import { AppendixFActionHorizon, actionsPageCount, type Horizon } from "./21f_Ap
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
 import { AppendixAPrompts, appendixAPromptsPageCount } from "./15a_AppendixA_Prompts";
 import { allAuditedPrompts } from "./04_LiveAudit";
-import { Tracker } from "./19_Tracker";
+import { Tracker, trackerPageCount } from "./19_Tracker";
 import { ThankYou } from "./22_ThankYou";
 
 /**
@@ -147,7 +147,7 @@ export function buildSlides(deck: DeckData): SlideDef[] {
 
   // ACT 5 — ENTREGA E FECHO
   out.push(
-    { id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker },
+    ...paginated("tracker", "O que entregamos", "paper", Tracker, trackerPageCount(deck)),
     { id: "pricing", title: "Investimento", tone: "paper", Component: Pricing },
     { id: "next-steps", title: "A seguir", tone: "paper", Component: NextSteps },
   );

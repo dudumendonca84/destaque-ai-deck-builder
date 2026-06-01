@@ -1013,7 +1013,12 @@ em.mark {
 
 .deck {
   position: relative;
-  min-height: 100vh;
+  /* Altura FIXA (não min-height): o deck é exactamente um viewport e o
+     body nunca ganha scroll, mesmo que um slide tenha conteúdo a mais.
+     Decisão v12: nunca scroll — conteúdo que não cabe é clipado (sinal
+     para paginar/reduzir densidade), não rolável. */
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--paper);
@@ -1082,6 +1087,8 @@ em.mark {
 .deck-stage {
   flex: 1;
   display: flex;
+  min-height: 0; /* permite clip em vez de empurrar o body */
+  overflow: hidden;
 }
 
 /* ---------- slide canvas ---------- */
