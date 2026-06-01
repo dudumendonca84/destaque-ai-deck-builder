@@ -52,6 +52,19 @@ export type SynthesizedDeck = {
     benchmark_md?: string;
     dimension: Dimension;
     anchor?: string;
+    /**
+     * v12.1 — molde número-líder: o número que torna o finding
+     * desconfortável. Quando presente, o slide ganha a coluna esquerda
+     * (herói Fraunces ~84px + label caps + barra/sub-stat opcionais).
+     * Quando ausente, o slide degrada para só título + diagnóstico.
+     */
+    metric_value?: string; // "25", "0", "4", "64,6%", etc.
+    metric_label?: string; // "entity score · sinal_scan"
+    metric_kind?: "score" | "percent" | "count" | "ratio" | "raw";
+    metric_max?: number; // 100 (score), 67 (universo), etc.
+    metric_sub?: string; // sub-stat ou ratio (ex.: "correlação citação ↔ PR · r=0,527")
+    /** Fecho do finding sobre régua. label = "O que falta" | "A oportunidade". */
+    next_step?: { label: string; text: string };
   }>;
   action_plan: {
     h1: ActionItem[];

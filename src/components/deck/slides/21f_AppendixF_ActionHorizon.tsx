@@ -64,8 +64,12 @@ export function AppendixFActionHorizon({
       </h2>
 
       {/* v12: tabela compacta sobre régua. Dimensão âmbar 130px fixos +
-          acção em Fraunces (herói) + 1 linha de contexto (Inter 11.5px) +
-          esforço em mono à direita. As 4 acções/página cabem sem corte. */}
+          acção em Fraunces (herói) + 1 linha de contexto (Inter 11.5px).
+          SEM coluna de horas: estimativas granulares ("2-3h") fazem
+          trabalho estratégico parecer trivial e subvendem a proposta — a
+          profundidade de esforço vive no plano operacional interno, não no
+          deck do cliente. O horizonte (H1/H2/H3) já dá o enquadramento
+          temporal no título do slide. */}
       <div style={{ maxWidth: 1040 }}>
         {actions.map((a, i) => (
           <motion.div
@@ -75,8 +79,8 @@ export function AppendixFActionHorizon({
             transition={{ duration: 0.3, delay: 0.05 * i }}
             style={{
               display: "grid",
-              gridTemplateColumns: "130px 1fr 110px",
-              gap: 24,
+              gridTemplateColumns: "150px 1fr",
+              gap: 28,
               alignItems: "baseline",
               padding: "14px 0 12px",
               borderTop: "1px solid var(--rule-paper)",
@@ -109,17 +113,6 @@ export function AppendixFActionHorizon({
                 {oneLine(a.why_md ?? a.why ?? "")}
               </div>
             </div>
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--ink-3)",
-                textAlign: "right",
-                fontFamily: "var(--font-mono-jetbrains)",
-                letterSpacing: 0.5,
-              }}
-            >
-              {a.effort}
-            </span>
           </motion.div>
         ))}
       </div>

@@ -8,7 +8,7 @@ import { Data } from "./03_Data";
 import { LiveAudit, liveAuditPageCount } from "./04_LiveAudit";
 import { SEOvsGEO } from "./05_SEOvsGEO";
 import { Definition } from "./06_Definition";
-import { Methodology } from "./07_Methodology";
+import { Methodology, methodologyPageCount } from "./07_Methodology";
 import { Phases12 } from "./08_Phases12";
 import { Phases34 } from "./09_Phases34";
 import { KPIs } from "./10_KPIs";
@@ -23,7 +23,7 @@ import { AppendixFActionHorizon, actionsPageCount, type Horizon } from "./21f_Ap
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
 import { AppendixAPrompts, appendixAPromptsPageCount } from "./15a_AppendixA_Prompts";
 import { allAuditedPrompts } from "./04_LiveAudit";
-import { Tracker } from "./19_Tracker";
+import { Tracker, trackerPageCount } from "./19_Tracker";
 import { ThankYou } from "./22_ThankYou";
 
 /**
@@ -113,7 +113,7 @@ export function buildSlides(deck: DeckData): SlideDef[] {
   out.push(
     { id: "seo-vs-geo", title: "SEO vs GEO", tone: "paper", Component: SEOvsGEO },
     { id: "definition", title: "O que é GEO", tone: "ink", Component: Definition },
-    { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
+    ...paginated("methodology", "Metodologia", "paper", Methodology, methodologyPageCount(deck)),
   );
 
   // ACT 4 — O PLANO
@@ -147,7 +147,7 @@ export function buildSlides(deck: DeckData): SlideDef[] {
 
   // ACT 5 — ENTREGA E FECHO
   out.push(
-    { id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker },
+    ...paginated("tracker", "O que entregamos", "paper", Tracker, trackerPageCount(deck)),
     { id: "pricing", title: "Investimento", tone: "paper", Component: Pricing },
     { id: "next-steps", title: "A seguir", tone: "paper", Component: NextSteps },
   );

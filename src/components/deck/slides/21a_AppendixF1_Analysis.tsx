@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
+import { isGeoTool } from "@/lib/skill/geo-tools";
 
 /**
  * F1 — Análise editorial. Mostra o primeiro parágrafo de
@@ -38,10 +39,27 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
 
   const cr_baseline = synth.projection_6m?.citation_rate_baseline;
   const cr_target = synth.projection_6m?.citation_rate_target;
-  // Marca mais citada nas respostas da categoria — NÃO é "concorrente"
-  // (pode ser uma ferramenta de medição como Profound). Label honesto.
   const topCited = deck.audit?.summary?.top_competitors?.[0] ?? "—";
   const findings_count = synth.critical_findings?.length ?? 0;
+
+  // "Marca mais citada" só entra como stat quando é um concorrente REAL.
+  // Vendor tool (Profound, AthenaHQ…) não se destaca aqui — é ruído nesta
+  // faixa e o Landscape (slide 7) já o classifica com contexto.
+  const showTopCited = topCited !== "—" && !isGeoTool(topCited);
+  const stats: Array<{ label: string; value: string; small?: boolean }> = [
+    {
+      label: "Citation rate hoje",
+      value: cr_baseline != null ? `${Math.round(cr_baseline * 100)}%` : "—",
+    },
+    {
+      label: "Target 6 meses",
+      value: cr_target != null ? `${Math.round(cr_target * 100)}%` : "—",
+    },
+    ...(showTopCited
+      ? [{ label: "Marca mais citada", value: topCited, small: true }]
+      : []),
+    { label: "Findings críticos", value: String(findings_count) },
+  ];
 
   return (
     <SlideShell eyebrow="Análise · plano personalizado SINAL">
@@ -69,32 +87,20 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: `repeat(${stats.length}, 1fr)`,
           gap: 24,
-          borderTop: "1px solid var(--rule-soft)",
+          borderTop: "1px solid var(--rule-paper)",
           paddingTop: 24,
         }}
       >
-        <div>
-          <div className="kpi__label">Citation rate hoje</div>
-          <div className="kpi__value">
-            {cr_baseline != null ? `${Math.round(cr_baseline * 100)}%` : "—"}
+        {stats.map((st) => (
+          <div key={st.label}>
+            <div className="kpi__label">{st.label}</div>
+            <div className="kpi__value" style={st.small ? { fontSize: 26 } : undefined}>
+              {st.value}
+            </div>
           </div>
-        </div>
-        <div>
-          <div className="kpi__label">Target 6 meses</div>
-          <div className="kpi__value">
-            {cr_target != null ? `${Math.round(cr_target * 100)}%` : "—"}
-          </div>
-        </div>
-        <div>
-          <div className="kpi__label">Marca mais citada</div>
-          <div className="kpi__value" style={{ fontSize: 26 }}>{topCited}</div>
-        </div>
-        <div>
-          <div className="kpi__label">Findings críticos</div>
-          <div className="kpi__value">{findings_count}</div>
-        </div>
+        ))}
       </div>
     </SlideShell>
   );

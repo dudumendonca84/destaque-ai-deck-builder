@@ -4,38 +4,14 @@ import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import { pct } from "@/lib/utils/format";
-
-/**
- * Lista de plataformas conhecidas de tracking/medição GEO. Quando a marca
- * mais citada na categoria é uma destas, o card muda o label para
- * "Ferramenta de referência citada" — evita apresentar uma ferramenta
- * como se fosse consultora concorrente.
- */
-const GEO_TOOLS = [
-  "profound",
-  "otterly.ai",
-  "otterly",
-  "peec ai",
-  "peec.ai",
-  "athenahq",
-  "athena hq",
-  "brightedge",
-  "conductor",
-  "semrush",
-  "ahrefs",
-  "kalicube",
-  "searchmetrics",
-];
-
-function isGeoTool(brand: string): boolean {
-  const norm = brand.trim().toLowerCase();
-  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
-}
+import { isGeoTool } from "@/lib/skill/geo-tools";
 
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;
   const topCited = s?.top_competitors?.[0] ?? "—";
   const topIsTool = topCited !== "—" && isGeoTool(topCited);
+
+  // Baseline: três métricas nuas. É o murro do slide — 0% / 0% / —.
   const cards = [
     { label: "Taxa de citação", value: s ? pct(s.citation_rate) : "—", note: "respostas onde és citado" },
     {
@@ -48,24 +24,26 @@ export function KPIs({ deck, active }: SlideProps) {
       value: s?.avg_position != null ? `#${s.avg_position}` : "—",
       note: "ordem em que apareces",
     },
-    topIsTool
-      ? {
-          label: "Ferramenta de referência citada",
-          value: topCited,
-          note: "plataforma de medição GEO — não consultora concorrente",
-        }
-      : {
-          label: "Marca mais citada na categoria",
-          value: topCited,
-          note: "quem a IA nomeia hoje — não um concorrente directo",
-        },
   ];
+
+  // 4º card só quando o top citado é um concorrente REAL — aí "quem a IA
+  // nomeia em vez de ti" reforça a baseline. Se é uma vendor tool (Profound,
+  // AthenaHQ…) NÃO entra: é ruído contextual nesta slide e o Landscape já
+  // a classifica com contexto. Sem dados → ficam os três zeros.
+  if (topCited !== "—" && !topIsTool) {
+    cards.push({
+      label: "Marca mais citada na categoria",
+      value: topCited,
+      note: "quem a IA nomeia hoje — não um concorrente directo",
+    });
+  }
+
   return (
     <SlideShell eyebrow="Ponto de partida">
       <h2 className="tx-h2" style={{ marginBottom: 28 }}>
         Onde a <em className="mark">destaque.ai</em> está hoje
       </h2>
-      <div className="kpi-grid">
+      <div className="kpi-grid" style={{ gridTemplateColumns: `repeat(${cards.length}, 1fr)` }}>
         {cards.map((c, i) => (
           <motion.div
             className="kpi-card"
