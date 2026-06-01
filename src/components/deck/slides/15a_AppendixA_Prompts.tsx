@@ -6,13 +6,15 @@ import { allAuditedPrompts } from "./04_LiveAudit";
 import { ENGINE_COUNT } from "@/lib/llm/models";
 
 /**
- * Apêndice A — os prompts auditados completos, movidos do slide 04
- * (que agora lidera com o 0%). Prova detalhada para quem quer.
+ * Apêndice A — os prompts auditados completos. Cada prompt aparece numa
+ * "caixa de input" inspirada nas barras de pesquisa das LLMs: card branco
+ * com cantos arredondados, número em mono à esquerda, texto do prompt à
+ * direita. Sinal visual de "isto é literalmente o que perguntámos à IA".
  *
- * Paginado: a lista pode ter dezenas de prompts e cada prompt vai até
- * 2-3 linhas — defensivo no número por página para evitar overflow.
+ * Paginado: 6 por página deixa folga vertical mesmo com prompts de 3-4
+ * linhas, e mantém o último item acima da barra de navegação fixa.
  */
-const PROMPTS_PER_PAGE = 10;
+const PROMPTS_PER_PAGE = 6;
 
 export function appendixAPromptsPageCount(deck: DeckData): number {
   const n = allAuditedPrompts(deck).length;
@@ -32,27 +34,58 @@ export function AppendixAPrompts({ deck, page = 0, pageCount = 1 }: SlideProps) 
       <h2 className="tx-h2" style={{ marginBottom: 8 }}>
         Os prompts que <em className="mark">decidem</em> a categoria.
       </h2>
-      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 28, maxWidth: 760 }}>
+      <p className="body-m" style={{ color: "var(--ink-3)", marginBottom: 24, maxWidth: 760 }}>
         {all.length} prompts × {ENGINE_COUNT} motores. A marca não aparece em nenhum.
       </p>
-      <ol
-        // Continua a numeração entre páginas: pág. 2 começa em #11, não em #1.
-        start={start + 1}
+      <div
         style={{
-          margin: 0,
-          paddingLeft: 22,
           display: "flex",
           flexDirection: "column",
-          gap: 12,
+          gap: 10,
           maxWidth: 940,
         }}
       >
-        {prompts.map((p, i) => (
-          <li key={start + i} style={{ fontSize: 14, lineHeight: 1.5, color: "var(--ink-2)" }}>
-            {p}
-          </li>
-        ))}
-      </ol>
+        {prompts.map((p, i) => {
+          const num = String(start + i + 1).padStart(2, "0");
+          return (
+            <div
+              key={start + i}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "44px 1fr",
+                gap: 14,
+                padding: "14px 18px",
+                background: "#FFFFFF",
+                border: "1px solid var(--rule-soft)",
+                borderRadius: 12,
+                boxShadow: "0 1px 0 rgba(0, 0, 0, 0.02)",
+                alignItems: "flex-start",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "var(--font-mono-jetbrains), ui-monospace, monospace",
+                  fontSize: 11,
+                  color: "var(--ink-3)",
+                  letterSpacing: "0.05em",
+                  paddingTop: 3,
+                }}
+              >
+                {num}
+              </span>
+              <span
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  color: "var(--ink-2)",
+                }}
+              >
+                {p}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </SlideShell>
   );
 }
