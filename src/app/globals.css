@@ -1348,8 +1348,12 @@ em.mark {
   transform: none !important;
 }
 @media print {
+  /* NB: @page size REMOVIDO. Foi a causa do PDF sair com 2 slides por
+     página (22 em vez de 44): pt vs px ambiguity entre puppeteer e o
+     parser CSS forçava 1280×720 mas em unidades inconsistentes, fazendo
+     duas .print-page de 720px caberem na altura real. Com @page só
+     margin:0, o page.pdf() em route.ts é a única fonte de dimensão. */
   @page {
-    size: 1280px 720px;
     margin: 0;
   }
   html,
