@@ -9,6 +9,10 @@
   "functions": {
     "src/app/api/audit/start/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/proposals/[token]/download-pdf/route.ts": {
+      "maxDuration": 60,
+      "memory": 1769
     }
   }
 }

@@ -28,6 +28,10 @@
   --border-inverted: #2a2a2a;
   --rule: #1f1c18;
   --rule-soft: #d4cfc0;
+  /* v12 — sistema "blocos sobre régua" */
+  --rule-paper: #cfc8b6; /* régua/divisória no off-white (Step 2a) */
+  --amber-label: #b9772e; /* etiqueta de categoria/dimensão (mais quente que --accent-ink) */
+  --ink-muted: #b3aa97; /* texto esbatido (numeração da lista de prompts) */
 
   /* Estados (raramente usados) */
   --status-active: #16a34a;
@@ -1136,6 +1140,14 @@ em.mark {
   gap: 20px;
   padding: 18px 24px;
   z-index: 60;
+  /* Fundo sólido (mesma cor do slide → sem costura visual em slides curtos,
+     mas opaco para o conteúdo nunca transbordar por cima da paginação em
+     slides altos). Rede de segurança: a correcção primária é paginar. */
+  background: var(--paper);
+}
+.deck[data-tone="ink"] .deck-nav,
+.deck-nav[data-tone="ink"] {
+  background: var(--bg-inverted);
 }
 .deck-nav__arrow {
   display: inline-flex;
@@ -1205,6 +1217,140 @@ em.mark {
   }
   .deck-nav__dots {
     display: none;
+  }
+}
+
+/* ---------- sistema "blocos sobre régua" (Step 2 do redesign v12) ----------
+   Padrão único no deck inteiro: SEM caixa, sem fundo, sem border-radius
+   completo. Cada bloco demarca-se por uma régua superior + tipografia
+   hierárquica (etiqueta caps → herói serifa → contexto sans). Destaque é
+   peso (régua mais grossa + etiqueta a tinta cheia), nunca uma caixa
+   amarela que apaga os vizinhos. */
+
+.bloc-rule {
+  /* régua superior 1px; --grouped vira 2px para grupos de topo */
+  border-top: var(--bloc-rule-thickness, 1px) solid var(--rule-paper);
+  border-radius: 0;
+  padding: 14px 0 0;
+  background: transparent;
+}
+.bloc-rule[data-rule="grouped"] {
+  --bloc-rule-thickness: 2px;
+}
+/* Destaque por PESO (não por caixa de fundo): régua preta + etiqueta a
+   tinta cheia. Usar sparingly — 1 bloco realçado por slide. */
+.bloc-rule[data-emphasis="strong"] {
+  --bloc-rule-thickness: 2px;
+  border-top-color: var(--ink);
+}
+.bloc-rule[data-emphasis="strong"] .bloc-rule__label {
+  color: var(--ink);
+}
+
+.bloc-rule__label {
+  display: block;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.bloc-rule__label[data-tone="category"] {
+  color: var(--amber-label);
+}
+
+.bloc-rule__hero {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+/* tamanhos do herói — adaptar consoante densidade da grelha */
+.bloc-rule__hero[data-size="sm"] {
+  font-size: clamp(18px, 1.6vw, 22px);
+}
+.bloc-rule__hero[data-size="md"] {
+  font-size: clamp(22px, 2vw, 28px);
+}
+.bloc-rule__hero[data-size="lg"] {
+  font-size: clamp(28px, 2.8vw, 38px);
+}
+
+.bloc-rule__context {
+  margin-top: 8px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* Fecho marcado a amarelo — barra à esquerda, sem caixa de fundo.
+   Usado para a frase-chave que fecha um conjunto de blocos paralelos
+   (ex.: "o lugar está por preencher" no slide 7/1). */
+.bloc-close {
+  border-left: 4px solid var(--accent);
+  padding: 6px 14px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* ---------- print mode (chromium → PDF) ---------- */
+/* Cada slide = uma página fixa 1280×720 (16:9). Reutiliza os componentes
+   de slide do deck web → web == PDF por construção. As animações de
+   entrada (framer-motion, opacity/transform) são forçadas ao estado final
+   para o chromium nunca capturar um frame a meio do fade. */
+.deck-print {
+  background: var(--paper);
+}
+.print-page {
+  position: relative;
+  width: 1280px;
+  height: 720px;
+  min-height: 0; /* anula .deck min-height:100vh */
+  overflow: hidden;
+  margin: 0 auto;
+  break-after: page;
+  page-break-after: always;
+}
+.print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.print-page .slide__inner {
+  padding: 56px 64px 64px; /* sem reserva para nav: o print não tem nav */
+  max-width: none;
+}
+/* Estado final garantido: sem animação, sem fade, sem deslocação. */
+.deck-print *,
+.deck-print *::before,
+.deck-print *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.deck-print .slide,
+.deck-print .slide__inner,
+.deck-print .slide__body,
+.deck-print .slide__eyebrow,
+.deck-print [style*="opacity"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+@media print {
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  .print-page {
+    break-after: page;
   }
 }
 
