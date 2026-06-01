@@ -277,7 +277,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
   const top10 = findBenchmark(deck.benchmarks, "aio_top10_share");
   const { glossary, dimensions } = deck.method;
 
-  // Ponto de partida (slide 13): rótulo honesto da marca mais citada.
+  // Ponto de partida (slide 7): rótulo honesto da marca mais citada.
   const topCited = summary?.top_competitors?.[0] ?? "—";
   const topIsTool = topCited !== "—" && isGeoTool(topCited);
 
@@ -287,6 +287,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
       author="destaque.ai"
       subject="Proposta de Generative Engine Optimization"
     >
+      {/* ACT 1 — ABERTURA E TENSÃO */}
       {/* 01 — Capa */}
       <Page size={[960, 540]} style={s.page}>
         <View style={s.accentBar} />
@@ -358,8 +359,21 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 04 — A prova própria (momento de viragem; 60% herói) */}
-      <ContentPage n={4} eyebrow="A prova">
+      {/* 04 — A esperança (o destino) */}
+      <StatementPage
+        n={4}
+        eyebrow="O destino"
+        title={
+          <>
+            Imagina o <Mark>contrário</Mark>.
+          </>
+        }
+        body="Um comprador pergunta à IA pela tua categoria. A resposta começa com o teu nome. Não pagaste por isso — foste citado porque a IA confia em ti. É isto que o GEO constrói: estar na resposta, não na página 2 que ninguém abre."
+      />
+
+      {/* ACT 2 — DIAGNÓSTICO COMPLETO */}
+      {/* 05 — A prova própria (momento de viragem; 60% herói) */}
+      <ContentPage n={5} eyebrow="A prova">
         <Text style={s.h2}>
           Não é teoria. Fizemos o <Mark>estudo</Mark>.
         </Text>
@@ -381,8 +395,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 05 — O espelho (auditoria personalizada do cliente — resposta ao "60%?") */}
-      <ContentPage n={5} eyebrow={`Auditoria personalizada · ${san(deck.companyName)}`}>
+      {/* 06 — O espelho (auditoria personalizada do cliente — resposta ao "60%?") */}
+      <ContentPage n={6} eyebrow={`Auditoria personalizada · ${san(deck.companyName)}`}>
         <Text style={s.h2}>
           E sobre ti, o que diz a <Mark>IA</Mark>?
         </Text>
@@ -414,20 +428,31 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 06 — A esperança (o destino) */}
-      <StatementPage
-        n={6}
-        eyebrow="O destino"
-        title={
-          <>
-            Imagina o <Mark>contrário</Mark>.
-          </>
-        }
-        body="Um comprador pergunta à IA pela tua categoria. A resposta começa com o teu nome. Não pagaste por isso — foste citado porque a IA confia em ti. É isto que o GEO constrói: estar na resposta, não na página 2 que ninguém abre."
-      />
+      {/* 07 — Ponto de partida */}
+      <ContentPage n={7} eyebrow="Ponto de partida">
+        <Text style={s.h2}>
+          Onde a <Mark>destaque.ai</Mark> está hoje.
+        </Text>
+        <View style={[s.row, { marginTop: 30 }]}>
+          {[
+            ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
+            ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
+            ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
+            [topIsTool ? "Ferramenta de referência" : "Marca mais citada", san(topCited)],
+          ].map(([l, v], i, arr) => (
+            <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
+              <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
+              <Text style={s.cardValue}>{v}</Text>
+              {i === arr.length - 1 && topIsTool ? (
+                <Text style={s.cardNote}>ferramenta de medição, não consultora</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      </ContentPage>
 
-      {/* 07 — O contexto (stats de terceiros — reforço, depois da prova própria) */}
-      <ContentPage n={7} eyebrow="O contexto">
+      {/* 08 — O contexto (stats de terceiros — fecho do diagnóstico) */}
+      <ContentPage n={8} eyebrow="O contexto">
         <Text style={s.h2}>
           Não é uma tendência. É <Mark>já</Mark>.
         </Text>
@@ -444,12 +469,13 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
         <Text style={{ fontFamily: SANS, fontSize: 8.5, color: INK3, marginTop: 22 }}>
           Estudos US-EN; evidência PT-PT específica ainda é escassa — números direccionais.
-          Os nossos dados PT (slide 04) vêm primeiro; estes reforçam.
+          Os nossos dados PT (slide 05) vêm primeiro; estes reforçam.
         </Text>
       </ContentPage>
 
-      {/* 08 — SEO vs GEO */}
-      <ContentPage n={8} eyebrow="SEO vs GEO">
+      {/* ACT 3 — COMO SE RESOLVE */}
+      {/* 09 — SEO vs GEO */}
+      <ContentPage n={9} eyebrow="SEO vs GEO">
         <Text style={s.h2}>
           O GEO <Mark>assenta</Mark> sobre o SEO.
         </Text>
@@ -497,9 +523,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 09 — Definição (glossário vivo da skill: SEO · GEO · AEO) */}
+      {/* 10 — Definição (glossário vivo da skill: SEO · GEO · AEO) */}
       <Page size={[960, 540]} style={s.pageInk}>
-        <Eyebrow num="09" label="A definição" ink />
+        <Eyebrow num="10" label="A definição" ink />
         <View style={s.center}>
           <Text style={[s.h2, { color: CREAM, maxWidth: 720 }]}>
             A categoria tem <Mark>vários nomes</Mark>.
@@ -521,12 +547,12 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
         <View style={s.footer} fixed>
           <Text style={[s.footerText, { color: INK4 }]}>DESTAQUE.AI</Text>
-          <Text style={[s.footerText, { color: INK4 }]}>{`09 / ${TOTAL}`}</Text>
+          <Text style={[s.footerText, { color: INK4 }]}>{`10 / ${TOTAL}`}</Text>
         </View>
       </Page>
 
-      {/* 10 — Metodologia (8 dimensões vivas da skill) */}
-      <ContentPage n={10} eyebrow="Metodologia · SINAL">
+      {/* 11 — Metodologia (8 dimensões vivas da skill) */}
+      <ContentPage n={11} eyebrow="Metodologia · SINAL">
         <Text style={s.h2}>
           <Mark>SINAL</Mark>: o sistema que te põe na resposta.
         </Text>
@@ -551,8 +577,9 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </Text>
       </ContentPage>
 
-      {/* 11 — Fases 1 e 2 */}
-      <ContentPage n={11} eyebrow="Fases 1 e 2">
+      {/* ACT 4 — O PLANO */}
+      {/* 12 — Fases 1 e 2 */}
+      <ContentPage n={12} eyebrow="Fases 1 e 2">
         <Text style={s.h2}>
           Diagnóstico e <Mark>conteúdo</Mark>.
         </Text>
@@ -581,8 +608,8 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 12 — Fases 3 e 4 */}
-      <ContentPage n={12} eyebrow="Fases 3 e 4">
+      {/* 13 — Fases 3 e 4 */}
+      <ContentPage n={13} eyebrow="Fases 3 e 4">
         <Text style={s.h2}>
           Distribuição e <Mark>medição</Mark>.
         </Text>
@@ -611,29 +638,7 @@ export async function buildPdf(deck: DeckData): Promise<Buffer> {
         </View>
       </ContentPage>
 
-      {/* 13 — Ponto de partida */}
-      <ContentPage n={13} eyebrow="Ponto de partida">
-        <Text style={s.h2}>
-          Onde a <Mark>destaque.ai</Mark> está hoje.
-        </Text>
-        <View style={[s.row, { marginTop: 30 }]}>
-          {[
-            ["Taxa de citação", summary ? pct(summary.citation_rate) : "—"],
-            ["Share of voice", summary ? pct(summary.share_of_voice) : "—"],
-            ["Posição média", summary?.avg_position != null ? `#${summary.avg_position}` : "—"],
-            [topIsTool ? "Ferramenta de referência" : "Marca mais citada", san(topCited)],
-          ].map(([l, v], i, arr) => (
-            <View key={l} style={[s.card, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
-              <Text style={s.cardLabel}>{l.toUpperCase()}</Text>
-              <Text style={s.cardValue}>{v}</Text>
-              {i === arr.length - 1 && topIsTool ? (
-                <Text style={s.cardNote}>ferramenta de medição, não consultora</Text>
-              ) : null}
-            </View>
-          ))}
-        </View>
-      </ContentPage>
-
+      {/* ACT 5 — ENTREGA E FECHO */}
       {/* 14 — Investimento */}
       <ContentPage n={14} eyebrow="Investimento">
         <Text style={s.h2}>

@@ -1,7 +1,7 @@
 import type { SlideDef, SlideProps, DeckData } from "../types";
 import { Cover } from "./01_Cover";
 import { Problem } from "./02_Problem";
-import { Villain } from "./03a_Villain";
+import { Villain, hasVillainData } from "./03a_Villain";
 import { OurStudy } from "./03b_OurStudy";
 import { Hope } from "./03c_Hope";
 import { Data } from "./03_Data";
@@ -13,6 +13,8 @@ import { Phases12 } from "./08_Phases12";
 import { Phases34 } from "./09_Phases34";
 import { KPIs } from "./10_KPIs";
 import { CostOfInvisibility } from "./10b_CostOfInvisibility";
+import { Pricing } from "./11_Pricing";
+import { NextSteps } from "./12_NextSteps";
 import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings, findingsPageCount } from "./21b_AppendixF2_Findings";
 import { AppendixFLandscape } from "./21y_AppendixF_Landscape";
@@ -46,48 +48,84 @@ function paginated(
 }
 
 /**
- * Monta a sequência de slides para um deck concreto. Estrutura narrativa
- * em 4 atos com arco emocional: problema → vilão → prova própria →
- * espelho → esperança → contexto → método → plano → onde estás → fecho.
- * Slides personalizados (F*) só entram quando há dados — slides vazios
- * são saltados. Slides com muito conteúdo são paginados, nunca cortados.
+ * Monta a sequência de slides para um deck concreto. Cinco actos:
  *
- *   ACT 1 — ARCO            (problema → vilão → prova → espelho → esperança → contexto)
- *   ACT 2 — O SISTEMA       (método SINAL + fases + plano de acções)
- *   ACT 3 — ONDE ESTÁS      (ponto de partida + diagnóstico detalhado)
- *   ACT 4 — ENTREGA + CLOSE (o que entregamos + prompts + contacto)
+ *   ACT 1 — ABERTURA E TENSÃO     (problema → vilão → destino)
+ *   ACT 2 — DIAGNÓSTICO COMPLETO  (prova → audit → landscape → KPIs →
+ *                                  custo → análise → findings → contexto)
+ *   ACT 3 — COMO SE RESOLVE       (SEO vs GEO → definição → SINAL)
+ *   ACT 4 — O PLANO               (fases → horizontes → potencial)
+ *   ACT 5 — ENTREGA E FECHO       (tracker → preço → next steps →
+ *                                  apêndices → close)
+ *
+ * Slides personalizados (F-slides) e o Villain dinâmico só entram quando
+ * há dados para os alimentar. Slides com muito conteúdo são paginados,
+ * nunca cortados.
  */
 export function buildSlides(deck: DeckData): SlideDef[] {
   const synth = deck.synthesized;
   const out: SlideDef[] = [];
 
-  // ACT 1 — Arco narrativo
+  // ACT 1 — ABERTURA E TENSÃO
   out.push(
     { id: "cover", title: "Capa", tone: "paper", Component: Cover },
     { id: "problem", title: "O problema", tone: "ink", Component: Problem },
-    { id: "villain", title: "Quem aparece", tone: "paper", Component: Villain },
+  );
+  if (hasVillainData(deck)) {
+    out.push({ id: "villain", title: "Quem aparece", tone: "paper", Component: Villain });
+  }
+  out.push({ id: "hope", title: "O destino", tone: "ink", Component: Hope });
+
+  // ACT 2 — DIAGNÓSTICO COMPLETO
+  out.push(
     { id: "our-study", title: "A prova", tone: "paper", Component: OurStudy },
-    // Espelho: a auditoria personalizada do cliente (0%). Só com dados reais.
     ...paginated("live-audit", "E sobre ti?", "paper", LiveAudit, liveAuditPageCount(deck)),
-    { id: "hope", title: "O destino", tone: "ink", Component: Hope },
-    { id: "data", title: "O contexto", tone: "paper", Component: Data },
+  );
+  if (synth && (synth.competitor_profiles?.length ?? 0) > 0) {
+    out.push({
+      id: "appendix-landscape",
+      title: "Landscape competitivo",
+      tone: "paper",
+      Component: AppendixFLandscape,
+    });
+  }
+  out.push(
+    { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
+    { id: "cost-invisibility", title: "Custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
+  );
+  if (synth) {
+    if (synth.executive_reading_md || synth.executive_reading) {
+      out.push({
+        id: "appendix-f1",
+        title: "Análise editorial",
+        tone: "paper",
+        Component: AppendixF1Analysis,
+      });
+    }
+    out.push(
+      ...paginated("appendix-f2", "Findings críticos", "paper", AppendixF2Findings, findingsPageCount(deck)),
+    );
+  }
+  out.push({ id: "data", title: "O contexto", tone: "paper", Component: Data });
+
+  // ACT 3 — COMO SE RESOLVE
+  out.push(
     { id: "seo-vs-geo", title: "SEO vs GEO", tone: "paper", Component: SEOvsGEO },
     { id: "definition", title: "O que é GEO", tone: "ink", Component: Definition },
+    { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
   );
 
-  // ACT 2 — O sistema e o plano
+  // ACT 4 — O PLANO
   out.push(
-    { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
     { id: "phases-1-2", title: "Fases 1 e 2", tone: "paper", Component: Phases12 },
     { id: "phases-3-4", title: "Fases 3 e 4", tone: "paper", Component: Phases34 },
   );
   if (synth) {
-    // Um slide por horizonte com acções (1 horizonte/página, sem espremer).
     const horizons: Array<{ key: Horizon; title: string }> = [
-      { key: "h1", title: "Plano H1 · semana 1-2" },
-      { key: "h2", title: "Plano H2 · semana 3-8" },
-      { key: "h3", title: "Plano H3 · mês 2-6" },
-      { key: "ongoing", title: "Plano · contínuo" },
+      { key: "h1", title: "Plano H1" },
+      { key: "h2", title: "Plano H2" },
+      { key: "h3", title: "Plano H3" },
+      { key: "ongoing", title: "Plano contínuo" },
     ];
     for (const h of horizons) {
       if (actionsFor(deck, h.key).length > 0) {
@@ -99,34 +137,22 @@ export function buildSlides(deck: DeckData): SlideDef[] {
         });
       }
     }
-    out.push(
-      ...paginated("appendix-faq", "Perguntas frequentes", "paper", AppendixFFAQ, faqPageCount(deck)),
-    );
-  }
-
-  // ACT 3 — Onde estás (ponto de partida + diagnóstico detalhado)
-  out.push(
-    { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
-    { id: "cost-invisibility", title: "O custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
-  );
-  if (synth) {
-    if (synth.executive_reading_md || synth.executive_reading) {
-      out.push({ id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis });
-    }
-    out.push(
-      ...paginated("appendix-f2", "Findings críticos", "paper", AppendixF2Findings, findingsPageCount(deck)),
-    );
-    if ((synth.competitor_profiles?.length ?? 0) > 0) {
-      out.push({ id: "appendix-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape });
-    }
     if (synth.projection_6m) {
-      out.push({ id: "appendix-potential", title: "Potencial · 6 meses", tone: "paper", Component: AppendixFPotential });
+      out.push({
+        id: "appendix-potential",
+        title: "Potencial · 6 meses",
+        tone: "paper",
+        Component: AppendixFPotential,
+      });
     }
   }
 
-  // ACT 4 — Entrega + closing
-  out.push({ id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker });
-  // Apêndice A — prompts auditados completos (movidos do slide do espelho).
+  // ACT 5 — ENTREGA E FECHO
+  out.push(
+    { id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker },
+    { id: "pricing", title: "Investimento", tone: "paper", Component: Pricing },
+    { id: "next-steps", title: "A seguir", tone: "paper", Component: NextSteps },
+  );
   if (allAuditedPrompts(deck).length > 0) {
     out.push(
       ...paginated(
@@ -138,6 +164,11 @@ export function buildSlides(deck: DeckData): SlideDef[] {
       ),
     );
   }
+  if (synth) {
+    out.push(
+      ...paginated("appendix-faq", "Perguntas frequentes", "paper", AppendixFFAQ, faqPageCount(deck)),
+    );
+  }
   out.push({ id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou });
 
   return out;
@@ -145,30 +176,37 @@ export function buildSlides(deck: DeckData): SlideDef[] {
 
 /**
  * Lista estática (page-agnostic) — usada por consumidores de metadata
- * (PDF, analytics) que só precisam dos ids/títulos base, não da paginação.
- * O runtime de render usa `buildSlides(deck)`. Ordem espelha o arco acima.
+ * que só precisam dos ids/títulos base, não da paginação nem das
+ * condicionais. Ordem espelha o arco em 5 actos do `buildSlides`.
  */
 export const SLIDES: SlideDef[] = [
+  // ACT 1
   { id: "cover", title: "Capa", tone: "paper", Component: Cover },
   { id: "problem", title: "O problema", tone: "ink", Component: Problem },
   { id: "villain", title: "Quem aparece", tone: "paper", Component: Villain },
+  { id: "hope", title: "O destino", tone: "ink", Component: Hope },
+  // ACT 2
   { id: "our-study", title: "A prova", tone: "paper", Component: OurStudy },
   { id: "live-audit", title: "E sobre ti?", tone: "paper", Component: LiveAudit },
-  { id: "hope", title: "O destino", tone: "ink", Component: Hope },
+  { id: "appendix-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape },
+  { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
+  { id: "cost-invisibility", title: "Custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
+  { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },
+  { id: "appendix-f2", title: "Findings críticos", tone: "paper", Component: AppendixF2Findings },
   { id: "data", title: "O contexto", tone: "paper", Component: Data },
+  // ACT 3
   { id: "seo-vs-geo", title: "SEO vs GEO", tone: "paper", Component: SEOvsGEO },
   { id: "definition", title: "O que é GEO", tone: "ink", Component: Definition },
   { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
+  // ACT 4
   { id: "phases-1-2", title: "Fases 1 e 2", tone: "paper", Component: Phases12 },
   { id: "phases-3-4", title: "Fases 3 e 4", tone: "paper", Component: Phases34 },
-  { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
-  { id: "cost-invisibility", title: "O custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
-  { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },
-  { id: "appendix-f2", title: "Findings críticos", tone: "paper", Component: AppendixF2Findings },
-  { id: "appendix-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape },
+  { id: "appendix-action-h1", title: "Plano H1", tone: "paper", Component: AppendixFActionHorizon },
   { id: "appendix-potential", title: "Potencial · 6 meses", tone: "paper", Component: AppendixFPotential },
-  { id: "appendix-action-h1", title: "Plano H1 · semana 1-2", tone: "paper", Component: AppendixFActionHorizon },
-  { id: "appendix-f5", title: "Perguntas frequentes", tone: "paper", Component: AppendixFFAQ },
+  // ACT 5
   { id: "tracker", title: "O que entregamos", tone: "paper", Component: Tracker },
+  { id: "pricing", title: "Investimento", tone: "paper", Component: Pricing },
+  { id: "next-steps", title: "A seguir", tone: "paper", Component: NextSteps },
+  { id: "appendix-faq", title: "Perguntas frequentes", tone: "paper", Component: AppendixFFAQ },
   { id: "thank-you", title: "Vamos a isto", tone: "ink", Component: ThankYou },
 ];

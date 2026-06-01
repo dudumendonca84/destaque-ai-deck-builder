@@ -10,9 +10,9 @@ export type Horizon = "h1" | "h2" | "h3" | "ongoing";
 import { DIMENSION_LABEL } from "@/lib/skill/dimensions";
 
 const HORIZON: Record<Horizon, { eyebrow: string; title: string }> = {
-  h1: { eyebrow: "Plano · H1 · semana 1-2", title: "O que fazemos primeiro." },
-  h2: { eyebrow: "Plano · H2 · semana 3-8", title: "Onde ganhamos tração." },
-  h3: { eyebrow: "Plano · H3 · mês 2-6", title: "Consolidação." },
+  h1: { eyebrow: "Plano · H1", title: "O que fazemos primeiro." },
+  h2: { eyebrow: "Plano · H2", title: "Onde ganhamos tração." },
+  h3: { eyebrow: "Plano · H3", title: "Consolidação." },
   ongoing: { eyebrow: "Plano · contínuo", title: "Manutenção." },
 };
 
