@@ -308,11 +308,14 @@ Specifically:
 4. **projection_6m**: baseline = citation_rate actual. Target conservador (max 0.4 OR baseline + 0.2, o que for maior). methodology_note com disclaimer sigmoidal + honestidade.
 5. **faq**: 3-5 perguntas que o prospecto provavelmente fará (preço, prazo, riscos, garantias, ownership). Respostas curtas e honestas.
 6. **competitor_profiles**: lista TODOS os nomes da secção "Todas as marcas mencionadas nas respostas (RAW)" acima — não filtres. Para cada nome, classifica:
-   - "peer_consultancy" — agência, consultora ou freelancer que oferece serviços relacionados (SEO clássico, GEO, AEO, marketing digital, conteúdo) e é potencial concorrente directo. **NO MERCADO PT, agências SEO clássicas COMO UniK SEO, Flowup, Infinidata, ou freelancers conhecidos contam aqui** mesmo sem GEO/AEO declarado, porque um decisor PT põe-nas na mesma shortlist.
-   - "vendor_platform" — plataforma SaaS que se VENDE ao cliente (Profound, AthenaHQ, Otterly, Peec AI, Semrush, Ahrefs, BrightEdge, Conductor, Kalicube, Searchmetrics). O cliente compra-as; não concorrem com a consultoria.
-   - "adjacent" — empresas de áreas próximas mas não directamente competitivas (ex.: agência de PR puro, design studio).
-   - "hallucinated" — nomes que claramente não existem ou são genéricos demais ("Agência GEO", "Consultora IA").
-   Inclui mention_count quando relevante. positioning_md (opcional, 1 frase) descreve o que oferecem. Sê AGRESSIVO em classificar como peer_consultancy — o slide Villain do deck precisa de mostrar 3 nomes reais. Se a lista RAW estiver vazia, devolve [].
+   - "peer_consultancy" — empresa que um decisor no negócio do cliente colocaria na mesma shortlist, mesmo que a oferta exacta seja ligeiramente diferente. O critério é PROXIMIDADE NO MIND-SHARE do buyer, não overlap exacto de produto. Exemplos por indústria:
+     • Consultoria GEO/SEO PT → agências SEO clássicas locais (mesmo sem GEO declarado) contam como peer.
+     • Fintech B2B em ES → fintechs ES adjacentes (mesmo com produto ligeiramente diferente) contam.
+     • Clínica de saúde → clínicas vizinhas (mesmo de especialidades adjacentes) contam.
+   - "vendor_platform" — plataforma SaaS que o cliente COMPRARIA, não com quem competiria. Inferir pela natureza do produto (telemetria, analytics, infra) versus o serviço do cliente. Para o sector GEO: Profound, AthenaHQ, Otterly, Peec AI, Semrush, Ahrefs, BrightEdge, Conductor, Kalicube, Searchmetrics. Para outras indústrias, usar o equivalente.
+   - "adjacent" — empresas de áreas próximas mas claramente não-competitivas (ex.: para uma consultoria, uma agência só de PR; para uma clínica, uma seguradora de saúde).
+   - "hallucinated" — nomes que claramente não existem ou são genéricos demais ("Agência GEO", "Consultora IA", "Empresa X").
+   Inclui mention_count quando relevante. positioning_md (opcional, 1 frase) descreve o que oferecem. Sê AGRESSIVO em classificar como peer_consultancy — o slide Villain do deck precisa de 3 nomes reais. Se a lista RAW estiver vazia, devolve [].
 7. **competitive_landscape_md** (opcional): 1-2 parágrafos PT-PT honestos sobre o que vês no landscape — quem domina o orgânico, quem está a fazer GEO, quem está só em SEO clássico, quem não existe.`;
 }
 
