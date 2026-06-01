@@ -1216,6 +1216,61 @@ em.mark {
   }
 }
 
+/* ---------- print mode (chromium → PDF) ---------- */
+/* Cada slide = uma página fixa 1280×720 (16:9). Reutiliza os componentes
+   de slide do deck web → web == PDF por construção. As animações de
+   entrada (framer-motion, opacity/transform) são forçadas ao estado final
+   para o chromium nunca capturar um frame a meio do fade. */
+.deck-print {
+  background: var(--paper);
+}
+.print-page {
+  position: relative;
+  width: 1280px;
+  height: 720px;
+  min-height: 0; /* anula .deck min-height:100vh */
+  overflow: hidden;
+  margin: 0 auto;
+  break-after: page;
+  page-break-after: always;
+}
+.print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.print-page .slide__inner {
+  padding: 56px 64px 64px; /* sem reserva para nav: o print não tem nav */
+  max-width: none;
+}
+/* Estado final garantido: sem animação, sem fade, sem deslocação. */
+.deck-print *,
+.deck-print *::before,
+.deck-print *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.deck-print .slide,
+.deck-print .slide__inner,
+.deck-print .slide__body,
+.deck-print .slide__eyebrow,
+.deck-print [style*="opacity"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+@media print {
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  .print-page {
+    break-after: page;
+  }
+}
+
 /* ---------- deck pending / expired ---------- */
 .deck-pending {
   min-height: 100vh;

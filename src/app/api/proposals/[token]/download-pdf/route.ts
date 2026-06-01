@@ -1,3 +1,5 @@
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 import { createServiceClient } from "@/lib/supabase/server";
 import { buildPdf } from "@/lib/pdf/build-deck";
 import type { DeckData } from "@/components/deck/types";
@@ -13,8 +15,14 @@ import { loadMethod } from "@/lib/skill/method";
 import type { ScanResult } from "@/lib/scan/types";
 import type { SynthesizedDeck } from "@/lib/llm/synthesize-deck";
 
-// @react-pdf/renderer precisa do runtime Node.
+// Chromium headless (Vercel) precisa do runtime Node + tempo para arrancar.
 export const runtime = "nodejs";
+export const maxDuration = 60;
+
+// Dimensão da página = canvas de design do slide (16:9). Tem de bater com
+// .print-page no globals.css e com @page em print.
+const PAGE_W = 1280;
+const PAGE_H = 720;
 
 function slug(s: string): string {
   return (
@@ -26,21 +34,16 @@ function slug(s: string): string {
   );
 }
 
-export async function GET(_request: Request, ctx: { params: Promise<{ token: string }> }) {
-  const { token } = await ctx.params;
-  // Service role: público por token (ver migration 003).
+/** Assembla DeckData — só usado no fallback (PDF estático antigo). */
+async function assembleDeck(token: string): Promise<DeckData | null> {
   const supabase = createServiceClient();
-
   const { data: proposalRow } = await supabase
     .from("proposals")
     .select("*")
     .eq("token", token)
     .is("deleted_at", null)
     .single();
-
-  if (!proposalRow) {
-    return new Response("Proposta não encontrada", { status: 404 });
-  }
+  if (!proposalRow) return null;
   const proposal = proposalRow as Proposal;
 
   const { data: prospectRow } = await supabase
@@ -65,7 +68,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     .maybeSingle();
   const sinalScan = (scanRow?.scan_results as ScanResult | null) ?? null;
 
-  const deck: DeckData = {
+  return {
     token,
     companyName: prospect?.company_name ?? "a tua marca",
     businessType: prospect?.business_type ?? null,
@@ -86,16 +89,75 @@ export async function GET(_request: Request, ctx: { params: Promise<{ token: str
     sinalScan,
     synthesized: (proposal.deck_blocks as SynthesizedDeck | null) ?? null,
   };
+}
 
-  const buffer = await buildPdf(deck);
-  const filename = `proposta-${slug(deck.companyName)}.pdf`;
+function companyNameFor(token: string, deck: DeckData | null): string {
+  return deck?.companyName ?? token;
+}
 
-  return new Response(new Uint8Array(buffer), {
-    status: 200,
-    headers: {
-      "content-type": "application/pdf",
-      "content-disposition": `attachment; filename="${filename}"`,
-      "cache-control": "no-store",
-    },
-  });
+/**
+ * Imprime o deck web (rota /proposta/[token]/print) via chromium headless.
+ * web == PDF por construção: mesmos slides, mesma ordem, mesmo conteúdo,
+ * mesmos números — drift impossível. Fontes embebidas automaticamente
+ * (o chromium renderiza a página real com next/font).
+ *
+ * Fallback: se o chromium falhar (cold start, OOM, indisponível em dev),
+ * cai no PDF estático antigo (build-deck.tsx) — produção nunca devolve um
+ * PDF partido. Remover o fallback + build-deck.tsx quando o print
+ * estabilizar em produção.
+ */
+export async function GET(request: Request, ctx: { params: Promise<{ token: string }> }) {
+  const { token } = await ctx.params;
+  const origin = new URL(request.url).origin;
+  const printUrl = `${origin}/proposta/${token}/print`;
+
+  try {
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+      defaultViewport: { width: PAGE_W, height: PAGE_H, deviceScaleFactor: 2 },
+    });
+    try {
+      const page = await browser.newPage();
+      const res = await page.goto(printUrl, { waitUntil: "networkidle0", timeout: 45_000 });
+      if (!res || !res.ok()) {
+        throw new Error(`print route ${res?.status() ?? "no-response"}`);
+      }
+      // Settle: hidratação + fontes + estado final das animações.
+      await new Promise((r) => setTimeout(r, 1200));
+      const pdf = await page.pdf({
+        width: `${PAGE_W}px`,
+        height: `${PAGE_H}px`,
+        printBackground: true,
+        preferCSSPageSize: true,
+      });
+      const filename = `proposta-${slug(token)}.pdf`;
+      return new Response(new Uint8Array(pdf), {
+        status: 200,
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": `attachment; filename="${filename}"`,
+          "cache-control": "no-store",
+        },
+      });
+    } finally {
+      await browser.close();
+    }
+  } catch (err) {
+    // Fallback estático — produção nunca devolve PDF partido.
+    console.error("[download-pdf] chromium falhou, fallback para build-deck estático:", err);
+    const deck = await assembleDeck(token);
+    if (!deck) return new Response("Proposta não encontrada", { status: 404 });
+    const buffer = await buildPdf(deck);
+    const filename = `proposta-${slug(companyNameFor(token, deck))}.pdf`;
+    return new Response(new Uint8Array(buffer), {
+      status: 200,
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": `attachment; filename="${filename}"`,
+        "cache-control": "no-store",
+      },
+    });
+  }
 }
