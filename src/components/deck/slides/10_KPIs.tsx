@@ -4,33 +4,7 @@ import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
 import type { SlideProps } from "../types";
 import { pct } from "@/lib/utils/format";
-
-/**
- * Lista de plataformas conhecidas de tracking/medição GEO. Quando a marca
- * mais citada na categoria é uma destas, o card muda o label para
- * "Ferramenta de referência citada" — evita apresentar uma ferramenta
- * como se fosse consultora concorrente.
- */
-const GEO_TOOLS = [
-  "profound",
-  "otterly.ai",
-  "otterly",
-  "peec ai",
-  "peec.ai",
-  "athenahq",
-  "athena hq",
-  "brightedge",
-  "conductor",
-  "semrush",
-  "ahrefs",
-  "kalicube",
-  "searchmetrics",
-];
-
-function isGeoTool(brand: string): boolean {
-  const norm = brand.trim().toLowerCase();
-  return GEO_TOOLS.some((t) => norm === t || norm.startsWith(`${t} `));
-}
+import { isGeoTool } from "@/lib/skill/geo-tools";
 
 export function KPIs({ deck, active }: SlideProps) {
   const s = deck.audit?.summary;

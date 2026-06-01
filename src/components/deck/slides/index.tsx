@@ -8,7 +8,7 @@ import { Data } from "./03_Data";
 import { LiveAudit, liveAuditPageCount } from "./04_LiveAudit";
 import { SEOvsGEO } from "./05_SEOvsGEO";
 import { Definition } from "./06_Definition";
-import { Methodology } from "./07_Methodology";
+import { Methodology, methodologyPageCount } from "./07_Methodology";
 import { Phases12 } from "./08_Phases12";
 import { Phases34 } from "./09_Phases34";
 import { KPIs } from "./10_KPIs";
@@ -113,7 +113,7 @@ export function buildSlides(deck: DeckData): SlideDef[] {
   out.push(
     { id: "seo-vs-geo", title: "SEO vs GEO", tone: "paper", Component: SEOvsGEO },
     { id: "definition", title: "O que é GEO", tone: "ink", Component: Definition },
-    { id: "methodology", title: "Metodologia", tone: "paper", Component: Methodology },
+    ...paginated("methodology", "Metodologia", "paper", Methodology, methodologyPageCount(deck)),
   );
 
   // ACT 4 — O PLANO
