@@ -56,32 +56,45 @@ export async function POST(_request: Request, ctx: { params: Promise<{ id: strin
     .maybeSingle();
   const sinalScan = (scanRow?.scan_results as ScanResult | null) ?? null;
 
-  const { deck, source } = await synthesizeDeck({
-    brandName: prospect?.company_name ?? "a marca",
-    businessType: prospect?.business_type ?? null,
-    location: prospect?.location ?? null,
-    targetAudience: prospect?.target_audience ?? null,
-    competitors: prospect?.competitors ?? [],
-    audit: (proposal.audit_results as AuditResults | null) ?? null,
-    auditRuns,
-    sinalScan,
-  });
+  // Marca pending no DB para o UI sobreviver a refresh / múltiplas abas.
+  // O botão lê este campo via server props — sem isto, refresh faz o
+  // operador clicar de novo enquanto a chamada anterior ainda corre.
+  await sb.from("proposals").update({ deck_synthesis_pending: true }).eq("id", id);
 
-  const { error: updateError } = await sb
-    .from("proposals")
-    .update({
-      deck_blocks: deck,
-      deck_synthesized_at: new Date().toISOString(),
-      deck_synthesized_source: source,
-    })
-    .eq("id", id);
+  try {
+    const { deck, source } = await synthesizeDeck({
+      brandName: prospect?.company_name ?? "a marca",
+      businessType: prospect?.business_type ?? null,
+      location: prospect?.location ?? null,
+      targetAudience: prospect?.target_audience ?? null,
+      competitors: prospect?.competitors ?? [],
+      audit: (proposal.audit_results as AuditResults | null) ?? null,
+      auditRuns,
+      sinalScan,
+    });
 
-  if (updateError) {
-    return NextResponse.json(
-      { ok: false, error: updateError.message },
-      { status: 500 },
-    );
+    const { error: updateError } = await sb
+      .from("proposals")
+      .update({
+        deck_blocks: deck,
+        deck_synthesized_at: new Date().toISOString(),
+        deck_synthesized_source: source,
+        deck_synthesis_pending: false,
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { ok: false, error: updateError.message },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ ok: true, source, deck });
+  } catch (e) {
+    // Liberta pending em qualquer falha — senão o UI fica para sempre
+    // a achar que ainda está a sintetizar e o operador não pode tentar de novo.
+    await sb.from("proposals").update({ deck_synthesis_pending: false }).eq("id", id);
+    throw e;
   }
-
-  return NextResponse.json({ ok: true, source, deck });
 }
