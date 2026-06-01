@@ -1228,7 +1228,6 @@ em.mark {
    amarela que apaga os vizinhos. */
 
 .bloc-rule {
-  /* régua superior 1px; --grouped vira 2px para grupos de topo */
   border-top: var(--bloc-rule-thickness, 1px) solid var(--rule-paper);
   border-radius: 0;
   padding: 14px 0 0;
@@ -1237,8 +1236,6 @@ em.mark {
 .bloc-rule[data-rule="grouped"] {
   --bloc-rule-thickness: 2px;
 }
-/* Destaque por PESO (não por caixa de fundo): régua preta + etiqueta a
-   tinta cheia. Usar sparingly — 1 bloco realçado por slide. */
 .bloc-rule[data-emphasis="strong"] {
   --bloc-rule-thickness: 2px;
   border-top-color: var(--ink);
@@ -1268,7 +1265,6 @@ em.mark {
   letter-spacing: -0.01em;
   line-height: 1.15;
 }
-/* tamanhos do herói — adaptar consoante densidade da grelha */
 .bloc-rule__hero[data-size="sm"] {
   font-size: clamp(18px, 1.6vw, 22px);
 }
@@ -1287,9 +1283,6 @@ em.mark {
   color: var(--ink-3);
 }
 
-/* Fecho marcado a amarelo — barra à esquerda, sem caixa de fundo.
-   Usado para a frase-chave que fecha um conjunto de blocos paralelos
-   (ex.: "o lugar está por preencher" no slide 7/1). */
 .bloc-close {
   border-left: 4px solid var(--accent);
   padding: 6px 14px;
