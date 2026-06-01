@@ -93,6 +93,7 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
             <SynthesizeDeckButton
               proposalId={proposal.id}
               hasExisting={Boolean(proposal.deck_blocks)}
+              isPending={Boolean(proposal.deck_synthesis_pending)}
               synthesizedAt={proposal.deck_synthesized_at}
               source={null}
             />
