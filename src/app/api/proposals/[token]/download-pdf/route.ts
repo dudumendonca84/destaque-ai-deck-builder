@@ -136,7 +136,9 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
   try {
     const browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(
+        "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar",
+      ),
       headless: true,
       defaultViewport: { width: PAGE_W, height: PAGE_H, deviceScaleFactor: 2 },
     });
