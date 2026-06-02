@@ -67,7 +67,7 @@ export function Villain({ deck, active }: SlideProps) {
             transition={{ duration: 0.45, delay: 0.15 + i * 0.12 }}
             style={{
               fontFamily: "var(--font-fraunces), Georgia, serif",
-              fontSize: "clamp(28px, 5vw, 44px)",
+              fontSize: "var(--fs-display-2)",
               lineHeight: 1.1,
               color: "var(--ink)",
             }}

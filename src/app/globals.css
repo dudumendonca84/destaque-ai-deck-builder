@@ -56,6 +56,11 @@
   --fs-body-sm: 13px;   /* corpo pequeno / contexto */
   --fs-mono: 12px;      /* nomes, sub-stats */
   --fs-label: 10px;     /* etiqueta caps */
+
+  /* Excepção fora dos 8 degraus de TEXTO: o lockup do logótipo
+     "destaque.ai" na capa (Geist 600) é um elemento de marca, não
+     corpo de texto. Documentado à parte para não inflar a escala. */
+  --fs-logo: 64px;
 }
 
 @theme inline {
