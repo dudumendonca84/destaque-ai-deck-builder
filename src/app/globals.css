@@ -2875,6 +2875,35 @@ em.mark {
   }
 
   /* --------------------------------------------------------------
+     Mobile collapse (PR #49 — restaurado): grids inline dos slides
+     colapsam para 1 coluna. A maioria dos slides usa grid-template-
+     columns inline ("1fr 1fr", "repeat(3, 1fr)", etc.) que NAO colapsa
+     por defeito em viewport estreito — dai Landscape (7), Findings
+     (11-19), SEO vs GEO (19), Definicao (20), Plano H1/H2 (25/27),
+     Investimento (34) cortarem texto.
+
+     Esta regra so dispara a < 720px e so afecta elementos com style
+     inline (especificidade > stylesheet). PDF chromium renderiza a
+     1280x720, logo @media nao matcha — desktop intocado.
+
+     NOTA: esta regra desapareceu acidentalmente durante o rebase do
+     PR #50 (cover logo) — a resolucao do conflict markers escolheu so
+     o side do logo, removendo o collapse. Restaurado aqui.
+     -------------------------------------------------------------- */
+  .slide [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Mobile center alignment: em desktop o slide__inner--center centra
+     vertical para drama. Em mobile, o conteudo arranca no topo (mais
+     natural para scroll vertical e nao deixa hero gigantes a sangrar
+     para fora). Combina com align-items:flex-start herdado de .slide. */
+  .slide__inner--center {
+    justify-content: flex-start;
+  }
+
+  /* --------------------------------------------------------------
      Cover logo: --fs-logo:64px (default) e absoluto — excepcao de
      marca, fora dos 8 tokens de texto. A 64px Geist 600 "destaque.ai"
      mede ~390px de largura, transbordando o viewport mobile (~304px
