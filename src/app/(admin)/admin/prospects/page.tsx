@@ -94,7 +94,7 @@ export default async function ProspectsPage(props: { searchParams: Promise<Searc
                     </span>
                   </td>
                   <td className="mono" style={{ color: "var(--ink-3)" }}>
-                    {new Date(p.created_at).toLocaleDateString("pt-PT")}
+                    {new Date(p.created_at).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })}
                   </td>
                   <td>
                     <Link className="link-arrow" href={`/admin/prospects/${p.id}`}>

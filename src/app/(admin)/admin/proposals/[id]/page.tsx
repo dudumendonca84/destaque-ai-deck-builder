@@ -128,7 +128,7 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
             <div className="kpi__label">Expira</div>
             <div className="kpi__value" style={{ fontSize: 24 }}>
               {proposal.expires_at
-                ? new Date(proposal.expires_at).toLocaleDateString("pt-PT")
+                ? new Date(proposal.expires_at).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })
                 : "—"}
             </div>
           </div>
@@ -172,7 +172,7 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
           })()}
           {proposal.sent_at && (
             <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 10 }}>
-              Enviada a {new Date(proposal.sent_at).toLocaleString("pt-PT")}.
+              Enviada a {new Date(proposal.sent_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}.
             </p>
           )}
         </div>
