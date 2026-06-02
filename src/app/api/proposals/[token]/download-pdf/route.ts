@@ -167,6 +167,10 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
           "content-type": "application/pdf",
           "content-disposition": `attachment; filename="${filename}"`,
           "cache-control": "no-store",
+          // Diagnóstico — qual ramo correu. "chromium" = web == PDF (correcto).
+          // "react-pdf-fallback" no catch = slides fósseis (regressão silenciosa).
+          "x-pdf-renderer": "chromium",
+          "x-pdf-bypass-secret-present": bypassSecret ? "1" : "0",
         },
       });
     } finally {
@@ -193,6 +197,9 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
         "content-type": "application/pdf",
         "content-disposition": `attachment; filename="${filename}"`,
         "cache-control": "no-store",
+        "x-pdf-renderer": "react-pdf-fallback",
+        "x-pdf-bypass-secret-present": bypassSecret ? "1" : "0",
+        "x-pdf-chromium-err": safeMsg.slice(0, 256),
       },
     });
   }
