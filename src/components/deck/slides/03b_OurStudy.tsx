@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
-import { Counter } from "../primitives/Counter";
 import type { SlideProps } from "../types";
 
 /**
@@ -14,6 +13,11 @@ import type { SlideProps } from "../types";
  * Estudo: 45 empresas, 3 motores (Claude, Gemini, Grok), Maio 2026.
  */
 const STUDY_URL = "https://destaque.ai/estudo/visibilidade-ia-saas-portugal-2026";
+
+// Achado fixo do estudo destaque.ai, Maio 2026 — não derivado de
+// audit/motores. Constante para impedir drift entre prospects e
+// builds. Se a metodologia mudar, mexer aqui (sítio único).
+const STUDY_HEADLINE_PCT = 60;
 
 export function OurStudy({ active }: SlideProps) {
   return (
@@ -37,7 +41,7 @@ export function OurStudy({ active }: SlideProps) {
             color: "var(--ink)",
           }}
         >
-          <Counter to={60} active={active} />
+          {STUDY_HEADLINE_PCT}
           <em className="mark" style={{ fontSize: 80 }}>
             %
           </em>

@@ -36,12 +36,19 @@ export function findingsPageCount(deck: DeckData): number {
   return n === 0 ? 0 : Math.ceil(n / FINDINGS_PER_PAGE);
 }
 
-/** Primeiras N frases do markdown (para o diagnóstico de 3 linhas). */
+/** Primeiras N frases do markdown, com cap de caracteres defensivo.
+ * O número é o herói; o veredito é apoio em ≤3 linhas. Cap por frases
+ * + cap por chars protege quando a Routine devolve frases longas. */
+const DIAGNOSTIC_MAX_CHARS = 260;
 function shortDiagnostic(md: string | undefined, sentences = 2): string {
   if (!md) return "";
   const plain = md.replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim();
   const parts = plain.split(/(?<=[.!?])\s+/);
-  return parts.slice(0, sentences).join(" ").trim();
+  let result = parts.slice(0, sentences).join(" ").trim();
+  if (result.length > DIAGNOSTIC_MAX_CHARS) {
+    result = result.slice(0, DIAGNOSTIC_MAX_CHARS).replace(/\s+\S*$/, "") + "…";
+  }
+  return result;
 }
 
 export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps) {
@@ -187,7 +194,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
                 margin: 0,
               }}
             >
-              {shortDiagnostic(f.why_md ?? f.why, 3)}
+              {shortDiagnostic(f.why_md ?? f.why, 2)}
             </p>
           ) : (
             <div

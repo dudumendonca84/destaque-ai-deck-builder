@@ -108,7 +108,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
       .sort((a, b) => b.s - a.s || a.i - b.i)
       .map((x) => x.p.name);
 
-  const incumbents = sortPt(peers.filter((p) => layerOf(p) === "incumbent")).slice(0, 4);
+  const incumbents = sortPt(peers.filter((p) => layerOf(p) === "incumbent")).slice(0, 3);
   const challengers = sortPt(peers.filter((p) => layerOf(p) === "challenger")).slice(0, 5);
   const foreign = peers.filter((p) => layerOf(p) === "foreign").map((p) => p.name).slice(0, 3);
 
