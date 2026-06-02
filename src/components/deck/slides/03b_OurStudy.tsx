@@ -48,7 +48,7 @@ export function OurStudy({ active }: SlideProps) {
         </div>
 
         <p className="body-m" style={{ color: "var(--ink-2)", maxWidth: 720 }}>
-          Auditámos 45 SaaS B2B portuguesas em 3 motores de IA.{" "}
+          Auditámos 45 SaaS B2B portuguesas em 4 motores de IA.{" "}
           <strong>60% não é recomendada por nenhum.</strong> 31% é completamente
           invisível — a IA nem as nomeia.
         </p>
