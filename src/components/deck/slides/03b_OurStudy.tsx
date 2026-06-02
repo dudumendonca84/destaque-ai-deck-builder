@@ -35,14 +35,14 @@ export function OurStudy({ active }: SlideProps) {
         <div
           style={{
             fontFamily: "var(--font-fraunces), Georgia, serif",
-            fontSize: 110,
+            fontSize: "var(--fs-display-1)",
             lineHeight: 1,
             letterSpacing: -3,
             color: "var(--ink)",
           }}
         >
           {STUDY_HEADLINE_PCT}
-          <em className="mark" style={{ fontSize: 80 }}>
+          <em className="mark" style={{ fontSize: "var(--fs-display-1)" }}>
             %
           </em>
         </div>
@@ -56,14 +56,14 @@ export function OurStudy({ active }: SlideProps) {
         <p
           style={{
             fontFamily: "var(--font-fraunces), Georgia, serif",
-            fontSize: 26,
+            fontSize: "var(--fs-h2)",
             color: "var(--ink)",
           }}
         >
           Estás nos 40%, ou nos <em className="mark">60%</em>?
         </p>
 
-        <p style={{ fontSize: 12, color: "var(--ink-3)" }}>
+        <p style={{ fontSize: "var(--fs-mono)", color: "var(--ink-3)" }}>
           Fonte:{" "}
           <a
             href={STUDY_URL}

@@ -107,7 +107,7 @@ export function Pricing({ active }: SlideProps) {
                 <li
                   key={line}
                   style={{
-                    fontSize: 12,
+                    fontSize: "var(--fs-mono)",
                     lineHeight: 1.45,
                     color: "var(--ink-2)",
                   }}
@@ -119,7 +119,7 @@ export function Pricing({ active }: SlideProps) {
             <p
               style={{
                 marginTop: 18,
-                fontSize: 12,
+                fontSize: "var(--fs-mono)",
                 color: "var(--ink-3)",
                 fontFamily: "var(--font-mono-jetbrains)",
                 letterSpacing: 0.5,

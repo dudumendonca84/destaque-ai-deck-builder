@@ -62,7 +62,7 @@ export function AppendixAPrompts({ deck, page = 0, pageCount = 1 }: SlideProps) 
               <span
                 style={{
                   fontFamily: "var(--font-mono-jetbrains), ui-monospace, monospace",
-                  fontSize: 10,
+                  fontSize: "var(--fs-label)",
                   color: "var(--ink-muted)",
                   letterSpacing: "0.05em",
                 }}
@@ -71,7 +71,7 @@ export function AppendixAPrompts({ deck, page = 0, pageCount = 1 }: SlideProps) 
               </span>
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: "var(--fs-mono)",
                   lineHeight: 1.45,
                   color: "var(--ink-2)",
                 }}

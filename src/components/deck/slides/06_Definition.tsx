@@ -48,14 +48,14 @@ export function Definition({ deck }: SlideProps) {
               <div
                 style={{
                   fontFamily: "var(--font-fraunces), Georgia, serif",
-                  fontSize: 28,
+                  fontSize: "var(--fs-h2)",
                   color: "var(--paper)",
                   marginBottom: 4,
                 }}
               >
                 {g.sigla}
               </div>
-              <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+              <div style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.5 }}>
                 <b style={{ color: "var(--paper)" }}>{g.nome}.</b> {g.definicao}
               </div>
             </div>
@@ -66,7 +66,7 @@ export function Definition({ deck }: SlideProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          style={{ marginTop: 32, fontSize: 12, color: "var(--ink-4)", opacity: 0.6, maxWidth: 680 }}
+          style={{ marginTop: 32, fontSize: "var(--fs-mono)", color: "var(--ink-4)", opacity: 0.6, maxWidth: 680 }}
         >
           Nomes distintos, problema único — ser <em className="mark">citável</em> pelos motores
           que decidem por quem clica. O SINAL trata-os como uma só disciplina integrada.

@@ -24,7 +24,7 @@ function ActionRow({ action, delay }: { action: ActionItem; delay: number }) {
     >
       <span
         style={{
-          fontSize: 10,
+          fontSize: "var(--fs-label)",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
           color: "var(--amber, #d97706)",
@@ -33,10 +33,10 @@ function ActionRow({ action, delay }: { action: ActionItem; delay: number }) {
       >
         {DIMENSION_LABEL[action.dimension] ?? action.dimension}
       </span>
-      <span style={{ fontSize: 14, lineHeight: 1.4, color: "var(--ink)" }}>
+      <span style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.4, color: "var(--ink)" }}>
         {action.title}
       </span>
-      <span style={{ fontSize: 11, color: "var(--ink-3)", textAlign: "right" }}>
+      <span style={{ fontSize: "var(--fs-mono)", color: "var(--ink-3)", textAlign: "right" }}>
         {action.effort}
       </span>
     </motion.div>
@@ -61,7 +61,7 @@ export function AppendixFActionH2H3({ deck }: SlideProps) {
         <div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: "var(--fs-mono)",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               color: "var(--ink-3)",
@@ -77,7 +77,7 @@ export function AppendixFActionH2H3({ deck }: SlideProps) {
         <div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: "var(--fs-mono)",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               color: "var(--ink-3)",
@@ -93,7 +93,7 @@ export function AppendixFActionH2H3({ deck }: SlideProps) {
             <>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: "var(--fs-mono)",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   color: "var(--ink-3)",

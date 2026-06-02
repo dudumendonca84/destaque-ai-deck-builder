@@ -48,7 +48,7 @@ export function AppendixF3ActionH1({ deck }: SlideProps) {
             >
               <span
                 style={{
-                  fontSize: 11,
+                  fontSize: "var(--fs-mono)",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   color: "var(--amber, #d97706)",
@@ -57,16 +57,16 @@ export function AppendixF3ActionH1({ deck }: SlideProps) {
               >
                 {DIMENSION_LABEL[a.dimension] ?? a.dimension}
               </span>
-              <span style={{ fontSize: 11, color: "var(--ink-3)" }}>{a.effort}</span>
+              <span style={{ fontSize: "var(--fs-mono)", color: "var(--ink-3)" }}>{a.effort}</span>
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.4, color: "var(--ink)" }}>
+            <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.4, color: "var(--ink)" }}>
               {a.title}
             </div>
             {a.benchmark_md && (
               <div
                 style={{
                   marginTop: 6,
-                  fontSize: 10,
+                  fontSize: "var(--fs-label)",
                   color: "var(--ink-3)",
                   fontFamily: "var(--font-mono-jetbrains)",
                   lineHeight: 1.4,

@@ -48,7 +48,7 @@ export function Methodology({ deck, active, page = 0, pageCount = 1 }: SlideProp
             <span
               style={{
                 fontFamily: "var(--font-mono-jetbrains)",
-                fontSize: 11,
+                fontSize: "var(--fs-mono)",
                 color: "var(--amber-label)",
                 letterSpacing: "0.08em",
               }}
@@ -69,7 +69,7 @@ export function Methodology({ deck, active, page = 0, pageCount = 1 }: SlideProp
         ))}
       </div>
       {page === pageCount - 1 && (
-        <p style={{ marginTop: 28, fontSize: 12, color: "var(--ink-3)", opacity: 0.7 }}>
+        <p style={{ marginTop: 28, fontSize: "var(--fs-mono)", color: "var(--ink-3)", opacity: 0.7 }}>
           As acções saem num plano de 4 horizontes — semana 1-2, 3-6, 7-12 e 90+ dias.
         </p>
       )}

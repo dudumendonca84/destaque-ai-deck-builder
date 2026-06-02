@@ -59,7 +59,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
               <div
                 className="tx-h3"
                 style={{
-                  fontSize: 22,
+                  fontSize: "var(--fs-h2)",
                   lineHeight: 1.2,
                   marginBottom: 8,
                   fontFamily: "var(--font-fraunces), Georgia, serif",
@@ -72,7 +72,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "baseline",
-                  fontSize: 13,
+                  fontSize: "var(--fs-body-sm)",
                   color: "var(--ink-3)",
                 }}
               >
@@ -88,7 +88,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
 
       <p
         style={{
-          fontSize: 12,
+          fontSize: "var(--fs-mono)",
           color: "var(--ink-3)",
           marginTop: 32,
           maxWidth: 760,

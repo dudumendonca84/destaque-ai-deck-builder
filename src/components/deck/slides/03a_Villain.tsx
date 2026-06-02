@@ -79,7 +79,7 @@ export function Villain({ deck, active }: SlideProps) {
       <p
         style={{
           fontFamily: "var(--font-fraunces), Georgia, serif",
-          fontSize: 20,
+          fontSize: "var(--fs-h2)",
           color: "var(--ink)",
           marginTop: 34,
         }}
