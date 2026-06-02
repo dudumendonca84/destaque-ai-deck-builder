@@ -158,7 +158,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: 36,
-          maxWidth: 1180,
+          maxWidth: 1100,
         }}
       >
         {/* Camada 1 — incumbentes */}
@@ -209,7 +209,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: 36,
-          maxWidth: 1180,
+          maxWidth: 1100,
           marginTop: 36,
           alignItems: "start",
         }}

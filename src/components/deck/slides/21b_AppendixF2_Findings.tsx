@@ -60,25 +60,10 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
 
   const eyebrow = `Findings críticos${pageCount > 1 ? ` · ${page + 1} de ${pageCount}` : ""}`;
 
+  const dimLabel = DIMENSION_LABEL[f.dimension] ?? f.dimension;
+
   return (
     <SlideShell eyebrow={eyebrow}>
-      {/* dimensão no canto sup direito */}
-      <div
-        style={{
-          position: "absolute",
-          top: 56,
-          right: 64,
-          fontFamily: "var(--font-inter), sans-serif",
-          fontSize: 10,
-          fontWeight: 500,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "var(--amber-label)",
-        }}
-      >
-        {DIMENSION_LABEL[f.dimension] ?? f.dimension}
-      </div>
-
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -166,6 +151,19 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
 
         {/* Coluna direita: VEREDITO */}
         <div>
+          <div
+            style={{
+              fontFamily: "var(--font-inter), sans-serif",
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--amber-label)",
+              marginBottom: 10,
+            }}
+          >
+            {dimLabel}
+          </div>
           <h2
             className="tx-h2"
             style={{
