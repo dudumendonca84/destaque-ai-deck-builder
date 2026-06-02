@@ -134,11 +134,12 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
     : basePrintUrl;
 
   try {
+    const tarballUrl =
+      process.env.CHROMIUM_TARBALL_URL ||
+      "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
     const browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(
-        "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar",
-      ),
+      executablePath: await chromium.executablePath(tarballUrl),
       headless: true,
       defaultViewport: { width: PAGE_W, height: PAGE_H, deviceScaleFactor: 2 },
     });
