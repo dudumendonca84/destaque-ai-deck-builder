@@ -176,7 +176,7 @@ export default async function AnalyticsPage(props: { params: Promise<{ id: strin
                   {events.slice(0, 60).map((e) => (
                     <tr key={e.id}>
                       <td className="mono" style={{ color: "var(--ink-3)" }}>
-                        {new Date(e.created_at).toLocaleString("pt-PT")}
+                        {new Date(e.created_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}
                       </td>
                       <td>{e.event_type}</td>
                       <td>

@@ -48,14 +48,14 @@ export function AppendixFFAQ({ deck, page = 0, pageCount = 1 }: SlideProps) {
                 style={{
                   fontFamily: "var(--font-fraunces), Georgia, serif",
                   fontWeight: 400,
-                  fontSize: "var(--fs-h2)",
+                  fontSize: "var(--fs-body)",
                   marginBottom: 10,
                   lineHeight: 1.3,
                 }}
               >
                 {qa.q}
               </h3>
-              <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6, color: "var(--ink-3)" }}>
+              <div style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.6, color: "var(--ink-3)" }}>
                 <ReactMarkdown
                   components={{
                     p: ({ children }) => <>{children}</>,

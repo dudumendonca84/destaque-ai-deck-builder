@@ -65,7 +65,7 @@ export default async function ProposalsPage() {
                       </span>
                     </td>
                     <td className="mono" style={{ color: "var(--ink-3)" }}>
-                      {new Date(p.created_at).toLocaleDateString("pt-PT")}
+                      {new Date(p.created_at).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })}
                     </td>
                     <td>
                       <Link className="link-arrow" href={`/admin/proposals/${p.id}`}>
