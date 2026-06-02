@@ -43,7 +43,16 @@ export function AppendixFFAQ({ deck, page = 0, pageCount = 1 }: SlideProps) {
               transition={{ duration: 0.35, delay: 0.06 * i }}
               style={{ borderTop: "1px solid var(--rule-soft)", paddingTop: 16 }}
             >
-              <h3 className="tx-h3" style={{ fontSize: "var(--fs-h2)", marginBottom: 10, lineHeight: 1.3 }}>
+              <h3
+                className="tx-h3"
+                style={{
+                  fontFamily: "var(--font-fraunces), Georgia, serif",
+                  fontWeight: 400,
+                  fontSize: "var(--fs-h2)",
+                  marginBottom: 10,
+                  lineHeight: 1.3,
+                }}
+              >
                 {qa.q}
               </h3>
               <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6, color: "var(--ink-3)" }}>
