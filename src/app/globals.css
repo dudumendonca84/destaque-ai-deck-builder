@@ -2873,6 +2873,30 @@ em.mark {
   .la-excerpt {
     font-size: 14px;
   }
+
+  /* --------------------------------------------------------------
+     Mobile collapse: grids inline dos slides colapsam para 1 coluna.
+     A maioria dos slides usa grid-template-columns inline ("1fr 1fr",
+     "repeat(3, 1fr)", etc.) que NAO colapsa por defeito em viewport
+     estreito — daí Landscape (7), Findings (11), SEO vs GEO (19),
+     Definicao (20), Plano H1/H2 (25/27) cortarem texto.
+
+     Esta regra so dispara a < 720px e so afecta elementos com style
+     inline (especificidade > stylesheet). PDF chromium renderiza a
+     1280x720, logo @media nao matcha — desktop intocado.
+     -------------------------------------------------------------- */
+  .slide [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Mobile center alignment: em desktop o slide__inner--center centra
+     vertical para drama. Em mobile, o conteudo arranca no topo (mais
+     natural para scroll vertical e nao deixa hero gigantes a sangrar
+     para fora). Combina com align-items:flex-start herdado de .slide. */
+  .slide__inner--center {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
