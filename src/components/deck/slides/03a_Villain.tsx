@@ -54,9 +54,14 @@ export function Villain({ deck, active }: SlideProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "24px 40px",
-          maxWidth: 820,
+          // minmax(280px, 1fr) garante: a 1280 cabem 3 colunas (~300px
+          // cada, espaço para "Infinidata" sem overflow); a 390px colapsa
+          // para 1 coluna empilhada. align-items:start mantém os nomes
+          // alinhados no topo mesmo quando "AISO Hub" parte para 2 linhas.
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          alignItems: "start",
+          gap: "32px 48px",
+          maxWidth: 980,
         }}
       >
         {names.map((name, i) => (
@@ -70,6 +75,9 @@ export function Villain({ deck, active }: SlideProps) {
               fontSize: "var(--fs-display-2)",
               lineHeight: 1.1,
               color: "var(--ink)",
+              minWidth: 0,
+              textAlign: "center",
+              overflowWrap: "break-word",
             }}
           >
             {name}
