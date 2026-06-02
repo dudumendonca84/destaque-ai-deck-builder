@@ -35,7 +35,7 @@ export function CostOfInvisibility({ deck }: SlideProps) {
             marginBottom: 32,
             color: "var(--ink-4)",
             fontFamily: "var(--font-fraunces), Georgia, serif",
-            fontSize: 22,
+            fontSize: "var(--fs-h2)",
             lineHeight: 1.2,
           }}
         >
@@ -45,7 +45,7 @@ export function CostOfInvisibility({ deck }: SlideProps) {
           <span
             style={{
               fontFamily: "var(--font-inter), sans-serif",
-              fontSize: 11,
+              fontSize: "var(--fs-mono)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: "var(--ink-4)",

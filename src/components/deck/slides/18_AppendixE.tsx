@@ -64,12 +64,12 @@ export function AppendixE({ deck, active }: SlideProps) {
         <span
           className="mono"
           style={{
-            fontSize: 38,
+            fontSize: "var(--fs-display-2)",
             lineHeight: 1,
             color: scan.score >= 70 ? "#166534" : scan.score >= 50 ? "#92400e" : "#991b1b",
           }}
         >
-          {scan.score}<span style={{ fontSize: 20 }}>/100</span>
+          {scan.score}<span style={{ fontSize: "var(--fs-h2)" }}>/100</span>
         </span>
       </div>
 

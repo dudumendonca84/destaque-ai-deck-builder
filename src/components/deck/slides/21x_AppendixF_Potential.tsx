@@ -58,7 +58,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           <div
             style={{
               fontFamily: "var(--font-fraunces), Georgia, serif",
-              fontSize: 72,
+              fontSize: "var(--fs-display-2)",
               lineHeight: 1,
               color: "var(--ink-2)",
               marginTop: 8,
@@ -67,7 +67,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           >
             {baselinePct}%
           </div>
-          <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
+          <div style={{ fontSize: "var(--fs-body-sm)", color: "var(--ink-3)" }}>
             citation rate · {baselineQueries} em 100 queries
           </div>
         </motion.div>
@@ -76,7 +76,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          style={{ fontSize: 32, color: "var(--ink-3)" }}
+          style={{ fontSize: "var(--fs-h1)", color: "var(--ink-3)" }}
         >
           →
         </motion.div>
@@ -90,7 +90,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           <div
             style={{
               fontFamily: "var(--font-fraunces), Georgia, serif",
-              fontSize: 96,
+              fontSize: "var(--fs-display-2)",
               lineHeight: 1,
               color: "var(--ink)",
               marginTop: 8,
@@ -99,7 +99,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           >
             {targetPct}%
           </div>
-          <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
+          <div style={{ fontSize: "var(--fs-body-sm)", color: "var(--ink-3)" }}>
             citation rate · {targetQueries} em 100 queries
           </div>
         </motion.div>
@@ -126,7 +126,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
             <div
               style={{
                 fontFamily: "var(--font-fraunces), Georgia, serif",
-                fontSize: 48,
+                fontSize: "var(--fs-display-2)",
                 lineHeight: 1.1,
                 color: "var(--ink)",
                 marginTop: 4,
@@ -137,7 +137,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
             </div>
             <div
               style={{
-                fontSize: 11,
+                fontSize: "var(--fs-mono)",
                 color: "var(--ink-3)",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
@@ -147,7 +147,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
               confidence {synth.projection_6m.monthly_eur_estimate.confidence}
             </div>
           </div>
-          <div style={{ fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" }}>
+          <div style={{ fontSize: "var(--fs-mono)", lineHeight: 1.55, color: "var(--ink-3)" }}>
             <ReactMarkdown
               components={{
                 p: ({ children }) => <p style={{ margin: "0 0 0.5em" }}>{children}</p>,
@@ -185,7 +185,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
       >
         <div
           style={{
-            fontSize: 12,
+            fontSize: "var(--fs-mono)",
             textTransform: "uppercase",
             letterSpacing: "0.08em",
             color: "var(--amber, #d97706)",
@@ -196,7 +196,7 @@ export function AppendixFPotential({ deck }: SlideProps) {
           +{deltaPct} pontos · meta condicional, não garantia
         </div>
         {methodology_note_md && (
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)", margin: 0 }}>
+          <p style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.6, color: "var(--ink-2)", margin: 0 }}>
             {methodology_note_md
               .replace(/[*_`#]/g, "")
               .split(/(?<=[.!?])\s+/)

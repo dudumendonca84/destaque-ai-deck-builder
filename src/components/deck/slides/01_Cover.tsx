@@ -13,7 +13,7 @@ export function Cover({ deck }: SlideProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <Logo size={64} />
+          <Logo style={{ fontSize: "var(--fs-logo)" }} />
         </motion.div>
 
         <motion.div

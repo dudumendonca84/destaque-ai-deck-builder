@@ -41,6 +41,26 @@
   /* Layout */
   --container: 1280px;
   --gutter: clamp(1.5rem, 5vw, 4rem);
+
+  /* ----------------------------------------------------------
+     Escala tipográfica — 8 degraus, fonte única (razão ~1,4).
+     Todo o texto do deck puxa de um destes tokens; nenhum slide
+     inventa o seu tamanho. Web e PDF partilham esta escala.
+     display-1 reservado ao número-herói da prova (slide 5).
+     ---------------------------------------------------------- */
+  --fs-display-1: 96px; /* número-herói da prova (60%) — pico do deck */
+  --fs-display-2: 60px; /* números grandes secundários + títulos hero */
+  --fs-h1: 36px;        /* título de slide */
+  --fs-h2: 24px;        /* subtítulo / essência de bloco */
+  --fs-body: 16px;      /* corpo */
+  --fs-body-sm: 13px;   /* corpo pequeno / contexto */
+  --fs-mono: 12px;      /* nomes, sub-stats */
+  --fs-label: 10px;     /* etiqueta caps */
+
+  /* Excepção fora dos 8 degraus de TEXTO: o lockup do logótipo
+     "destaque.ai" na capa (Geist 600) é um elemento de marca, não
+     corpo de texto. Documentado à parte para não inflar a escala. */
+  --fs-logo: 64px;
 }
 
 @theme inline {
@@ -141,7 +161,7 @@ h4 {
 
 .tx-display {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: clamp(48px, 6vw, 88px);
+  font-size: var(--fs-display-2);
   line-height: 0.98;
   letter-spacing: -0.025em;
   font-weight: 380;
@@ -154,14 +174,14 @@ h4 {
 
 .tx-h1 {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: clamp(40px, 4.6vw, 64px);
+  font-size: var(--fs-display-2);
   line-height: 1.02;
   letter-spacing: -0.02em;
 }
 
 .tx-h2 {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: clamp(28px, 2.8vw, 40px);
+  font-size: var(--fs-h1);
   line-height: 1.08;
   letter-spacing: -0.015em;
 }
@@ -169,13 +189,13 @@ h4 {
 .tx-h3 {
   font-family: var(--font-inter), -apple-system, system-ui, sans-serif;
   font-weight: 500;
-  font-size: 22px;
+  font-size: var(--fs-h2);
   line-height: 1.2;
 }
 
 .lead {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: clamp(20px, 1.6vw, 24px);
+  font-size: var(--fs-h2);
   line-height: 1.4;
   color: var(--ink-2);
   letter-spacing: -0.005em;
@@ -185,17 +205,17 @@ p {
   margin: 0 0 1em;
 }
 .body-l {
-  font-size: 17px;
+  font-size: var(--fs-body);
   line-height: 1.55;
   color: var(--ink-2);
 }
 .body-m {
-  font-size: 15px;
+  font-size: var(--fs-body);
   line-height: 1.55;
   color: var(--ink-2);
 }
 .body-s {
-  font-size: 13px;
+  font-size: var(--fs-body-sm);
   line-height: 1.5;
   color: var(--ink-3);
 }
@@ -640,7 +660,7 @@ em.mark {
 }
 .kpi__label {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -648,7 +668,7 @@ em.mark {
 }
 .kpi__value {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 40px;
+  font-size: var(--fs-display-2);
   line-height: 1;
   letter-spacing: -0.025em;
   color: var(--ink);
@@ -1097,6 +1117,9 @@ em.mark {
   display: flex;
   align-items: center;
   width: 100%;
+  /* Default tipográfico do deck: texto sem classe explícita herda o
+     token de corpo (16px), nunca o 15px do body root (admin). */
+  font-size: var(--fs-body);
 }
 .slide__inner {
   width: 100%;
@@ -1117,7 +1140,7 @@ em.mark {
   gap: 16px;
   margin-bottom: 36px;
   font-family: var(--font-mono-jetbrains);
-  font-size: 11.5px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -1164,7 +1187,7 @@ em.mark {
   height: 40px;
   border-radius: 999px;
   border: 1px solid var(--rule-soft);
-  font-size: 16px;
+  font-size: var(--fs-body);
   color: var(--ink);
   transition:
     transform 0.15s,
@@ -1210,7 +1233,7 @@ em.mark {
 }
 .deck-nav__counter {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.08em;
   color: var(--ink-3);
 }
@@ -1257,7 +1280,7 @@ em.mark {
 .bloc-rule__label {
   display: block;
   font-family: var(--font-inter), sans-serif;
-  font-size: 10px;
+  font-size: var(--fs-label);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1277,19 +1300,19 @@ em.mark {
 }
 /* tamanhos do herói — adaptar consoante densidade da grelha */
 .bloc-rule__hero[data-size="sm"] {
-  font-size: clamp(18px, 1.6vw, 22px);
+  font-size: var(--fs-h2);
 }
 .bloc-rule__hero[data-size="md"] {
-  font-size: clamp(22px, 2vw, 28px);
+  font-size: var(--fs-h2);
 }
 .bloc-rule__hero[data-size="lg"] {
-  font-size: clamp(28px, 2.8vw, 38px);
+  font-size: var(--fs-h1);
 }
 
 .bloc-rule__context {
   margin-top: 8px;
   font-family: var(--font-inter), sans-serif;
-  font-size: 11.5px;
+  font-size: var(--fs-mono);
   line-height: 1.5;
   color: var(--ink-3);
 }
@@ -1301,7 +1324,7 @@ em.mark {
   border-left: 4px solid var(--accent);
   padding: 6px 14px;
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 17px;
+  font-size: var(--fs-body);
   line-height: 1.4;
   color: var(--ink);
 }
@@ -1422,7 +1445,7 @@ em.mark {
 }
 .deck-list li b {
   font-family: var(--font-mono-jetbrains);
-  font-size: 12px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--accent-ink);
@@ -1430,7 +1453,7 @@ em.mark {
 }
 .deck-list li span {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 20px;
+  font-size: var(--fs-h2);
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
@@ -1644,13 +1667,13 @@ em.mark {
 }
 .data-stat__value {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: clamp(56px, 7vw, 88px);
+  font-size: var(--fs-display-2);
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--ink);
 }
 .data-stat__label {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   line-height: 1.5;
   color: var(--ink-3);
   max-width: 260px;
@@ -1692,7 +1715,7 @@ em.mark {
 }
 .la-hero__v {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 84px;
+  font-size: var(--fs-display-2);
   line-height: 1;
   color: var(--ink);
   margin-top: 6px;
@@ -1713,13 +1736,13 @@ em.mark {
 }
 .la-card__n {
   font-family: var(--font-mono-jetbrains);
-  font-size: 10.5px;
+  font-size: var(--fs-label);
   letter-spacing: 0.08em;
   color: var(--accent-ink);
 }
 .la-card__prompt {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 16px;
+  font-size: var(--fs-body);
   color: var(--ink);
   letter-spacing: -0.01em;
 }
@@ -1752,7 +1775,7 @@ em.mark {
 }
 .la-flag {
   font-family: var(--font-mono-jetbrains);
-  font-size: 9px;
+  font-size: var(--fs-label);
   letter-spacing: 0.06em;
   padding: 2px 6px;
   border-radius: 999px;
@@ -1767,7 +1790,7 @@ em.mark {
   border: 1px solid var(--red);
 }
 .la-excerpt {
-  font-size: 12px;
+  font-size: var(--fs-mono);
   line-height: 1.5;
   color: var(--ink-3);
 }
@@ -1863,7 +1886,7 @@ em.mark {
 }
 .compare__head {
   font-family: var(--font-mono-jetbrains);
-  font-size: 12px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -1877,7 +1900,7 @@ em.mark {
   padding: 16px 22px;
   border-bottom: 1px solid var(--rule-soft);
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 17px;
+  font-size: var(--fs-body);
   line-height: 1.35;
   color: var(--ink);
 }
@@ -2016,19 +2039,19 @@ em.mark {
 }
 .phase__n {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent-ink);
 }
 .phase__dur {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 .phase__lead {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 20px;
+  font-size: var(--fs-h2);
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -2042,7 +2065,7 @@ em.mark {
 .phase__list li {
   padding: 8px 0 8px 18px;
   position: relative;
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   color: var(--ink-2);
   border-top: 1px solid var(--rule-soft);
 }
@@ -2088,20 +2111,20 @@ em.mark {
 }
 .kpi-card__label {
   font-family: var(--font-mono-jetbrains);
-  font-size: 10.5px;
+  font-size: var(--fs-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 .kpi-card__value {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 44px;
+  font-size: var(--fs-display-2);
   line-height: 1;
   letter-spacing: -0.03em;
   color: var(--ink);
 }
 .kpi-card__note {
-  font-size: 12px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 @media (max-width: 860px) {
@@ -2128,17 +2151,17 @@ em.mark {
 }
 .steps-table__n {
   font-family: var(--font-mono-jetbrains);
-  font-size: 13px;
+  font-size: var(--fs-body-sm);
   color: var(--accent-ink);
 }
 .steps-table__t {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 21px;
+  font-size: var(--fs-h2);
   letter-spacing: -0.01em;
   color: var(--ink);
 }
 .steps-table__d {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   line-height: 1.55;
   color: var(--ink-3);
 }
@@ -2157,7 +2180,7 @@ em.mark {
 }
 .invest-table thead th {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -2168,23 +2191,23 @@ em.mark {
 .invest-table tbody td {
   padding: 20px 16px;
   border-bottom: 1px solid var(--rule-soft);
-  font-size: 15px;
+  font-size: var(--fs-body);
   color: var(--ink-2);
 }
 .invest-table__phase {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 22px;
+  font-size: var(--fs-h2);
   letter-spacing: -0.015em;
   color: var(--ink);
 }
 .invest-table__price {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 24px;
+  font-size: var(--fs-h2);
   color: var(--ink);
 }
 .invest-table__price span {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 
@@ -2243,18 +2266,18 @@ em.mark {
 }
 .appendix-e-dim__name {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 .appendix-e-dim__score {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--fs-h2);
   color: var(--ink);
 }
 .appendix-e-dim__count {
-  font-size: 12px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 .appendix-e-findings {
@@ -2280,7 +2303,7 @@ em.mark {
 }
 .appendix-e-finding__sev {
   font-family: var(--font-mono-jetbrains);
-  font-size: 10px;
+  font-size: var(--fs-label);
   letter-spacing: 0.06em;
   padding: 2px 8px;
   border-radius: 3px;
@@ -2313,7 +2336,7 @@ em.mark {
 }
 .tracker-block__head {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -2337,16 +2360,16 @@ em.mark {
   gap: 2px;
 }
 .tracker-card__label {
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 .tracker-card__value {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--fs-h2);
   color: var(--ink);
 }
 .tracker-card__target {
-  font-size: 10px;
+  font-size: var(--fs-label);
   color: var(--ink-3);
 }
 .tracker-dashboard__chart {
@@ -2358,7 +2381,7 @@ em.mark {
 .tracker-chart__head {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
   margin-bottom: 4px;
 }
@@ -2367,11 +2390,11 @@ em.mark {
 }
 .tracker-chart__note {
   margin: 6px 0 0;
-  font-size: 10px;
+  font-size: var(--fs-label);
   color: var(--ink-3);
 }
 .tracker-prompt-table {
-  font-size: 12px;
+  font-size: var(--fs-mono);
 }
 .tracker-prompt-table__head {
   display: grid;
@@ -2415,22 +2438,22 @@ em.mark {
 }
 .tracker-engine-card__name {
   font-family: var(--font-mono-jetbrains);
-  font-size: 10px;
+  font-size: var(--fs-label);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-3);
 }
 .tracker-engine-card__cr {
   font-family: var(--font-serif);
-  font-size: 20px;
+  font-size: var(--fs-h2);
   color: var(--ink);
 }
 .tracker-engine-card__label {
-  font-size: 10px;
+  font-size: var(--fs-label);
   color: var(--ink-3);
 }
 .tracker-engine-card__sov {
-  font-size: 10px;
+  font-size: var(--fs-label);
   color: var(--ink-3);
 }
 .tracker-report-preview {
@@ -2449,12 +2472,12 @@ em.mark {
 }
 .tracker-report-cover__eyebrow {
   font-family: var(--font-mono-jetbrains);
-  font-size: 9px;
+  font-size: var(--fs-label);
   letter-spacing: 0.08em;
   opacity: 0.7;
 }
 .tracker-report-cover__brand {
-  font-size: 12px;
+  font-size: var(--fs-mono);
   background: var(--amber);
   color: var(--ink);
   padding: 1px 5px;
@@ -2462,10 +2485,10 @@ em.mark {
 }
 .tracker-report-cover__client {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: var(--fs-body);
 }
 .tracker-report-cover__date {
-  font-size: 10px;
+  font-size: var(--fs-label);
   opacity: 0.6;
 }
 .tracker-report-thumbs {
@@ -2483,7 +2506,7 @@ em.mark {
   min-height: 60px;
 }
 .tracker-report-thumb__title {
-  font-size: 9px;
+  font-size: var(--fs-label);
   font-family: var(--font-mono-jetbrains);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2514,7 +2537,7 @@ em.mark {
 }
 .tracker-report-preview__note {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--fs-label);
   color: var(--ink-3);
   font-style: italic;
 }
@@ -2548,22 +2571,22 @@ em.mark {
 }
 .cta-card__num {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.06em;
   opacity: 0.6;
 }
 .cta-card__title {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--fs-h2);
 }
 .cta-card__desc {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   line-height: 1.5;
   opacity: 0.85;
 }
 .cta-card__action {
   font-family: var(--font-mono-jetbrains);
-  font-size: 12px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-top: auto;
@@ -2587,7 +2610,7 @@ em.mark {
 .findings-summary__dim {
   display: inline-block;
   font-family: var(--font-mono-jetbrains);
-  font-size: 10px;
+  font-size: var(--fs-label);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-3);
@@ -2600,7 +2623,7 @@ em.mark {
 .findings-summary__why {
   margin: 4px 0 0;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
 }
 .action-plan-grid {
   display: flex;
@@ -2614,7 +2637,7 @@ em.mark {
 }
 .horizon-block__title {
   font-family: var(--font-mono-jetbrains);
-  font-size: 12px;
+  font-size: var(--fs-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink);
@@ -2642,35 +2665,35 @@ em.mark {
 }
 .action-card__dim {
   font-family: var(--font-mono-jetbrains);
-  font-size: 10px;
+  font-size: var(--fs-label);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
 .action-card__effort {
   font-family: var(--font-mono-jetbrains);
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 .action-card__title {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: var(--fs-body);
   color: var(--ink);
   line-height: 1.3;
 }
 .action-card__why {
   margin: 0;
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: var(--fs-body-sm);
   line-height: 1.5;
 }
 .action-card__impact {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
 }
 .action-card__source {
-  font-size: 11px;
+  font-size: var(--fs-mono);
   color: var(--ink-3);
   font-style: italic;
   margin-top: 4px;
@@ -2697,7 +2720,7 @@ em.mark {
 .faq-item dd {
   margin: 0;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   line-height: 1.55;
 }
 
@@ -2880,7 +2903,7 @@ em.mark {
 
 /* ---- Markdown rendering nos slides synthesized ---- */
 .md-body {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   line-height: 1.6;
   color: var(--ink-2);
 }
@@ -2907,7 +2930,7 @@ em.mark {
 }
 .md-body code {
   font-family: var(--font-mono-jetbrains);
-  font-size: 0.9em;
+  font-size: var(--fs-mono);
   background: var(--paper-2);
   padding: 1px 5px;
   border-radius: 3px;
@@ -2933,9 +2956,9 @@ em.mark {
   margin: 1.2em 0 0.5em;
   color: var(--ink);
 }
-.md-body h2 { font-size: 22px; }
-.md-body h3 { font-size: 18px; }
-.md-body h4 { font-size: 16px; }
+.md-body h2 { font-size: var(--fs-h2); }
+.md-body h3 { font-size: var(--fs-body); }
+.md-body h4 { font-size: var(--fs-body); }
 
 /* Executive reading (Slide 21) — markdown maior */
 .executive-reading {
@@ -2943,7 +2966,7 @@ em.mark {
   margin-bottom: 24px;
 }
 .executive-reading .md-body {
-  font-size: 16px;
+  font-size: var(--fs-body);
   line-height: 1.65;
   color: var(--ink);
 }

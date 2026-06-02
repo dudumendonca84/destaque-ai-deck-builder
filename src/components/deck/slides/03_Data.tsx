@@ -68,7 +68,7 @@ export function Data({ deck, active }: SlideProps) {
                 className="data-stat__source"
                 style={{
                   marginTop: 8,
-                  fontSize: 12,
+                  fontSize: "var(--fs-mono)",
                   color: "var(--ink-3)",
                   textDecoration: "underline",
                   textUnderlineOffset: 3,
@@ -83,7 +83,7 @@ export function Data({ deck, active }: SlideProps) {
       <p
         style={{
           marginTop: 28,
-          fontSize: 12,
+          fontSize: "var(--fs-mono)",
           color: "var(--ink-3)",
           maxWidth: 720,
           fontStyle: "italic",

@@ -56,14 +56,14 @@ export function landscapePageCount(deck: DeckData): number {
 function NameList({ names }: { names: string[] }) {
   if (names.length === 0) {
     return (
-      <span style={{ fontSize: 13, color: "var(--ink-3)", fontStyle: "italic" }}>—</span>
+      <span style={{ fontSize: "var(--fs-body-sm)", color: "var(--ink-3)", fontStyle: "italic" }}>—</span>
     );
   }
   return (
     <span
       style={{
         fontFamily: "var(--font-mono-jetbrains)",
-        fontSize: 12.5,
+        fontSize: "var(--fs-mono)",
         lineHeight: 1.6,
         color: "var(--ink-2)",
       }}
@@ -87,7 +87,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
         <h2 className="tx-h2" style={{ marginBottom: 20, maxWidth: 900 }}>
           Quem aparece quando perguntam.
         </h2>
-        <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 880 }}>
+        <div style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 880 }}>
           <ReactMarkdown
             components={{
               p: ({ children }) => <p style={{ margin: "0 0 0.7em" }}>{children}</p>,
@@ -108,7 +108,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
       .sort((a, b) => b.s - a.s || a.i - b.i)
       .map((x) => x.p.name);
 
-  const incumbents = sortPt(peers.filter((p) => layerOf(p) === "incumbent")).slice(0, 4);
+  const incumbents = sortPt(peers.filter((p) => layerOf(p) === "incumbent")).slice(0, 3);
   const challengers = sortPt(peers.filter((p) => layerOf(p) === "challenger")).slice(0, 5);
   const foreign = peers.filter((p) => layerOf(p) === "foreign").map((p) => p.name).slice(0, 3);
 
@@ -119,7 +119,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
 
   const labelStyle: React.CSSProperties = {
     fontFamily: "var(--font-inter), sans-serif",
-    fontSize: 10,
+    fontSize: "var(--fs-label)",
     fontWeight: 500,
     letterSpacing: "0.14em",
     textTransform: "uppercase",
@@ -129,13 +129,13 @@ export function AppendixFLandscape({ deck }: SlideProps) {
   };
   const heroStyle: React.CSSProperties = {
     fontFamily: "var(--font-fraunces), Georgia, serif",
-    fontSize: 21,
+    fontSize: "var(--fs-h2)",
     lineHeight: 1.15,
     color: "var(--ink)",
     marginBottom: 10,
   };
   const ctxStyle: React.CSSProperties = {
-    fontSize: 11.5,
+    fontSize: "var(--fs-mono)",
     lineHeight: 1.5,
     color: "var(--ink-3)",
     marginBottom: 14,
@@ -194,7 +194,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
           <span
             style={{
               fontFamily: "var(--font-mono-jetbrains)",
-              fontSize: 12,
+              fontSize: "var(--fs-mono)",
               color: "var(--amber-label)",
             }}
           >
@@ -216,7 +216,7 @@ export function AppendixFLandscape({ deck }: SlideProps) {
       >
         <div style={{ borderTop: "1px solid var(--rule-paper)", paddingTop: 12 }}>
           <span style={labelStyle}>Nota · não confundir</span>
-          <div style={{ fontSize: 11.5, lineHeight: 1.5, color: "var(--ink-3)" }}>
+          <div style={{ fontSize: "var(--fs-mono)", lineHeight: 1.5, color: "var(--ink-3)" }}>
             {vendors.length ? `${vendors.join(", ")} ` : "Profound, AthenaHQ, Peec, Semrush "}
             são <strong style={{ color: "var(--ink-2)" }}>plataformas</strong> que uma
             consultoria integra e revende — não concorrentes.

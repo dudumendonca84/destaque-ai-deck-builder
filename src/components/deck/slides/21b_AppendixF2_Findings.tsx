@@ -36,12 +36,19 @@ export function findingsPageCount(deck: DeckData): number {
   return n === 0 ? 0 : Math.ceil(n / FINDINGS_PER_PAGE);
 }
 
-/** Primeiras N frases do markdown (para o diagnóstico de 3 linhas). */
+/** Primeiras N frases do markdown, com cap de caracteres defensivo.
+ * O número é o herói; o veredito é apoio em ≤3 linhas. Cap por frases
+ * + cap por chars protege quando a Routine devolve frases longas. */
+const DIAGNOSTIC_MAX_CHARS = 260;
 function shortDiagnostic(md: string | undefined, sentences = 2): string {
   if (!md) return "";
   const plain = md.replace(/[*_`#>]/g, "").replace(/\s+/g, " ").trim();
   const parts = plain.split(/(?<=[.!?])\s+/);
-  return parts.slice(0, sentences).join(" ").trim();
+  let result = parts.slice(0, sentences).join(" ").trim();
+  if (result.length > DIAGNOSTIC_MAX_CHARS) {
+    result = result.slice(0, DIAGNOSTIC_MAX_CHARS).replace(/\s+\S*$/, "") + "…";
+  }
+  return result;
 }
 
 export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps) {
@@ -83,7 +90,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
             <div
               style={{
                 fontFamily: "var(--font-fraunces), Georgia, serif",
-                fontSize: 84,
+                fontSize: "var(--fs-display-2)",
                 lineHeight: 0.9,
                 letterSpacing: "-0.02em",
                 color: "var(--ink)",
@@ -91,7 +98,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
             >
               {f.metric_value}
               {f.metric_kind === "score" && f.metric_max ? (
-                <span style={{ fontSize: 32, color: "var(--ink-3)" }}>
+                <span style={{ fontSize: "var(--fs-h1)", color: "var(--ink-3)" }}>
                   /{f.metric_max}
                 </span>
               ) : null}
@@ -101,7 +108,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
                 style={{
                   marginTop: 16,
                   fontFamily: "var(--font-inter), sans-serif",
-                  fontSize: 10,
+                  fontSize: "var(--fs-label)",
                   fontWeight: 500,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -137,7 +144,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
                 style={{
                   marginTop: 14,
                   fontFamily: "var(--font-mono-jetbrains)",
-                  fontSize: 12,
+                  fontSize: "var(--fs-mono)",
                   color: "var(--ink-3)",
                   lineHeight: 1.5,
                   whiteSpace: "pre-wrap",
@@ -154,7 +161,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
           <div
             style={{
               fontFamily: "var(--font-inter), sans-serif",
-              fontSize: 10,
+              fontSize: "var(--fs-label)",
               fontWeight: 500,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
@@ -170,7 +177,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
               marginTop: 0,
               marginBottom: 16,
               maxWidth: 640,
-              fontSize: 27,
+              fontSize: "var(--fs-h2)",
               lineHeight: 1.18,
             }}
           >
@@ -180,19 +187,19 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
           {hasMetric ? (
             <p
               style={{
-                fontSize: 14,
+                fontSize: "var(--fs-body-sm)",
                 lineHeight: 1.55,
                 color: "var(--ink-2)",
                 maxWidth: 620,
                 margin: 0,
               }}
             >
-              {shortDiagnostic(f.why_md ?? f.why, 3)}
+              {shortDiagnostic(f.why_md ?? f.why, 2)}
             </p>
           ) : (
             <div
               className="body-m"
-              style={{ fontSize: 15, lineHeight: 1.6, color: "var(--ink-2)", maxWidth: 720 }}
+              style={{ fontSize: "var(--fs-body)", lineHeight: 1.6, color: "var(--ink-2)", maxWidth: 720 }}
             >
               <ReactMarkdown
                 components={{
@@ -223,7 +230,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
               <span
                 style={{
                   fontFamily: "var(--font-inter), sans-serif",
-                  fontSize: 10,
+                  fontSize: "var(--fs-label)",
                   fontWeight: 600,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -233,7 +240,7 @@ export function AppendixF2Findings({ deck, page = 0, pageCount = 1 }: SlideProps
               >
                 {f.next_step.label}
               </span>
-              <span style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--ink-3)" }}>
+              <span style={{ fontSize: "var(--fs-body-sm)", lineHeight: 1.55, color: "var(--ink-3)" }}>
                 {f.next_step.text}
               </span>
             </div>

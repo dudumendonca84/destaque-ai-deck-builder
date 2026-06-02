@@ -178,7 +178,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
               >
                 <div
                   className="la-card__prompt"
-                  style={{ fontSize: 15, marginBottom: 6, color: "var(--ink)" }}
+                  style={{ fontSize: "var(--fs-body)", marginBottom: 6, color: "var(--ink)" }}
                 >
                   «{prompt}»
                 </div>
@@ -189,7 +189,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
                     >
                       {bestRun.brand_present ? "PRESENTE" : "AUSENTE"}
                     </span>
-                    <span style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--ink-3)" }}>
+                    <span style={{ fontSize: "var(--fs-mono)", lineHeight: 1.5, color: "var(--ink-3)" }}>
                       <Excerpt
                         run={bestRun}
                         brand={brand}
@@ -204,7 +204,7 @@ export function LiveAudit({ deck, active }: SlideProps) {
           })}
         </div>
 
-        <p style={{ marginTop: 28, fontSize: 14, color: "var(--ink-3)", maxWidth: 820 }}>
+        <p style={{ marginTop: 28, fontSize: "var(--fs-body-sm)", color: "var(--ink-3)", maxWidth: 820 }}>
           Auditámos os prompts que decidem a tua categoria. Não apareces em nenhum.{" "}
           <span style={{ color: "var(--ink-2)" }}>
             ({withData.length} prompts completos no Apêndice A.)

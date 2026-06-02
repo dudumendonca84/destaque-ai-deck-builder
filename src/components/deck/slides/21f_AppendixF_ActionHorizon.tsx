@@ -88,7 +88,7 @@ export function AppendixFActionHorizon({
           >
             <span
               style={{
-                fontSize: 10,
+                fontSize: "var(--fs-label)",
                 textTransform: "uppercase",
                 letterSpacing: "0.14em",
                 color: "var(--amber-label)",
@@ -101,7 +101,7 @@ export function AppendixFActionHorizon({
               <div
                 style={{
                   fontFamily: "var(--font-fraunces), Georgia, serif",
-                  fontSize: 15,
+                  fontSize: "var(--fs-body)",
                   lineHeight: 1.3,
                   color: "var(--ink)",
                   marginBottom: 4,
@@ -109,7 +109,7 @@ export function AppendixFActionHorizon({
               >
                 {a.title}
               </div>
-              <div style={{ fontSize: 11.5, lineHeight: 1.5, color: "var(--ink-3)" }}>
+              <div style={{ fontSize: "var(--fs-mono)", lineHeight: 1.5, color: "var(--ink-3)" }}>
                 {oneLine(a.why_md ?? a.why ?? "")}
               </div>
             </div>

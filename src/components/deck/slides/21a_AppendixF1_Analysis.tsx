@@ -96,7 +96,7 @@ export function AppendixF1Analysis({ deck }: SlideProps) {
         {stats.map((st) => (
           <div key={st.label}>
             <div className="kpi__label">{st.label}</div>
-            <div className="kpi__value" style={st.small ? { fontSize: 26 } : undefined}>
+            <div className="kpi__value" style={st.small ? { fontSize: "var(--fs-h2)" } : undefined}>
               {st.value}
             </div>
           </div>

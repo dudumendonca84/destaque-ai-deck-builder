@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { SlideShell } from "../primitives/SlideShell";
-import { Counter } from "../primitives/Counter";
 import type { SlideProps } from "../types";
 
 /**
@@ -14,6 +13,11 @@ import type { SlideProps } from "../types";
  * Estudo: 45 empresas, 3 motores (Claude, Gemini, Grok), Maio 2026.
  */
 const STUDY_URL = "https://destaque.ai/estudo/visibilidade-ia-saas-portugal-2026";
+
+// Achado fixo do estudo destaque.ai, Maio 2026 — não derivado de
+// audit/motores. Constante para impedir drift entre prospects e
+// builds. Se a metodologia mudar, mexer aqui (sítio único).
+const STUDY_HEADLINE_PCT = 60;
 
 export function OurStudy({ active }: SlideProps) {
   return (
@@ -31,14 +35,14 @@ export function OurStudy({ active }: SlideProps) {
         <div
           style={{
             fontFamily: "var(--font-fraunces), Georgia, serif",
-            fontSize: 110,
+            fontSize: "var(--fs-display-1)",
             lineHeight: 1,
             letterSpacing: -3,
             color: "var(--ink)",
           }}
         >
-          <Counter to={60} active={active} />
-          <em className="mark" style={{ fontSize: 80 }}>
+          {STUDY_HEADLINE_PCT}
+          <em className="mark" style={{ fontSize: "var(--fs-display-1)" }}>
             %
           </em>
         </div>
@@ -52,14 +56,14 @@ export function OurStudy({ active }: SlideProps) {
         <p
           style={{
             fontFamily: "var(--font-fraunces), Georgia, serif",
-            fontSize: 26,
+            fontSize: "var(--fs-h2)",
             color: "var(--ink)",
           }}
         >
           Estás nos 40%, ou nos <em className="mark">60%</em>?
         </p>
 
-        <p style={{ fontSize: 12, color: "var(--ink-3)" }}>
+        <p style={{ fontSize: "var(--fs-mono)", color: "var(--ink-3)" }}>
           Fonte:{" "}
           <a
             href={STUDY_URL}

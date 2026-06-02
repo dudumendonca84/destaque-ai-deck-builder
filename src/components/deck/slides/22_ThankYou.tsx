@@ -38,7 +38,7 @@ export function ThankYou() {
             gap: 32,
             alignItems: "baseline",
             color: "var(--ink-4)",
-            fontSize: 14,
+            fontSize: "var(--fs-body-sm)",
           }}
         >
           <a

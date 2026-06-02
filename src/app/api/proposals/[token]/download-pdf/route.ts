@@ -109,12 +109,37 @@ function companyNameFor(token: string, deck: DeckData | null): string {
 export async function GET(request: Request, ctx: { params: Promise<{ token: string }> }) {
   const { token } = await ctx.params;
   const origin = new URL(request.url).origin;
-  const printUrl = `${origin}/proposta/${token}/print`;
+  const basePrintUrl = `${origin}/proposta/${token}/print`;
+
+  // Bypass da Vercel Deployment Protection na chamada chromium → /print.
+  // Sem isto, /print devolve 403 (host_not_allowed) ao page.goto, o catch
+  // roda o fallback @react-pdf (slides fósseis, Stripe/Cloudbeds/UpKeep)
+  // e o cliente recebe a versão velha em silêncio. Query + set-bypass-
+  // cookie cobre o HTML inicial E os sub-requests (fontes, CSS, imagens)
+  // — só header arriscava deixar passar o HTML e um asset levar 403,
+  // dando PDF meio-renderizado.
+  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (!bypassSecret) {
+    console.error(
+      "[download-pdf] VERCEL_AUTOMATION_BYPASS_SECRET não definido — " +
+        "atrás da Deployment Protection, page.goto vai apanhar 403 e o " +
+        "fallback @react-pdf (slides fósseis) será entregue ao cliente. " +
+        "Definir em Vercel → Project Settings → Deployment Protection → " +
+        "Protection Bypass for Automation.",
+    );
+  }
+  const printUrl = bypassSecret
+    ? `${basePrintUrl}?x-vercel-protection-bypass=${encodeURIComponent(bypassSecret)}` +
+      "&x-vercel-set-bypass-cookie=true"
+    : basePrintUrl;
 
   try {
+    const tarballUrl =
+      process.env.CHROMIUM_TARBALL_URL ||
+      "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
     const browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(tarballUrl),
       headless: true,
       defaultViewport: { width: PAGE_W, height: PAGE_H, deviceScaleFactor: 2 },
     });
@@ -145,14 +170,26 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
           "content-type": "application/pdf",
           "content-disposition": `attachment; filename="${filename}"`,
           "cache-control": "no-store",
+          // Diagnóstico — qual ramo correu. "chromium" = web == PDF (correcto).
+          // "react-pdf-fallback" no catch = slides fósseis (regressão silenciosa).
+          "x-pdf-renderer": "chromium",
+          "x-pdf-bypass-secret-present": bypassSecret ? "1" : "0",
         },
       });
     } finally {
       await browser.close();
     }
   } catch (err) {
-    // Fallback estático — produção nunca devolve PDF partido.
-    console.error("[download-pdf] chromium falhou, fallback para build-deck estático:", err);
+    // Fallback estático — produção nunca devolve PDF partido. NB: ao logar
+    // o err do puppeteer, sanitizar o bypass secret que pode aparecer no
+    // texto da URL incluída em mensagens "net::ERR_… at https://…?x-vercel-
+    // protection-bypass=…".
+    const rawMsg = err instanceof Error ? err.message : String(err);
+    const safeMsg = rawMsg.replace(
+      /x-vercel-protection-bypass=[^&\s"]+/g,
+      "x-vercel-protection-bypass=***REDACTED***",
+    );
+    console.error("[download-pdf] chromium falhou, fallback para build-deck estático:", safeMsg);
     const deck = await assembleDeck(token);
     if (!deck) return new Response("Proposta não encontrada", { status: 404 });
     const buffer = await buildPdf(deck);
@@ -163,6 +200,9 @@ export async function GET(request: Request, ctx: { params: Promise<{ token: stri
         "content-type": "application/pdf",
         "content-disposition": `attachment; filename="${filename}"`,
         "cache-control": "no-store",
+        "x-pdf-renderer": "react-pdf-fallback",
+        "x-pdf-bypass-secret-present": bypassSecret ? "1" : "0",
+        "x-pdf-chromium-err": safeMsg.slice(0, 256),
       },
     });
   }
