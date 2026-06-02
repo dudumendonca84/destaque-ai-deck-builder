@@ -2889,6 +2889,31 @@ em.mark {
   :root {
     --fs-logo: 36px;
   }
+
+  /* --------------------------------------------------------------
+     Tracker mockup (slide 19, paginado em 2) — colapso mobile.
+     Os componentes Tracker usam classes CSS (nao inline grids), por
+     isso a regra generica '.slide [style*=grid-template-columns]'
+     nao os apanha. Aqui colapsamos as 4 grids do tracker para 1
+     coluna em mobile, mantendo o layout em "cartoes empilhados":
+
+     - .tracker-grid              2 blocos topo a topo -> empilhados
+     - .tracker-dashboard__cards  4 KPIs em 2x2        -> 4 linhas
+     - .tracker-engine-breakdown  3 motores horizontais -> 3 linhas
+     - .tracker-report-thumbs     2 thumbs PDF         -> empilhados
+
+     .tracker-prompt-table mantem-se em grid 1fr 40px 90px (texto +
+     CR + barra) — funciona a 360px porque os fixed cells sao pequenos.
+
+     Sem !important: classes CSS competem com classes CSS no mesmo
+     @media — a especificidade matcha.
+     -------------------------------------------------------------- */
+  .tracker-grid,
+  .tracker-dashboard__cards,
+  .tracker-engine-breakdown,
+  .tracker-report-thumbs {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
