@@ -14,12 +14,48 @@ export function CostOfInvisibility({ deck }: SlideProps) {
   const cr = deck.audit?.summary?.citation_rate ?? 0;
   const pct = Math.round(cr * 100);
   const b2b = findBenchmark(deck.benchmarks, "b2b_ai_answer");
+  // 2º elemento: a projecção 6m só aparece quando a Routine a produziu
+  // (synth.projection_6m). Pareia o número desconfortável com o que ele
+  // pode ser — não inventa, não promete.
+  const target = deck.synthesized?.projection_6m?.citation_rate_target;
+  const targetPct = target != null ? Math.round(target * 100) : null;
 
   return (
     <SlideShell tone="ink" eyebrow="O custo da invisibilidade">
       <h2 className="tx-h1" style={{ maxWidth: 1000, color: "var(--paper)", marginBottom: 28 }}>
         {pct}% significa que a IA <em className="mark">nomeia outro</em>.
       </h2>
+
+      {targetPct != null && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 18,
+            marginBottom: 32,
+            color: "var(--ink-4)",
+            fontFamily: "var(--font-fraunces), Georgia, serif",
+            fontSize: 22,
+            lineHeight: 1.2,
+          }}
+        >
+          <span style={{ color: "var(--paper)" }}>{pct}% hoje</span>
+          <span style={{ opacity: 0.6 }}>→</span>
+          <span style={{ color: "var(--accent)" }}>{targetPct}% em 6 meses</span>
+          <span
+            style={{
+              fontFamily: "var(--font-inter), sans-serif",
+              fontSize: 11,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--ink-4)",
+              opacity: 0.7,
+            }}
+          >
+            meta condicional · plano SINAL
+          </span>
+        </div>
+      )}
       <p
         className="lead"
         style={{ maxWidth: 760, color: "var(--ink-4)", lineHeight: 1.6 }}
