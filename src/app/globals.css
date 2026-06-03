@@ -2760,6 +2760,36 @@ em.mark {
    MOBILE FIX — deck precisava de respiração em portrait
    ============================================================ */
 @media (max-width: 720px) {
+  /* OVERRIDE da decisao v12 'nunca scroll' especificamente para mobile.
+     Em desktop (1280x720 landscape), cada slide cabe num viewport — a
+     decisao v12 (clip o que nao cabe) faz sentido. Em mobile portrait,
+     com grids colapsados a 1 col, os mesmos slides ficam 2-3x mais
+     altos que o viewport (~844px) -> conteudo era clipado verticalmente
+     pelo overflow:hidden de .deck e .deck-stage.
+
+     Fix: em mobile, libertar altura/overflow do deck e da stage. Cada
+     slide ocupa pelo menos o viewport (min-height) mas pode crescer e
+     o body scrolla naturalmente. .deck-nav (position:fixed, z-index 60)
+     mantem-se sticky no fundo, sem interferencia.
+
+     PDF/print: .print-page tem altura 720px fixa por causa do @page do
+     puppeteer — esta regra mobile so dispara <720px logical, logo nao
+     afecta o PDF (renderiza a 1280). Desktop tambem nao afecta. */
+  .deck {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .deck-stage {
+    overflow: visible;
+  }
+  .slide {
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+  }
+
   /* Slide container: para de centrar verticalmente, mantém conteúdo
      no topo onde os utilizadores estão habituados em mobile. */
   .slide {
