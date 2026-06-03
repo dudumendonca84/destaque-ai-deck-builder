@@ -1368,6 +1368,38 @@ em.mark {
   padding: 56px 64px 64px; /* sem reserva para nav: o print não tem nav */
   max-width: none;
 }
+
+/* --------------------------------------------------------------
+   Print overflow fixes — slides com conteúdo variavel (síntese
+   Claude) podem ultrapassar os 720px fixos da .print-page e ficar
+   cortados. Estas regras SO afectam .print-page (que so existe no
+   render PDF chromium) — desktop web e mobile web nao tem este
+   className, logo ficam intactos.
+
+   Slide 19 (SEO vs GEO / .compare): se o deck.method.seoVsGeo
+   trouxer 5+ linhas, a tabela transbordava e o bottom border ficava
+   cortado ('tabela sem fechar'). Reduzir o vertical padding das
+   cells de 16->10 da ~30px de folga.
+
+   Slide 21 (Methodology / .bloc-rule): se o 'foco' de cada dimensao
+   for longo (4-5 linhas), os cartoes crescem e a grid 2x2 transborda
+   os 600px de content area. Limitar o contexto a 3 linhas via
+   line-clamp mantem cada cartao em altura previsivel.
+   -------------------------------------------------------------- */
+.print-page .compare__head,
+.print-page .compare__cell {
+  padding: 10px 18px;
+}
+.print-page .bloc-rule {
+  padding-top: 10px;
+}
+.print-page .bloc-rule__context {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 /* Estado final garantido: sem animação, sem fade, sem deslocação. */
 .deck-print *,
 .deck-print *::before,
