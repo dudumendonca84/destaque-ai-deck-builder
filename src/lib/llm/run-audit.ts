@@ -21,6 +21,11 @@ import {
   resolveModel,
   type EngineModelEntry,
 } from "@/lib/skill/models";
+import {
+  expandEngineModes,
+  loadEngineAugmentation,
+  type SearchMode,
+} from "@/lib/skill/searchModes";
 import { filterRelevantCompetitors } from "./competitor-filter";
 import { runSinalScan } from "@/lib/scan/sinal-scan";
 
@@ -43,20 +48,27 @@ async function queryEngine(
   engine: Engine,
   prompt: string,
   model: string,
+  searchMode: SearchMode,
 ): Promise<EngineQueryResult> {
-  if (engine === "chatgpt") return queryChatGPT(prompt, model);
-  if (engine === "gemini") return queryGemini(prompt, model);
-  if (engine === "grok") return queryGrok(prompt, model);
-  if (engine === "deepseek") return queryDeepSeek(prompt, model);
-  if (engine === "mistral") return queryMistral(prompt, model);
+  if (engine === "chatgpt") return queryChatGPT(prompt, model, searchMode);
+  if (engine === "gemini") return queryGemini(prompt, model, searchMode);
+  if (engine === "grok") return queryGrok(prompt, model, searchMode);
+  if (engine === "deepseek") return queryDeepSeek(prompt, model, searchMode);
+  if (engine === "mistral") return queryMistral(prompt, model, searchMode);
   // claude
-  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024, model });
+  const { text, tokens } = await claudeComplete({
+    prompt,
+    maxTokens: 1024,
+    model,
+    searchMode,
+  });
   return { response: text, tokens };
 }
 
 type RunRow = {
   prompt: string;
   engine: Engine;
+  search_mode: SearchMode;
   response: string | null;
   analysis: CitationAnalysis | null;
   tokens: number;
@@ -87,35 +99,50 @@ type EngineCircuitState = { consecutiveFailures: number; broken: boolean };
 
 async function runSingle(opts: {
   engine: Engine;
+  searchMode: SearchMode;
   prompt: string;
   brandName: string;
   competitors: string[];
   model: string;
-  circuit: Map<Engine, EngineCircuitState>;
+  circuit: Map<string, EngineCircuitState>;
 }): Promise<RunRow> {
-  const { engine, prompt, brandName, competitors, model, circuit } = opts;
+  const { engine, searchMode, prompt, brandName, competitors, model, circuit } = opts;
+  // Circuit-breaker key is per (engine, mode): a broken augmented path
+  // (vendor tool 429s) shouldn't trip the knowledge path of the same
+  // engine, and vice versa.
+  const circuitKey = `${engine}::${searchMode}`;
 
   if (!keyAvailable(engine)) {
     if (mockAuditEnabled()) {
       return {
         prompt,
         engine,
+        search_mode: searchMode,
         response: mockEngineQuery(prompt, engine).response,
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
         error_reason: null,
       };
     }
-    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key" };
+    return {
+      prompt,
+      engine,
+      search_mode: searchMode,
+      response: null,
+      analysis: null,
+      tokens: 0,
+      error_reason: "no_api_key",
+    };
   }
 
   // Circuit breaker: salta motor se já falhou CIRCUIT_BREAKER_THRESHOLD vezes
   // seguidas. Evita gastar 30s em retries de um motor partido (model id
   // inválido, key expirada). Próximo audit recomeça com circuit limpo.
-  if (circuit.get(engine)?.broken) {
+  if (circuit.get(circuitKey)?.broken) {
     return {
       prompt,
       engine,
+      search_mode: searchMode,
       response: null,
       analysis: null,
       tokens: 0,
@@ -125,9 +152,9 @@ async function runSingle(opts: {
 
   try {
     const query = await withTimeout(
-      queryEngine(engine, prompt, model),
+      queryEngine(engine, prompt, model, searchMode),
       PER_CALL_TIMEOUT_MS,
-      `${engine}`,
+      `${engine}/${searchMode}`,
     );
     const analysis = await parseCitations({
       response: query.response,
@@ -135,13 +162,22 @@ async function runSingle(opts: {
       knownCompetitors: competitors,
     });
     // Sucesso → reset do contador
-    circuit.set(engine, { consecutiveFailures: 0, broken: false });
-    return { prompt, engine, response: query.response, analysis, tokens: query.tokens, error_reason: null };
+    circuit.set(circuitKey, { consecutiveFailures: 0, broken: false });
+    return {
+      prompt,
+      engine,
+      search_mode: searchMode,
+      response: query.response,
+      analysis,
+      tokens: query.tokens,
+      error_reason: null,
+    };
   } catch (err) {
     if (mockAuditEnabled()) {
       return {
         prompt,
         engine,
+        search_mode: searchMode,
         response: mockEngineQuery(prompt, engine).response,
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
@@ -149,16 +185,17 @@ async function runSingle(opts: {
       };
     }
     // Increment consecutive failures; trip o circuit ao atingir o threshold.
-    const state = circuit.get(engine) ?? { consecutiveFailures: 0, broken: false };
+    const state = circuit.get(circuitKey) ?? { consecutiveFailures: 0, broken: false };
     state.consecutiveFailures += 1;
     if (state.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) state.broken = true;
-    circuit.set(engine, state);
+    circuit.set(circuitKey, state);
 
     const msg = err instanceof Error ? err.message : String(err);
     // Trunca para evitar gravar logs de API gigantes (10s of KB) em cada row.
     return {
       prompt,
       engine,
+      search_mode: searchMode,
       response: null,
       analysis: null,
       tokens: 0,
@@ -265,7 +302,21 @@ function aggregate(rows: RunRow[], relevant?: Set<string>): AuditResults {
       ).length,
     };
   }
-  return { summary: summarise(rows, relevant), by_engine, engines_status };
+  // Per the SINAL two-mode contract, knowledge and augmented are reported
+  // side-by-side and never blended. The legacy `summary` and `by_engine`
+  // fields stay (blended) for backwards compat with existing slide
+  // consumers; `by_mode` is the new structured split for new surfaces.
+  const knowledgeRows = rows.filter((r) => r.search_mode === "knowledge");
+  const augmentedRows = rows.filter((r) => r.search_mode === "augmented");
+  return {
+    summary: summarise(rows, relevant),
+    by_engine,
+    engines_status,
+    by_mode: {
+      knowledge: summarise(knowledgeRows, relevant),
+      augmented: summarise(augmentedRows, relevant),
+    },
+  };
 }
 
 /**
@@ -330,33 +381,45 @@ export async function runAudit(proposalId: string): Promise<void> {
         }).catch(() => undefined)
       : Promise.resolve();
 
-    const { mappings } = await loadModelMappings();
+    const [{ mappings }, { augmentation }] = await Promise.all([
+      loadModelMappings(),
+      loadEngineAugmentation(),
+    ]);
+
+    // Expand engines into (engine × mode) pairs per the SINAL two-mode
+    // contract. chatgpt/claude/gemini/grok run twice; mistral/deepseek
+    // run knowledge only.
+    const enginePairs = expandEngineModes(ENGINES, augmentation);
 
     const tasks = prompts.flatMap((prompt) =>
-      ENGINES.map((engine) => ({
+      enginePairs.map(({ engine, mode }) => ({
         prompt,
         engine,
+        searchMode: mode,
         model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
         intent_stage: intentByPrompt.get(prompt) ?? null,
       })),
     );
 
-    // Estado partilhado pelo circuit-breaker (per audit run).
-    const circuit = new Map<Engine, EngineCircuitState>();
+    // Estado partilhado pelo circuit-breaker (per audit run, per
+    // (engine, mode) — see runSingle for the keying).
+    const circuit = new Map<string, EngineCircuitState>();
 
     const rows = await runWithLimit(tasks, resolveConcurrency(), async (task) => {
       const row = await runSingle({
         engine: task.engine,
+        searchMode: task.searchMode,
         prompt: task.prompt,
         brandName,
         competitors,
         model: task.model,
         circuit,
       });
-      await supabase.from("audit_runs").insert({
+      const insert: Record<string, unknown> = {
         proposal_id: proposalId,
         prompt: row.prompt,
         engine: row.engine,
+        search_mode: row.search_mode,
         intent_stage: task.intent_stage,
         response: row.response,
         citations_found: row.analysis?.citations_found ?? null,
@@ -366,7 +429,25 @@ export async function runAudit(proposalId: string): Promise<void> {
         sentiment_score: row.analysis?.sentiment_score ?? null,
         tokens_used: row.tokens,
         error_reason: row.error_reason,
-      });
+      };
+      let { error: insertErr } = await supabase.from("audit_runs").insert(insert);
+      // Defensive fallback: if migration 011 hasn't been applied yet
+      // (column `search_mode` missing → Postgres 42703), retry without
+      // that column. Audit keeps running; operator sees the warning
+      // and applies 011.
+      if (insertErr && /search_mode|42703/.test(insertErr.message)) {
+        console.warn(
+          "[run-audit] search_mode column missing — applying " +
+            "supabase/migrations/011_audit_runs_search_mode.sql will " +
+            "restore knowledge-vs-augmented split persistence. " +
+            "Retrying without column.",
+        );
+        const { search_mode: _drop, ...legacy } = insert;
+        void _drop;
+        const retry = await supabase.from("audit_runs").insert(legacy);
+        insertErr = retry.error;
+      }
+      if (insertErr) throw new Error(`insert audit_runs: ${insertErr.message}`);
       return row;
     });
 

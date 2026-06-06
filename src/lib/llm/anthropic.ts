@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_MODEL } from "./models";
+import type { SearchMode } from "@/lib/skill/searchModes";
 
 let cached: Anthropic | null = null;
 
@@ -21,18 +22,31 @@ function textOf(message: Anthropic.Message): string {
     .join("");
 }
 
-/** Geração de texto simples via Claude. */
+const WEB_SEARCH_TOOL = {
+  type: "web_search_20250305" as const,
+  name: "web_search" as const,
+  max_uses: 3,
+};
+
+/**
+ * Geração de texto simples via Claude. Quando `searchMode === "augmented"`,
+ * o cliente activa a `web_search_20250305` tool nativa (Anthropic) — o
+ * modelo retrieves live web context e tece nas suas respostas. Em
+ * `knowledge` (default), nenhuma tool: training-only.
+ */
 export async function claudeComplete(opts: {
   system?: string;
   prompt: string;
   maxTokens?: number;
   model?: string;
+  searchMode?: SearchMode;
 }): Promise<{ text: string; tokens: number }> {
   const message = await client().messages.create({
     model: opts.model ?? CLAUDE_MODEL,
     max_tokens: opts.maxTokens ?? 1024,
     system: opts.system,
     messages: [{ role: "user", content: opts.prompt }],
+    ...(opts.searchMode === "augmented" ? { tools: [WEB_SEARCH_TOOL] } : {}),
   });
   return {
     text: textOf(message),

@@ -1,5 +1,6 @@
 import { DEEPSEEK_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
+import type { SearchMode } from "@/lib/skill/searchModes";
 
 export function hasDeepSeekKey(): boolean {
   return Boolean(process.env.DEEPSEEK_API_KEY);
@@ -8,7 +9,13 @@ export function hasDeepSeekKey(): boolean {
 export async function queryDeepSeek(
   prompt: string,
   model: string = DEEPSEEK_MODEL,
+  searchMode: SearchMode = "knowledge",
 ): Promise<EngineQueryResult> {
+  // DeepSeek tem sem first-party search/grounding (skill search_modes.md).
+  // O orchestrator filtra via tabela; este throw é defensivo contra drift.
+  if (searchMode === "augmented") {
+    throw new Error("deepseek does not support augmented mode");
+  }
   const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
     method: "POST",
     headers: {

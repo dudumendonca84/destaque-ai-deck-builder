@@ -1,5 +1,6 @@
 import { MISTRAL_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
+import type { SearchMode } from "@/lib/skill/searchModes";
 
 export function hasMistralKey(): boolean {
   return Boolean(process.env.MISTRAL_API_KEY);
@@ -8,7 +9,11 @@ export function hasMistralKey(): boolean {
 export async function queryMistral(
   prompt: string,
   model: string = MISTRAL_MODEL,
+  searchMode: SearchMode = "knowledge",
 ): Promise<EngineQueryResult> {
+  if (searchMode === "augmented") {
+    throw new Error("mistral does not support augmented mode");
+  }
   const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
     headers: {
