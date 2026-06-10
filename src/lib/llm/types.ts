@@ -1,6 +1,16 @@
+/** Fonte (URL) citada por um motor via web search. */
+export type EngineSource = {
+  url: string;
+  title?: string;
+  /** Domínio cru (best-effort), ex. "reddit.com". */
+  domain?: string;
+};
+
 export type EngineQueryResult = {
   response: string;
   tokens: number;
+  /** Fontes citadas via web search (só em runs grounded). */
+  sources?: EngineSource[];
 };
 
 /** Análise extraída de uma resposta de motor (via Claude). */
