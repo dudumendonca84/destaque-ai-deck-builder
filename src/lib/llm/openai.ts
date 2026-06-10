@@ -69,6 +69,9 @@ async function queryKnowledge(prompt: string, model: string): Promise<EngineQuer
  * ChatGPT.com vê com browse on.
  */
 async function queryAugmented(prompt: string, model: string): Promise<EngineQueryResult> {
+  const isReasoningModel =
+    model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
+
   const res = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -80,6 +83,10 @@ async function queryAugmented(prompt: string, model: string): Promise<EngineQuer
       input: prompt,
       tools: [{ type: "web_search" }],
       max_output_tokens: 1024,
+      // Reasoning models a effort default (medium) gastam 30-90s de
+      // thinking — somado ao web search rebenta o timeout de 60s do
+      // worker pool e trip o circuit breaker. `low` chega para audit.
+      ...(isReasoningModel ? { reasoning: { effort: "low" } } : {}),
     }),
   });
 
@@ -87,15 +94,28 @@ async function queryAugmented(prompt: string, model: string): Promise<EngineQuer
     throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
   }
 
+  // NOTA: `output_text` é um convenience helper dos SDKs oficiais — NÃO
+  // existe no JSON cru da Responses API. Com fetch directo temos de
+  // percorrer `output[]` e juntar os content items `output_text`.
   const data = (await res.json()) as {
-    output_text?: string;
+    output?: Array<{
+      type?: string;
+      content?: Array<{ type?: string; text?: string }>;
+    }>;
     usage?: { input_tokens?: number; output_tokens?: number };
   };
+
+  const text = (data.output ?? [])
+    .filter((item) => item.type === "message")
+    .flatMap((item) => item.content ?? [])
+    .filter((c) => c.type === "output_text")
+    .map((c) => c.text ?? "")
+    .join("");
 
   const tokensIn = data.usage?.input_tokens ?? 0;
   const tokensOut = data.usage?.output_tokens ?? 0;
   return {
-    response: data.output_text ?? "",
+    response: text,
     tokens: tokensIn + tokensOut,
   };
 }

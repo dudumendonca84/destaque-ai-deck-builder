@@ -80,6 +80,10 @@ function mockAuditEnabled(): boolean {
 }
 
 const PER_CALL_TIMEOUT_MS = 60_000;
+// Augmented calls fazem retrieval (web search) antes de gerar — a
+// latência típica é 10-30s acima da knowledge. 90s evita falsos
+// timeouts sem segurar slots do pool indefinidamente.
+const PER_CALL_TIMEOUT_AUGMENTED_MS = 90_000;
 // Threshold baixo: 2 falhas consecutivas → motor partido (key inválida,
 // rate limit, model deprecated). Com concurrency 5, mesmo threshold 2
 // ainda gasta ~10 calls in-flight no pior caso, mas muito menos do que
@@ -153,7 +157,7 @@ async function runSingle(opts: {
   try {
     const query = await withTimeout(
       queryEngine(engine, prompt, model, searchMode),
-      PER_CALL_TIMEOUT_MS,
+      searchMode === "augmented" ? PER_CALL_TIMEOUT_AUGMENTED_MS : PER_CALL_TIMEOUT_MS,
       `${engine}/${searchMode}`,
     );
     const analysis = await parseCitations({
@@ -392,13 +396,25 @@ export async function runAudit(proposalId: string): Promise<void> {
     const enginePairs = expandEngineModes(ENGINES, augmentation);
 
     const tasks = prompts.flatMap((prompt) =>
-      enginePairs.map(({ engine, mode }) => ({
-        prompt,
-        engine,
-        searchMode: mode,
-        model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
-        intent_stage: intentByPrompt.get(prompt) ?? null,
-      })),
+      enginePairs.flatMap(({ engine, mode }) => {
+        const model = resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier);
+        // A web_search tool da Anthropic não está disponível na família
+        // Haiku (nota na própria skill search_modes.md). O tier free
+        // resolve claude → haiku; correr augmented aqui só queimava o
+        // circuit breaker. Skip limpo — fica a metade knowledge.
+        if (engine === "claude" && mode === "augmented" && model.startsWith("claude-haiku")) {
+          return [];
+        }
+        return [
+          {
+            prompt,
+            engine,
+            searchMode: mode,
+            model,
+            intent_stage: intentByPrompt.get(prompt) ?? null,
+          },
+        ];
+      }),
     );
 
     // Estado partilhado pelo circuit-breaker (per audit run, per

@@ -25,7 +25,12 @@ export type EngineAugmentation = {
 
 const SEARCH_MODES_HEADER = "## Per-engine augmentation feature";
 
-const FALLBACK_AUGMENTATION: Record<Engine, EngineAugmentation> = {
+/**
+ * Exported for synchronous consumers (e.g. the audit status route, which
+ * needs a calls-per-prompt estimate without fetching the skill). Runtime
+ * audit paths should prefer `loadEngineAugmentation()`.
+ */
+export const FALLBACK_AUGMENTATION: Record<Engine, EngineAugmentation> = {
   chatgpt: { supportsAugmented: true, alwaysOn: false, activation: "web_search" },
   claude: { supportsAugmented: true, alwaysOn: false, activation: "web_search" },
   gemini: { supportsAugmented: true, alwaysOn: false, activation: "google_search" },

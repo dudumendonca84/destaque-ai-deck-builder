@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ENGINES } from "@/lib/llm/models";
+import { expandEngineModes, FALLBACK_AUGMENTATION } from "@/lib/skill/searchModes";
 
 export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -23,8 +24,13 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Progresso: nº de audit_runs gravados / total esperado (prompts × motores).
-  const expected = (data.custom_prompts?.length ?? 0) * ENGINES.length;
+  // Progresso: nº de audit_runs gravados / total esperado. Desde o
+  // contrato two-mode, cada prompt gera (engine × mode) rows — 10 por
+  // prompt com o set actual (6 knowledge + 4 augmented), não 6. Usamos
+  // a tabela fallback (sync); se a skill divergir o erro é cosmético e
+  // o Math.min(99) protege o overflow.
+  const callsPerPrompt = expandEngineModes([...ENGINES], FALLBACK_AUGMENTATION).length;
+  const expected = (data.custom_prompts?.length ?? 0) * callsPerPrompt;
   const { count } = await supabase
     .from("audit_runs")
     .select("*", { count: "exact", head: true })
