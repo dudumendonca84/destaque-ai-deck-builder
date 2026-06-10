@@ -56,6 +56,16 @@ export type AuditResults = {
   // Operator-facing visibility (não vai para o deck cliente). Permite
   // ao admin ver quantas runs por motor foram reais vs falhadas/sem key.
   engines_status?: Record<Engine, EngineRunStatus>;
+  // SINAL two-mode split (knowledge raw vs augmented com web search nativo).
+  // `summary` e `by_engine` continuam blended para backwards-compat com os
+  // slides actuais; `by_mode` é a leitura nova — o GAP entre os dois é em
+  // si um finding (knowledge fraco / augmented forte ⇒ entity foundation;
+  // o inverso ⇒ crawlability/freshness). Ausente em audits pre-two-mode
+  // ou em tiers com augmented desligado via AUDIT_WEB_SEARCH_TIERS.
+  by_mode?: {
+    knowledge: AuditEngineSummary;
+    augmented: AuditEngineSummary;
+  };
 };
 
 // Shape inspirada nos tipos gerados pelo `supabase gen types typescript`.

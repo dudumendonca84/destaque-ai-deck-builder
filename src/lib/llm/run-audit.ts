@@ -8,11 +8,7 @@ import type {
 } from "@/lib/supabase/types";
 import { ENGINES, type Engine } from "./models";
 import type { CitationAnalysis, EngineQueryResult, EngineSource } from "./types";
-import {
-  WEB_SEARCH_CAPABLE,
-  searchTimeoutMs,
-  webSearchEnabledForTier,
-} from "./web-search";
+import { WEB_SEARCH_CAPABLE, searchTimeoutMs } from "./web-search";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
 import { hasOpenAIKey, queryChatGPT } from "./openai";
 import { hasGeminiKey, queryGemini } from "./gemini";
@@ -26,6 +22,11 @@ import {
   resolveModel,
   type EngineModelEntry,
 } from "@/lib/skill/models";
+import {
+  expandEngineModes,
+  loadEngineAugmentation,
+  type SearchMode,
+} from "@/lib/skill/searchModes";
 import { filterRelevantCompetitors } from "./competitor-filter";
 import { runSinalScan } from "@/lib/scan/sinal-scan";
 
@@ -69,6 +70,7 @@ async function queryEngine(
 type RunRow = {
   prompt: string;
   engine: Engine;
+  search_mode: SearchMode;
   response: string | null;
   analysis: CitationAnalysis | null;
   tokens: number;
@@ -100,20 +102,26 @@ type EngineCircuitState = { consecutiveFailures: number; broken: boolean };
 
 async function runSingle(opts: {
   engine: Engine;
+  searchMode: SearchMode;
   prompt: string;
   brandName: string;
   competitors: string[];
   model: string;
   webSearch: boolean;
-  circuit: Map<Engine, EngineCircuitState>;
+  circuit: Map<string, EngineCircuitState>;
 }): Promise<RunRow> {
-  const { engine, prompt, brandName, competitors, model, webSearch, circuit } = opts;
+  const { engine, searchMode, prompt, brandName, competitors, model, webSearch, circuit } = opts;
+  // Circuit-breaker key inclui o mode: um caminho augmented partido (vendor
+  // tool a dar 429s) não deve trip o caminho knowledge do mesmo motor, e
+  // vice-versa.
+  const circuitKey = `${engine}::${searchMode}`;
 
   if (!keyAvailable(engine)) {
     if (mockAuditEnabled()) {
       return {
         prompt,
         engine,
+        search_mode: searchMode,
         response: mockEngineQuery(prompt, engine).response,
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
@@ -121,16 +129,26 @@ async function runSingle(opts: {
         sources: null,
       };
     }
-    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key", sources: null };
+    return {
+      prompt,
+      engine,
+      search_mode: searchMode,
+      response: null,
+      analysis: null,
+      tokens: 0,
+      error_reason: "no_api_key",
+      sources: null,
+    };
   }
 
   // Circuit breaker: salta motor se já falhou CIRCUIT_BREAKER_THRESHOLD vezes
   // seguidas. Evita gastar 30s em retries de um motor partido (model id
   // inválido, key expirada). Próximo audit recomeça com circuit limpo.
-  if (circuit.get(engine)?.broken) {
+  if (circuit.get(circuitKey)?.broken) {
     return {
       prompt,
       engine,
+      search_mode: searchMode,
       response: null,
       analysis: null,
       tokens: 0,
@@ -143,7 +161,7 @@ async function runSingle(opts: {
     const query = await withTimeout(
       queryEngine(engine, prompt, model, webSearch),
       webSearch ? searchTimeoutMs() : PER_CALL_TIMEOUT_MS,
-      `${engine}`,
+      `${engine}/${searchMode}`,
     );
     const analysis = await parseCitations({
       response: query.response,
@@ -151,10 +169,11 @@ async function runSingle(opts: {
       knownCompetitors: competitors,
     });
     // Sucesso → reset do contador
-    circuit.set(engine, { consecutiveFailures: 0, broken: false });
+    circuit.set(circuitKey, { consecutiveFailures: 0, broken: false });
     return {
       prompt,
       engine,
+      search_mode: searchMode,
       response: query.response,
       analysis,
       tokens: query.tokens,
@@ -166,6 +185,7 @@ async function runSingle(opts: {
       return {
         prompt,
         engine,
+        search_mode: searchMode,
         response: mockEngineQuery(prompt, engine).response,
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
@@ -174,16 +194,17 @@ async function runSingle(opts: {
       };
     }
     // Increment consecutive failures; trip o circuit ao atingir o threshold.
-    const state = circuit.get(engine) ?? { consecutiveFailures: 0, broken: false };
+    const state = circuit.get(circuitKey) ?? { consecutiveFailures: 0, broken: false };
     state.consecutiveFailures += 1;
     if (state.consecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD) state.broken = true;
-    circuit.set(engine, state);
+    circuit.set(circuitKey, state);
 
     const msg = err instanceof Error ? err.message : String(err);
     // Trunca para evitar gravar logs de API gigantes (10s of KB) em cada row.
     return {
       prompt,
       engine,
+      search_mode: searchMode,
       response: null,
       analysis: null,
       tokens: 0,
@@ -291,7 +312,21 @@ function aggregate(rows: RunRow[], relevant?: Set<string>): AuditResults {
       ).length,
     };
   }
-  return { summary: summarise(rows, relevant), by_engine, engines_status };
+  // Two-mode reporting (SINAL): knowledge e augmented lado-a-lado, nunca
+  // blended. `summary` e `by_engine` continuam blended por compatibilidade
+  // com os slides existentes; `by_mode` é a leitura nova — o GAP entre os
+  // dois é em si um finding. Vazio se o audit não correu augmented (ex.:
+  // tier sem AUDIT_WEB_SEARCH_TIERS, ou rows pre-migration 012).
+  const knowledgeRows = rows.filter((r) => r.search_mode === "knowledge");
+  const augmentedRows = rows.filter((r) => r.search_mode === "augmented");
+  const by_mode =
+    augmentedRows.length > 0
+      ? {
+          knowledge: summarise(knowledgeRows, relevant),
+          augmented: summarise(augmentedRows, relevant),
+        }
+      : undefined;
+  return { summary: summarise(rows, relevant), by_engine, engines_status, by_mode };
 }
 
 /**
@@ -356,27 +391,54 @@ export async function runAudit(proposalId: string): Promise<void> {
         }).catch(() => undefined)
       : Promise.resolve();
 
-    const { mappings } = await loadModelMappings();
-    // Web search por tier (default: todos). Replica o que o cliente vê quando
-    // pergunta a uma AI com pesquisa ao vivo. Ver src/lib/llm/web-search.ts.
-    const tierWebSearch = webSearchEnabledForTier(tier);
+    const [{ mappings }, { augmentation }] = await Promise.all([
+      loadModelMappings(),
+      loadEngineAugmentation(),
+    ]);
+
+    // Two-mode expansion (SINAL): cada motor capaz de search corre em
+    // knowledge + augmented; restantes correm só knowledge. `webSearch`
+    // continua a vir do gate do `web-search.ts` (tier + WEB_SEARCH_CAPABLE)
+    // — a mecânica de chamada vive em TS, não no MD da skill.
+    const enginePairs = expandEngineModes(ENGINES, augmentation, tier);
 
     const tasks = prompts.flatMap((prompt) =>
-      ENGINES.map((engine) => ({
-        prompt,
-        engine,
-        model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
-        intent_stage: intentByPrompt.get(prompt) ?? null,
-        webSearch: tierWebSearch && WEB_SEARCH_CAPABLE[engine],
-      })),
+      enginePairs.flatMap(({ engine, mode }) => {
+        const model = resolveModel(
+          mappings as Record<Engine, EngineModelEntry>,
+          engine,
+          tier,
+        );
+        // O `web_search` tool da Anthropic não é exposto na família Haiku
+        // (limitação documentada). O tier `free` resolve claude → haiku;
+        // correr augmented aqui só queimava o circuit breaker. Skip limpo
+        // — a metade knowledge continua.
+        if (engine === "claude" && mode === "augmented" && model.startsWith("claude-haiku")) {
+          return [];
+        }
+        const webSearch =
+          mode === "augmented" && (WEB_SEARCH_CAPABLE[engine] ?? false);
+        return [
+          {
+            prompt,
+            engine,
+            searchMode: mode,
+            model,
+            intent_stage: intentByPrompt.get(prompt) ?? null,
+            webSearch,
+          },
+        ];
+      }),
     );
 
-    // Estado partilhado pelo circuit-breaker (per audit run).
-    const circuit = new Map<Engine, EngineCircuitState>();
+    // Estado partilhado pelo circuit-breaker (per audit run). Chave inclui
+    // o mode — augmented partido não tropeça no knowledge do mesmo motor.
+    const circuit = new Map<string, EngineCircuitState>();
 
     const rows = await runWithLimit(tasks, resolveConcurrency(), async (task) => {
       const row = await runSingle({
         engine: task.engine,
+        searchMode: task.searchMode,
         prompt: task.prompt,
         brandName,
         competitors,
@@ -398,13 +460,21 @@ export async function runAudit(proposalId: string): Promise<void> {
         tokens_used: row.tokens,
         error_reason: row.error_reason,
       };
-      // `sources` chegou na migration 011. Se ainda não foi aplicada (coluna
-      // em falta → Postgres 42703), reinsere sem ela para não perder a row.
-      const { error: insertErr } = await supabase
-        .from("audit_runs")
-        .insert({ ...auditRow, sources: row.sources });
-      if (insertErr && /sources|42703|column/i.test(insertErr.message ?? "")) {
-        await supabase.from("audit_runs").insert(auditRow);
+      // `sources` chegou na 011 e `search_mode` na 012. Se uma das duas não
+      // foi aplicada (Postgres 42703 / column not found), inserimos sem essa
+      // coluna específica — não dropamos a outra para não perder dados que
+      // o schema ainda consegue guardar.
+      const full = {
+        ...auditRow,
+        sources: row.sources,
+        search_mode: row.search_mode,
+      };
+      const { error: insertErr } = await supabase.from("audit_runs").insert(full);
+      if (insertErr && /search_mode|sources|42703|column/i.test(insertErr.message ?? "")) {
+        const retry: Record<string, unknown> = { ...full };
+        if (/search_mode/i.test(insertErr.message ?? "")) delete retry.search_mode;
+        if (/sources/i.test(insertErr.message ?? "")) delete retry.sources;
+        await supabase.from("audit_runs").insert(retry);
       }
       return row;
     });
