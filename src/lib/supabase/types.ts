@@ -268,7 +268,7 @@ export type Database = {
           sentiment_score: number | null;
           tokens_used: number | null;
           cost_usd: number | null;
-          // Fontes citadas via web search (migration 006). Array de
+          // Fontes citadas via web search (migration 011). Array de
           // { url, title, domain } ou null em runs sem grounding.
           sources: { url: string; title?: string; domain?: string }[] | null;
         };

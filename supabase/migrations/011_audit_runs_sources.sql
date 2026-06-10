@@ -1,5 +1,5 @@
 -- =====================================================
--- destaque.ai Deck Builder · migration 006 — sources em audit_runs
+-- destaque.ai Deck Builder · migration 011 — sources em audit_runs
 -- =====================================================
 -- Adiciona `sources` (jsonb) a `audit_runs`: as fontes (URLs/domínios) que
 -- cada motor citou quando corre com web search ligado. Array de objectos

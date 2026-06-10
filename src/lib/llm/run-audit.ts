@@ -398,7 +398,7 @@ export async function runAudit(proposalId: string): Promise<void> {
         tokens_used: row.tokens,
         error_reason: row.error_reason,
       };
-      // `sources` chegou na migration 006. Se ainda não foi aplicada (coluna
+      // `sources` chegou na migration 011. Se ainda não foi aplicada (coluna
       // em falta → Postgres 42703), reinsere sem ela para não perder a row.
       const { error: insertErr } = await supabase
         .from("audit_runs")
