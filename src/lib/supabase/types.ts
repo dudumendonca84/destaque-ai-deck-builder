@@ -281,6 +281,8 @@ export type Database = {
           // Fontes citadas via web search (migration 011). Array de
           // { url, title, domain } ou null em runs sem grounding.
           sources: { url: string; title?: string; domain?: string }[] | null;
+          // Eixo two-mode SINAL (migration 012). Defaults to 'knowledge'.
+          search_mode: "knowledge" | "augmented";
         };
         Insert: {
           id?: string;
@@ -298,6 +300,7 @@ export type Database = {
           tokens_used?: number | null;
           cost_usd?: number | null;
           sources?: { url: string; title?: string; domain?: string }[] | null;
+          search_mode?: "knowledge" | "augmented";
         };
         Update: {
           id?: string;
@@ -315,6 +318,7 @@ export type Database = {
           tokens_used?: number | null;
           cost_usd?: number | null;
           sources?: { url: string; title?: string; domain?: string }[] | null;
+          search_mode?: "knowledge" | "augmented";
         };
         Relationships: [
           {
