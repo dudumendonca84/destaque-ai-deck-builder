@@ -7,7 +7,12 @@ import type {
   GeneratedPromptMeta,
 } from "@/lib/supabase/types";
 import { ENGINES, type Engine } from "./models";
-import type { CitationAnalysis, EngineQueryResult } from "./types";
+import type { CitationAnalysis, EngineQueryResult, EngineSource } from "./types";
+import {
+  WEB_SEARCH_CAPABLE,
+  searchTimeoutMs,
+  webSearchEnabledForTier,
+} from "./web-search";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
 import { hasOpenAIKey, queryChatGPT } from "./openai";
 import { hasGeminiKey, queryGemini } from "./gemini";
@@ -43,15 +48,22 @@ async function queryEngine(
   engine: Engine,
   prompt: string,
   model: string,
+  webSearch: boolean,
 ): Promise<EngineQueryResult> {
-  if (engine === "chatgpt") return queryChatGPT(prompt, model);
-  if (engine === "gemini") return queryGemini(prompt, model);
-  if (engine === "grok") return queryGrok(prompt, model);
+  if (engine === "chatgpt") return queryChatGPT(prompt, model, { webSearch });
+  if (engine === "gemini") return queryGemini(prompt, model, { webSearch });
+  if (engine === "grok") return queryGrok(prompt, model, { webSearch });
+  // deepseek e mistral não têm web search nesta API — sempre ungrounded.
   if (engine === "deepseek") return queryDeepSeek(prompt, model);
   if (engine === "mistral") return queryMistral(prompt, model);
   // claude
-  const { text, tokens } = await claudeComplete({ prompt, maxTokens: 1024, model });
-  return { response: text, tokens };
+  const { text, tokens, sources } = await claudeComplete({
+    prompt,
+    maxTokens: 1024,
+    model,
+    webSearch,
+  });
+  return { response: text, tokens, sources };
 }
 
 type RunRow = {
@@ -61,6 +73,7 @@ type RunRow = {
   analysis: CitationAnalysis | null;
   tokens: number;
   error_reason: string | null;
+  sources: EngineSource[] | null;
 };
 
 function mockAuditEnabled(): boolean {
@@ -91,9 +104,10 @@ async function runSingle(opts: {
   brandName: string;
   competitors: string[];
   model: string;
+  webSearch: boolean;
   circuit: Map<Engine, EngineCircuitState>;
 }): Promise<RunRow> {
-  const { engine, prompt, brandName, competitors, model, circuit } = opts;
+  const { engine, prompt, brandName, competitors, model, webSearch, circuit } = opts;
 
   if (!keyAvailable(engine)) {
     if (mockAuditEnabled()) {
@@ -104,9 +118,10 @@ async function runSingle(opts: {
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
         error_reason: null,
+        sources: null,
       };
     }
-    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key" };
+    return { prompt, engine, response: null, analysis: null, tokens: 0, error_reason: "no_api_key", sources: null };
   }
 
   // Circuit breaker: salta motor se já falhou CIRCUIT_BREAKER_THRESHOLD vezes
@@ -120,13 +135,14 @@ async function runSingle(opts: {
       analysis: null,
       tokens: 0,
       error_reason: `engine_circuit_broken: ${CIRCUIT_BREAKER_THRESHOLD} falhas consecutivas`,
+      sources: null,
     };
   }
 
   try {
     const query = await withTimeout(
-      queryEngine(engine, prompt, model),
-      PER_CALL_TIMEOUT_MS,
+      queryEngine(engine, prompt, model, webSearch),
+      webSearch ? searchTimeoutMs() : PER_CALL_TIMEOUT_MS,
       `${engine}`,
     );
     const analysis = await parseCitations({
@@ -136,7 +152,15 @@ async function runSingle(opts: {
     });
     // Sucesso → reset do contador
     circuit.set(engine, { consecutiveFailures: 0, broken: false });
-    return { prompt, engine, response: query.response, analysis, tokens: query.tokens, error_reason: null };
+    return {
+      prompt,
+      engine,
+      response: query.response,
+      analysis,
+      tokens: query.tokens,
+      error_reason: null,
+      sources: query.sources ?? null,
+    };
   } catch (err) {
     if (mockAuditEnabled()) {
       return {
@@ -146,6 +170,7 @@ async function runSingle(opts: {
         analysis: mockCitationAnalysis({ prompt, engine, brandName, competitors }),
         tokens: 0,
         error_reason: null,
+        sources: null,
       };
     }
     // Increment consecutive failures; trip o circuit ao atingir o threshold.
@@ -163,6 +188,7 @@ async function runSingle(opts: {
       analysis: null,
       tokens: 0,
       error_reason: `api_failed: ${msg.slice(0, 300)}`,
+      sources: null,
     };
   }
 }
@@ -331,6 +357,9 @@ export async function runAudit(proposalId: string): Promise<void> {
       : Promise.resolve();
 
     const { mappings } = await loadModelMappings();
+    // Web search por tier (default: todos). Replica o que o cliente vê quando
+    // pergunta a uma AI com pesquisa ao vivo. Ver src/lib/llm/web-search.ts.
+    const tierWebSearch = webSearchEnabledForTier(tier);
 
     const tasks = prompts.flatMap((prompt) =>
       ENGINES.map((engine) => ({
@@ -338,6 +367,7 @@ export async function runAudit(proposalId: string): Promise<void> {
         engine,
         model: resolveModel(mappings as Record<Engine, EngineModelEntry>, engine, tier),
         intent_stage: intentByPrompt.get(prompt) ?? null,
+        webSearch: tierWebSearch && WEB_SEARCH_CAPABLE[engine],
       })),
     );
 
@@ -351,9 +381,10 @@ export async function runAudit(proposalId: string): Promise<void> {
         brandName,
         competitors,
         model: task.model,
+        webSearch: task.webSearch,
         circuit,
       });
-      await supabase.from("audit_runs").insert({
+      const auditRow = {
         proposal_id: proposalId,
         prompt: row.prompt,
         engine: row.engine,
@@ -366,7 +397,15 @@ export async function runAudit(proposalId: string): Promise<void> {
         sentiment_score: row.analysis?.sentiment_score ?? null,
         tokens_used: row.tokens,
         error_reason: row.error_reason,
-      });
+      };
+      // `sources` chegou na migration 006. Se ainda não foi aplicada (coluna
+      // em falta → Postgres 42703), reinsere sem ela para não perder a row.
+      const { error: insertErr } = await supabase
+        .from("audit_runs")
+        .insert({ ...auditRow, sources: row.sources });
+      if (insertErr && /sources|42703|column/i.test(insertErr.message ?? "")) {
+        await supabase.from("audit_runs").insert(auditRow);
+      }
       return row;
     });
 

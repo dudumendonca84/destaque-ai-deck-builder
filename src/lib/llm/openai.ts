@@ -1,27 +1,31 @@
 import { OPENAI_MODEL } from "./models";
 import type { EngineQueryResult } from "./types";
+import { parseResponsesPayload } from "./responses-api";
 
 export function hasOpenAIKey(): boolean {
   return Boolean(process.env.OPENAI_API_KEY);
 }
 
+const isReasoningModel = (model: string) =>
+  model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
+
 export async function queryChatGPT(
   prompt: string,
   model: string = OPENAI_MODEL,
+  opts: { webSearch?: boolean } = {},
 ): Promise<EngineQueryResult> {
+  if (opts.webSearch) return queryChatGPTGrounded(prompt, model);
+
   // gpt-5/o1/o3 são reasoning models — thinking interno consome 30-90s no
   // default `medium` effort. Para audit (queries curtas, não bench), `low`
   // mantém qualidade aceitável e respeita o budget de 60s do worker pool.
   // Usam `max_completion_tokens` em vez de `max_tokens` e rejeitam temperature.
-  const isReasoningModel =
-    model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
-
   const body: Record<string, unknown> = {
     model,
     messages: [{ role: "user", content: prompt }],
   };
 
-  if (isReasoningModel) {
+  if (isReasoningModel(model)) {
     body.reasoning_effort = "low";
     body.max_completion_tokens = 1024;
   } else {
@@ -50,4 +54,40 @@ export async function queryChatGPT(
     response: data.choices?.[0]?.message?.content ?? "",
     tokens: data.usage?.total_tokens ?? 0,
   };
+}
+
+/**
+ * Caminho grounded: Responses API com o tool nativo `web_search` — é assim que
+ * o chatgpt.com responde hoje (web ao vivo). Funciona com o modelo resolvido da
+ * skill (gpt-4o / gpt-4.1 / gpt-5), por isso continuamos a usar `models.md` em
+ * vez de forçar um modelo `-search-preview` do Chat Completions. As citações
+ * vêm como anotações `url_citation` (parse em responses-api.ts).
+ */
+async function queryChatGPTGrounded(
+  prompt: string,
+  model: string,
+): Promise<EngineQueryResult> {
+  const body: Record<string, unknown> = {
+    model,
+    input: prompt,
+    tools: [{ type: "web_search" }],
+    max_output_tokens: 1024,
+  };
+  if (isReasoningModel(model)) body.reasoning = { effort: "low" };
+
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+  }
+
+  const { response, tokens, sources } = parseResponsesPayload(await res.json());
+  return { response, tokens, sources };
 }
