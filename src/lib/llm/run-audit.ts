@@ -460,22 +460,32 @@ export async function runAudit(proposalId: string): Promise<void> {
         tokens_used: row.tokens,
         error_reason: row.error_reason,
       };
-      // `sources` chegou na 011 e `search_mode` na 012. Se uma das duas não
-      // foi aplicada (Postgres 42703 / column not found), inserimos sem essa
-      // coluna específica — não dropamos a outra para não perder dados que
-      // o schema ainda consegue guardar.
-      const full = {
+      // `sources` chegou na 011 e `search_mode` na 012. Se uma das duas (ou
+      // ambas) não estiver aplicada, o Postgres devolve 42703 nomeando UMA
+      // coluna de cada vez. Iteramos: drop a coluna nomeada, retry; máximo
+      // de 2 voltas (uma por cada coluna possível). Sem o loop, com as duas
+      // migrations em falta o primeiro retry voltava a falhar e a row
+      // perdia-se silenciosamente. Audit nunca bloqueia: se findarmos por
+      // outro erro, throw — o caller é que trata.
+      let attempt: Record<string, unknown> = {
         ...auditRow,
         sources: row.sources,
         search_mode: row.search_mode,
       };
-      const { error: insertErr } = await supabase.from("audit_runs").insert(full);
-      if (insertErr && /search_mode|sources|42703|column/i.test(insertErr.message ?? "")) {
-        const retry: Record<string, unknown> = { ...full };
-        if (/search_mode/i.test(insertErr.message ?? "")) delete retry.search_mode;
-        if (/sources/i.test(insertErr.message ?? "")) delete retry.sources;
-        await supabase.from("audit_runs").insert(retry);
+      let { error: insertErr } = await supabase.from("audit_runs").insert(attempt);
+      for (let i = 0; i < 2 && insertErr && /42703|does not exist/.test(insertErr.message ?? ""); i++) {
+        const col = insertErr.message?.match(/column "?(\w+)"?/)?.[1];
+        if (!col || !(col in attempt)) break;
+        console.warn(
+          `[run-audit] column "${col}" missing — apply the pending ` +
+            `supabase migration to restore it. Retrying without it.`,
+        );
+        const { [col]: _drop, ...rest } = attempt;
+        void _drop;
+        attempt = rest;
+        ({ error: insertErr } = await supabase.from("audit_runs").insert(attempt));
       }
+      if (insertErr) throw new Error(`insert audit_runs: ${insertErr.message}`);
       return row;
     });
 
