@@ -16,7 +16,7 @@ export default function LoginPage() {
         </div>
         <h1>Entrar</h1>
         <p className="body-m" style={{ color: "var(--ink-3)" }}>
-          Acesso restrito ao administrador. Receberás um magic link por email.
+          Acesso restrito ao administrador. Email e password.
         </p>
         <LoginForm />
         <div className="foot">
