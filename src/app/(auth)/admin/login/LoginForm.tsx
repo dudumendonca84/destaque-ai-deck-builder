@@ -1,22 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import { requestMagicLink, type LoginState } from "./actions";
+import { useRouter } from "next/navigation";
+import { signInWithPassword, type LoginState } from "./actions";
 
 const initial: LoginState = {};
 
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(requestMagicLink, initial);
+  const router = useRouter();
+  const [state, formAction, pending] = useActionState(signInWithPassword, initial);
 
   if (state.ok) {
-    return (
-      <div>
-        <p className="body-m" style={{ color: "var(--ink-2)", marginBottom: 12 }}>
-          Enviámos-te um <em className="mark">link mágico</em>. Verifica o email para entrar.
-        </p>
-        <div className="foot">Podes fechar esta janela.</div>
-      </div>
-    );
+    router.push("/admin");
+    router.refresh();
   }
 
   return (
@@ -31,10 +27,20 @@ export function LoginForm() {
           required
           placeholder="contacto@destaque.ai"
         />
+      </div>
+      <div className="field">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
         {state.error && <span className="error">{state.error}</span>}
       </div>
       <button className="btn-big" type="submit" disabled={pending}>
-        <span>{pending ? "A enviar…" : "Enviar magic link"}</span>
+        <span>{pending ? "A entrar…" : "Entrar"}</span>
         <span className="arrow">→</span>
       </button>
     </form>
