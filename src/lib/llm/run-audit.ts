@@ -15,6 +15,7 @@ import { hasGeminiKey, queryGemini } from "./gemini";
 import { hasGrokKey, queryGrok } from "./grok";
 import { hasDeepSeekKey, queryDeepSeek } from "./deepseek";
 import { hasMistralKey, queryMistral } from "./mistral";
+import { hasPerplexityKey, queryPerplexity } from "./perplexity";
 import { parseCitations } from "./parse-citations";
 import { mockCitationAnalysis, mockEngineQuery } from "./mock-audit";
 import {
@@ -42,7 +43,8 @@ function keyAvailable(engine: Engine): boolean {
   if (engine === "gemini") return hasGeminiKey();
   if (engine === "grok") return hasGrokKey();
   if (engine === "deepseek") return hasDeepSeekKey();
-  return hasMistralKey();
+  if (engine === "mistral") return hasMistralKey();
+  return hasPerplexityKey();
 }
 
 async function queryEngine(
@@ -57,6 +59,8 @@ async function queryEngine(
   // deepseek e mistral não têm web search nesta API — sempre ungrounded.
   if (engine === "deepseek") return queryDeepSeek(prompt, model);
   if (engine === "mistral") return queryMistral(prompt, model);
+  // perplexity pesquisa sempre (augmented-only) e devolve fontes.
+  if (engine === "perplexity") return queryPerplexity(prompt, model);
   // claude
   const { text, tokens, sources } = await claudeComplete({
     prompt,

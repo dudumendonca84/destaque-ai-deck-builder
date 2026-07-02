@@ -1,7 +1,7 @@
 import { loadSkillFile } from "./loader";
 import type { Engine } from "@/lib/llm/models";
 import type { AuditTier } from "@/lib/supabase/types";
-import { WEB_SEARCH_CAPABLE, webSearchEnabledForTier } from "@/lib/llm/web-search";
+import { WEB_SEARCH_CAPABLE, webSearchEnabledForTier, ALWAYS_SEARCH } from "@/lib/llm/web-search";
 
 /**
  * Consome `references/search_modes.md` da skill para derivar, por motor, se
@@ -44,7 +44,10 @@ const SEARCH_MODES_HEADER = "## Per-engine augmentation feature";
 export function fallbackAugmentation(): Record<Engine, EngineAugmentation> {
   const out = {} as Record<Engine, EngineAugmentation>;
   for (const [engine, capable] of Object.entries(WEB_SEARCH_CAPABLE)) {
-    out[engine as Engine] = { supportsAugmented: capable, alwaysOn: false };
+    const alwaysOn = ALWAYS_SEARCH[engine as Engine] ?? false;
+    // alwaysOn corre augmented-only → supportsAugmented (o flag two-mode) é false;
+    // a expansion adiciona o único par augmented.
+    out[engine as Engine] = { supportsAugmented: capable && !alwaysOn, alwaysOn };
   }
   return out;
 }

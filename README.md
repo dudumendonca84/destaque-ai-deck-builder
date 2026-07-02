@@ -39,6 +39,7 @@ Ver `.env.local.example`. Necessárias:
 | `XAI_API_KEY` | Grok (auditoria) |
 | `DEEPSEEK_API_KEY` | DeepSeek (auditoria) |
 | `MISTRAL_API_KEY` | Mistral (auditoria) |
+| `PERPLEXITY_API_KEY` | Perplexity (auditoria; sonar, augmented-only) |
 | `AUDIT_CONCURRENCY` | Paralelismo das chamadas LLM (default `5`) |
 | `RESEND_API_KEY` | Email |
 | `NEXT_PUBLIC_APP_URL` | URL do admin (https://admin.destaque.ai) |
