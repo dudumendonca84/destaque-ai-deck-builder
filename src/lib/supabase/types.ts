@@ -13,7 +13,16 @@ export type AuditStatus = "pending" | "running" | "completed" | "failed";
 
 export type AuditTier = "free" | "diagnostic" | "premium";
 
-export type Engine = "chatgpt" | "claude" | "gemini" | "grok" | "deepseek" | "mistral";
+// Mantém-se em sincronia com `ENGINES` em `src/lib/llm/models.ts` (duplicação
+// consciente: este tipo é o shape persistido de audit_runs.engine / by_engine).
+export type Engine =
+  | "chatgpt"
+  | "claude"
+  | "gemini"
+  | "grok"
+  | "deepseek"
+  | "mistral"
+  | "perplexity";
 
 export type IntentStage =
   | "awareness"
