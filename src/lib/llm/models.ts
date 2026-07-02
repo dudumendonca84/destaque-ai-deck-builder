@@ -9,6 +9,9 @@ export const GEMINI_MODEL = "gemini-3.5-flash";
 export const GROK_MODEL = "grok-4";
 export const DEEPSEEK_MODEL = "deepseek-v4";
 export const MISTRAL_MODEL = "mistral-large-latest";
+// Perplexity — search-grounded por definição (sonar pesquisa sempre a web viva).
+// Corre augmented-only. API OpenAI-compatible em api.perplexity.ai.
+export const PERPLEXITY_MODEL = "sonar-pro";
 
 export const ENGINES = [
   "chatgpt",
@@ -17,6 +20,7 @@ export const ENGINES = [
   "grok",
   "deepseek",
   "mistral",
+  "perplexity",
 ] as const;
 export type Engine = (typeof ENGINES)[number];
 
@@ -30,6 +34,7 @@ export const ENGINE_LABEL: Record<Engine, string> = {
   grok: "Grok",
   deepseek: "DeepSeek",
   mistral: "Mistral",
+  perplexity: "Perplexity",
 };
 
 export const ENGINE_VERSION: Record<Engine, string> = {
@@ -39,4 +44,5 @@ export const ENGINE_VERSION: Record<Engine, string> = {
   grok: GROK_MODEL,
   deepseek: DEEPSEEK_MODEL,
   mistral: MISTRAL_MODEL,
+  perplexity: PERPLEXITY_MODEL,
 };

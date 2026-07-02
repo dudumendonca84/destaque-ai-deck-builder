@@ -162,7 +162,7 @@ Ambos carregados server-side em `page.tsx` + na route do PDF, injectados em `Dec
 
 ### Engines actuais (TS owns SET)
 
-`chatgpt`, `claude`, `gemini`, `grok`, `deepseek`, `mistral` — 6 motores. Adicionar um motor (ex: `perplexity`, `copilot`, `meta`) = code change neste repo (novo cliente + env var + switch case + `ENGINES`). Mudar a versão de modelo de um motor existente = apenas commit no skill.
+`chatgpt`, `claude`, `gemini`, `grok`, `deepseek`, `mistral`, `perplexity` — 7 motores. Adicionar um motor (ex: `copilot`, `meta`) = code change neste repo (novo cliente + env var + switch case + `ENGINES`). Mudar a versão de modelo de um motor existente = apenas commit no skill. **Perplexity** corre **augmented-only** (`sonar` pesquisa sempre a web viva → mecanismo `ALWAYS_SEARCH`).
 
 Engines que apareçam em `models.md` mas não estejam no `ENGINES` deste repo são **ignoradas silenciosamente** — não cria erros.
 
@@ -182,7 +182,7 @@ Engines que apareçam em `models.md` mas não estejam no `ENGINES` deste repo s�
 ## Divergências conscientes vs outras propostas no ecossistema
 
 Outras sessões podem ter proposto:
-- **7 motores incluindo Perplexity** → este repo mantém 6 (sem Perplexity), decisão explícita do founder. Pode ser revertido com PR (cliente + env var + ENGINES).
+- ~~**7 motores incluindo Perplexity** → este repo mantinha 6 (sem Perplexity), por custo.~~ **Resolvido:** Perplexity adicionado (7 motores) — o founder adicionou crédito. Corre augmented-only. Requer `PERPLEXITY_API_KEY`.
 - **Schema split `audit_runs` (batch JSONB) + `audit_responses` (per row)** → este repo mantém `audit_runs` monolítico (1 row por response). Nomenclatura menos pura mas funcional. Migration de split seria 006+.
 
 Documentadas para não causar confusão. Se uma sessão tiver instrução explícita para alinhar, fazer migration + PR coordenado.

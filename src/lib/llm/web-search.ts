@@ -27,6 +27,16 @@ export const WEB_SEARCH_CAPABLE: Record<Engine, boolean> = {
   grok: true,
   deepseek: false,
   mistral: false,
+  perplexity: true,
+};
+
+/**
+ * Motores search-grounded *por definição* — não há modo sem pesquisa para medir.
+ * Correm augmented-only (ver `expandEngineModes`). Perplexity sonar pesquisa
+ * sempre a web viva.
+ */
+export const ALWAYS_SEARCH: Partial<Record<Engine, boolean>> = {
+  perplexity: true,
 };
 
 function masterEnabled(): boolean {

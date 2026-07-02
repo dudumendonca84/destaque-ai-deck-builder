@@ -7,6 +7,7 @@ import {
   GROK_MODEL,
   DEEPSEEK_MODEL,
   MISTRAL_MODEL,
+  PERPLEXITY_MODEL,
 } from "@/lib/llm/models";
 import type { AuditTier } from "./prompts";
 
@@ -27,6 +28,7 @@ const FALLBACK_MAPPINGS: Record<Engine, EngineModelEntry> = {
   grok: { production: GROK_MODEL, cost_optimized: GROK_MODEL },
   deepseek: { production: DEEPSEEK_MODEL, cost_optimized: DEEPSEEK_MODEL },
   mistral: { production: MISTRAL_MODEL, cost_optimized: MISTRAL_MODEL },
+  perplexity: { production: PERPLEXITY_MODEL, cost_optimized: "sonar" },
 };
 
 const MAPPINGS_HEADER = "## Deck Builder API mappings";
