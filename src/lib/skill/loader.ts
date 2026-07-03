@@ -7,7 +7,7 @@
  */
 
 const SKILL_BASE =
-  "https://raw.githubusercontent.com/dudumendonca84/geo-seo-aeo-master/main";
+  "https://raw.githubusercontent.com/dudumendonca84/geo-seo-aeo-master/main/skills/geo-seo-aeo-master";
 
 const TTL_MS = 60 * 60 * 1000;
 
