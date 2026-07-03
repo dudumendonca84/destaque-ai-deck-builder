@@ -57,7 +57,6 @@ function tierTotal(tier: AuditTier): number {
   return TIER_OPTIONS.find((t) => t.value === tier)?.promptsCount ?? 5;
 }
 
-const ENGINE_COUNT = 6;
 
 function priceFromInput(v: string): number | null {
   const t = v.trim();
