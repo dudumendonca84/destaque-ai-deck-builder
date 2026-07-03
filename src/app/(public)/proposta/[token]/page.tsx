@@ -47,7 +47,7 @@ export default async function DeckPage(props: { params: Promise<{ token: string 
           <span className="pulse-dot" />
           <h1 className="tx-h2">A preparar a tua proposta</h1>
           <p className="body-m" style={{ color: "var(--ink-3)" }}>
-            Estamos a correr a auditoria GEO em seis motores de IA. Volta dentro de
+            Estamos a correr a auditoria GEO em sete motores de IA. Volta dentro de
             alguns minutos — o link mantém-se o mesmo.
           </p>
         </div>

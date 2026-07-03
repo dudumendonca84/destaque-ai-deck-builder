@@ -53,7 +53,7 @@ Correr as migrations em ordem no SQL Editor:
 1. `supabase/migrations/001_init.sql` — tabelas + índices + triggers
 2. `supabase/migrations/002_rls.sql` — Row Level Security
 3. `supabase/migrations/003_rls_lockdown.sql` — lockdown de leitura anónima
-4. `supabase/migrations/004_engines_expand.sql` — alarga check de `engine` para os 6 motores activos
+4. `supabase/migrations/004_engines_expand.sql` — alarga o check de `engine` (inclui os 7 motores activos)
 
 Para gerar tipos (opcional, ao vivo a partir do projecto):
 
@@ -124,7 +124,7 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 | 7 | CRUD Prospects | ✓ |
 | 8 | Wizard criar Proposta | ✓ |
 | 9 | Geração prompts via Claude | ✓ |
-| 10 | Auditoria GEO 6 motores | ✓ |
+| 10 | Auditoria GEO 7 motores | ✓ |
 | 11 | Deck público `/proposta/[token]` | ✓ |
 | 12 | DeckContainer + navegação | ✓ |
 | 13 | 18 slides (ficheiros individuais) + Slide 4 Live Audit | ✓ |
@@ -149,8 +149,8 @@ Magic link Supabase, restrito ao email definido em `ADMIN_EMAIL`.
 
 ## Auditoria GEO
 
-A auditoria corre `prompts × 6 motores` (ChatGPT, Claude, Gemini, Grok,
-DeepSeek, Mistral). Para cada resposta, Claude extrai marcas citadas,
+A auditoria corre `prompts × 7 motores` (ChatGPT, Claude, Gemini, Grok,
+DeepSeek, Mistral, Perplexity). Para cada resposta, Claude extrai marcas citadas,
 posição da marca do prospect, concorrentes e sentimento. O resultado
 agregado é gravado em `proposals.audit_results`.
 
@@ -166,5 +166,5 @@ agregado é gravado em `proposals.audit_results`.
   ao longo de todos os `(prompt × motor)`. Cada `audit_run` é inserido
   no Supabase à medida que termina, para que o endpoint de status
   reporte progresso ao vivo.
-- Os motores são consultados directamente (sem grounding/web-search).
-  Para produção, considerar adicionar pesquisa web a cada motor.
+- Motores com pesquisa nativa (chatgpt, claude, gemini, grok) correm também
+  grounded (two-mode); Perplexity é sempre grounded; deepseek/mistral só knowledge.
