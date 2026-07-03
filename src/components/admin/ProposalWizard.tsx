@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Prospect, GeneratedPromptMeta, AuditTier } from "@/lib/supabase/types";
 import { createProposal } from "@/app/(admin)/admin/proposals/actions";
 import { fallbackPrompts } from "@/lib/llm/fallback-prompts";
+import { ENGINE_COUNT } from "@/lib/llm/models";
 
 const STEPS = [
   { n: "01", label: "Tipo" },
@@ -36,13 +37,13 @@ const TIER_OPTIONS: TierOption[] = [
     value: "free",
     label: "Auditoria gratuita",
     promptsCount: 5,
-    description: "Lead-gen — 5 prompts × 6 motores com modelos cost-optimized.",
+    description: `Lead-gen — 5 prompts × ${ENGINE_COUNT} motores com modelos cost-optimized.`,
   },
   {
     value: "diagnostic",
     label: "Diagnóstico",
     promptsCount: 30,
-    description: "Paid — 30 prompts × 6 motores com modelos production. Fidelidade ao que o utilizador real vê.",
+    description: `Paid — 30 prompts × ${ENGINE_COUNT} motores com modelos production. Fidelidade ao que o utilizador real vê.`,
   },
   {
     value: "premium",

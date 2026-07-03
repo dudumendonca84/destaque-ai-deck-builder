@@ -1,5 +1,6 @@
 "use client";
 
+import { ENGINE_COUNT } from "@/lib/llm/models";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AuditStatus } from "@/lib/supabase/types";
@@ -82,7 +83,7 @@ export function AuditRunner({ proposalId, initialStatus }: Props) {
         <span className="pulse-dot" />
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: 8 }}>
-            Auditoria GEO a correr nos 6 motores — mantém este separador aberto.
+            Auditoria GEO a correr nos {ENGINE_COUNT} motores — mantém este separador aberto.
           </div>
           <div className="audit-progress">
             <div className="audit-progress__fill" style={{ width: `${progress}%` }} />

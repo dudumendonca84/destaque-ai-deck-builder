@@ -269,7 +269,7 @@ function buildUserPrompt(input: SynthesizeInput): string {
     .join(", ");
 
   const auditSection = audit
-    ? `## Resultados do audit em 6 motores LLM
+    ? `## Resultados do audit em 7 motores LLM
 - Citation rate global: ${(audit.summary.citation_rate * 100).toFixed(0)}%
 - Share of voice: ${(audit.summary.share_of_voice * 100).toFixed(0)}% (intra-resposta)
 - Posição média: ${audit.summary.avg_position ?? "—"}

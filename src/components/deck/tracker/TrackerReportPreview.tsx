@@ -1,5 +1,7 @@
 "use client";
 
+import { ENGINE_COUNT } from "@/lib/llm/models";
+
 /**
  * Mockup visual do PDF mensal que o retainer entrega.
  * Componente puramente visual, sem dados reais.
@@ -26,7 +28,7 @@ export function TrackerReportPreview({ companyName }: Props) {
           </div>
         </div>
         <div className="tracker-report-thumb">
-          <span className="tracker-report-thumb__title">Citation rate · 6 motores</span>
+          <span className="tracker-report-thumb__title">Citation rate · {ENGINE_COUNT} motores</span>
           <div className="tracker-report-thumb__bars">
             <span style={{ height: "30%" }} />
             <span style={{ height: "50%" }} />
