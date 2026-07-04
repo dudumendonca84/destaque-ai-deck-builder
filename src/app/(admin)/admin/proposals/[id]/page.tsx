@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
 import { AuditRunner } from "@/components/admin/AuditRunner";
+import { ReopenProposalButton } from "@/components/admin/ReopenProposalButton";
 import { SendProposalButton } from "@/components/admin/SendProposalButton";
 import { SynthesisProgress } from "@/components/admin/SynthesisProgress";
 import { SynthesizeDeckButton } from "@/components/admin/SynthesizeDeckButton";
@@ -38,6 +39,14 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
   // o prefix no URL público.
   const base = (process.env.NEXT_PUBLIC_PROPOSAL_URL ?? "").replace(/\/$/, "");
   const publicUrl = `${base}/${proposal.token}`;
+
+  // Mesmo critério da página pública (expires_at no passado) + o estado
+  // que o cron diário escreve. (Server Component: relógio em render é correcto.)
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+  const isExpired =
+    proposal.status === "expired" ||
+    (proposal.expires_at && new Date(proposal.expires_at).getTime() < now);
 
   return (
     <>
@@ -130,6 +139,14 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
               {proposal.expires_at
                 ? new Date(proposal.expires_at).toLocaleDateString("pt-PT", { timeZone: "Europe/Lisbon" })
                 : "—"}
+              {isExpired && (
+                <span
+                  className="body-s"
+                  style={{ color: "var(--err, #b3261e)", marginLeft: 8, fontSize: 13 }}
+                >
+                  expirada
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -170,6 +187,7 @@ export default async function ProposalDetailPage(props: { params: Promise<{ id: 
               />
             );
           })()}
+          <ReopenProposalButton proposalId={proposal.id} expired={Boolean(isExpired)} />
           {proposal.sent_at && (
             <p className="body-s" style={{ color: "var(--ink-3)", marginTop: 10 }}>
               Enviada a {new Date(proposal.sent_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}.

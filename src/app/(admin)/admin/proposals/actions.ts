@@ -80,6 +80,53 @@ export async function createProposal(input: unknown): Promise<CreateProposalResu
   return { ok: true, id: data.id, token: data.token };
 }
 
+export type ReopenProposalResult =
+  | { ok: true; expires_at: string }
+  | { ok: false; error: string };
+
+/**
+ * Reabre uma proposta expirada (ou prorroga uma activa) sem gerar outra:
+ * nova validade a contar de hoje, mesmo token — o link enviado ao prospect
+ * volta a funcionar tal como está. Se o cron já a marcou `expired`, repõe
+ * o estado anterior (`sent` se alguma vez foi enviada, senão `draft`).
+ */
+export async function reopenProposal(
+  proposalId: string,
+  days = 30,
+): Promise<ReopenProposalResult> {
+  const safeDays = Math.min(Math.max(Math.trunc(days), 1), 365);
+  const supabase = await createClient();
+
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("id,status,sent_at")
+    .eq("id", proposalId)
+    .single();
+
+  if (!proposal) return { ok: false, error: "Proposta não encontrada." };
+
+  const expires = new Date();
+  expires.setDate(expires.getDate() + safeDays);
+
+  const update: { expires_at: string; status?: string } = {
+    expires_at: expires.toISOString(),
+  };
+  if (proposal.status === "expired") {
+    update.status = proposal.sent_at ? "sent" : "draft";
+  }
+
+  const { error } = await supabase
+    .from("proposals")
+    .update(update)
+    .eq("id", proposalId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/proposals");
+  revalidatePath(`/admin/proposals/${proposalId}`);
+  return { ok: true, expires_at: expires.toISOString() };
+}
+
 export type SendProposalResult = { ok: true; to: string } | { ok: false; error: string };
 
 /** Envia a proposta por email ao prospect e marca o estado como `sent`. */
