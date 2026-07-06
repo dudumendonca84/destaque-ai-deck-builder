@@ -6,7 +6,7 @@ import type {
   EngineRunStatus,
   GeneratedPromptMeta,
 } from "@/lib/supabase/types";
-import { ENGINES, type Engine } from "./models";
+import { ENGINES, AUDIT_MAX_TOKENS, type Engine } from "./models";
 import type { CitationAnalysis, EngineQueryResult, EngineSource } from "./types";
 import { WEB_SEARCH_CAPABLE, searchTimeoutMs } from "./web-search";
 import { claudeComplete, hasAnthropicKey } from "./anthropic";
@@ -64,7 +64,7 @@ async function queryEngine(
   // claude
   const { text, tokens, sources } = await claudeComplete({
     prompt,
-    maxTokens: 1024,
+    maxTokens: AUDIT_MAX_TOKENS,
     model,
     webSearch,
   });
