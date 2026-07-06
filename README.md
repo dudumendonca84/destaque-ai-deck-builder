@@ -41,6 +41,7 @@ Ver `.env.local.example`. Necessárias:
 | `MISTRAL_API_KEY` | Mistral (auditoria) |
 | `PERPLEXITY_API_KEY` | Perplexity (auditoria; sonar, augmented-only) |
 | `AUDIT_CONCURRENCY` | Paralelismo das chamadas LLM (default `5`) |
+| `AUDIT_MAX_TOKENS` | Tecto de output das respostas auditadas (default `2048`). Sobe se respostas longas ainda cortarem; desce para poupar |
 | `RESEND_API_KEY` | Email |
 | `NEXT_PUBLIC_APP_URL` | URL do admin (https://admin.destaque.ai) |
 | `NEXT_PUBLIC_PROPOSAL_URL` | URL do deck público (https://destaque.ai) |

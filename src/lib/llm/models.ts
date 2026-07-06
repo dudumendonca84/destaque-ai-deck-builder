@@ -13,6 +13,16 @@ export const MISTRAL_MODEL = "mistral-large-latest";
 // Corre augmented-only. API OpenAI-compatible em api.perplexity.ai.
 export const PERPLEXITY_MODEL = "sonar-pro";
 
+// Output cap for AUDITED engine answers (the buyer-facing response we measure).
+// 1024 was clipping long answers mid-sentence — comparison tables and
+// multi-section responses got cut, which also corrupts citation/competitor
+// detection (a brand named late in the answer would never be seen). 2048 clears
+// typical answers with headroom; env-overridable (AUDIT_MAX_TOKENS) so the
+// operator can tune fidelity vs cost without a deploy. Only the engines that
+// actually cap (claude, chatgpt, grok) read this; the others use provider
+// defaults. Brain/analysis calls (competitor-filter, parse-citations) keep 1024.
+export const AUDIT_MAX_TOKENS = Number(process.env.AUDIT_MAX_TOKENS) || 2048;
+
 export const ENGINES = [
   "chatgpt",
   "claude",

@@ -1,4 +1,4 @@
-import { GROK_MODEL } from "./models";
+import { GROK_MODEL, AUDIT_MAX_TOKENS } from "./models";
 import type { EngineQueryResult } from "./types";
 import { parseResponsesPayload } from "./responses-api";
 
@@ -60,7 +60,7 @@ async function queryGrokGrounded(
       model,
       input: prompt,
       tools: [{ type: "web_search" }],
-      max_output_tokens: 1024,
+      max_output_tokens: AUDIT_MAX_TOKENS,
     }),
   });
 

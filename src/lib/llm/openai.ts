@@ -1,4 +1,4 @@
-import { OPENAI_MODEL } from "./models";
+import { OPENAI_MODEL, AUDIT_MAX_TOKENS } from "./models";
 import type { EngineQueryResult } from "./types";
 import { parseResponsesPayload } from "./responses-api";
 
@@ -27,9 +27,9 @@ export async function queryChatGPT(
 
   if (isReasoningModel(model)) {
     body.reasoning_effort = "low";
-    body.max_completion_tokens = 1024;
+    body.max_completion_tokens = AUDIT_MAX_TOKENS;
   } else {
-    body.max_tokens = 1024;
+    body.max_tokens = AUDIT_MAX_TOKENS;
   }
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -71,7 +71,7 @@ async function queryChatGPTGrounded(
     model,
     input: prompt,
     tools: [{ type: "web_search" }],
-    max_output_tokens: 1024,
+    max_output_tokens: AUDIT_MAX_TOKENS,
   };
   if (isReasoningModel(model)) body.reasoning = { effort: "low" };
 
