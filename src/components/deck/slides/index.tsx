@@ -19,6 +19,7 @@ import { AppendixF1Analysis } from "./21a_AppendixF1_Analysis";
 import { AppendixF2Findings, findingsPageCount } from "./21b_AppendixF2_Findings";
 import { AppendixFLandscape, landscapePageCount } from "./21y_AppendixF_Landscape";
 import { AppendixFPotential } from "./21x_AppendixF_Potential";
+import { AppendixFTerritorio } from "./21z_AppendixF_Territorio";
 import { AppendixFActionHorizon, actionsPageCount, type Horizon } from "./21f_AppendixF_ActionHorizon";
 import { AppendixFFAQ, faqPageCount } from "./21e_AppendixF_FAQ";
 import { AppendixAPrompts, appendixAPromptsPageCount } from "./15a_AppendixA_Prompts";
@@ -90,6 +91,14 @@ export function buildSlides(deck: DeckData): SlideDef[] {
       landscapePageCount(deck),
     ),
   );
+  if (synth?.territorio_livre_md) {
+    out.push({
+      id: "appendix-territorio",
+      title: "Território livre",
+      tone: "paper",
+      Component: AppendixFTerritorio,
+    });
+  }
   out.push(
     { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
     { id: "cost-invisibility", title: "Custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
@@ -187,6 +196,7 @@ export const SLIDES: SlideDef[] = [
   { id: "our-study", title: "A prova", tone: "paper", Component: OurStudy },
   { id: "live-audit", title: "E sobre ti?", tone: "paper", Component: LiveAudit },
   { id: "appendix-landscape", title: "Landscape competitivo", tone: "paper", Component: AppendixFLandscape },
+  { id: "appendix-territorio", title: "Território livre", tone: "paper", Component: AppendixFTerritorio },
   { id: "kpis", title: "Ponto de partida", tone: "paper", Component: KPIs },
   { id: "cost-invisibility", title: "Custo da invisibilidade", tone: "ink", Component: CostOfInvisibility },
   { id: "appendix-f1", title: "Análise editorial", tone: "paper", Component: AppendixF1Analysis },

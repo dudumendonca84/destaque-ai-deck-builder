@@ -84,6 +84,9 @@ export type SynthesizedDeck = {
   }>;
   /** Markdown — leitura honesta do landscape competitivo. */
   competitive_landscape_md?: string;
+  /** Markdown — território livre: perguntas sem dono, fontes sem dono e o
+   * ângulo de posicionamento por reclamar. Alimenta o slide homónimo. */
+  territorio_livre_md?: string;
   projection_6m: {
     citation_rate_baseline: number;
     citation_rate_target: number;
@@ -187,6 +190,7 @@ const SCHEMA = {
       },
     },
     competitive_landscape_md: { type: "string" },
+    territorio_livre_md: { type: "string" },
   },
   required: [
     "executive_reading",
@@ -329,7 +333,8 @@ Specifically:
    - "adjacent" — empresas de áreas próximas mas claramente não-competitivas (ex.: para uma consultoria, uma agência só de PR; para uma clínica, uma seguradora de saúde).
    - "hallucinated" — nomes que claramente não existem ou são genéricos demais ("Agência GEO", "Consultora IA", "Empresa X").
    Inclui mention_count quando relevante. positioning_md (opcional, 1 frase) descreve o que oferecem. Sê AGRESSIVO em classificar como peer_consultancy — o slide Villain do deck precisa de 3 nomes reais. Se a lista RAW estiver vazia, devolve [].
-7. **competitive_landscape_md** (opcional): 1-2 parágrafos PT-PT honestos sobre o que vês no landscape — quem domina o orgânico, quem está a fazer GEO, quem está só em SEO clássico, quem não existe.`;
+7. **competitive_landscape_md** (opcional): 1-2 parágrafos PT-PT honestos sobre o que vês no landscape — quem domina o orgânico, quem está a fazer GEO, quem está só em SEO clássico, quem não existe.
+8. **territorio_livre_md** (opcional mas recomendado — é o slide mais persuasivo): a partir das respostas do audit, mapeia o TERRITÓRIO LIVRE da categoria: (a) 3-5 perguntas onde NENHUMA marca é recomendada — a IA não tem resposta-padrão; assinala as de intenção de compra; (b) 2-3 fontes que os motores citam onde nenhum concorrente domina; (c) o ângulo de posicionamento que ninguém reclama e que o prospect pode ocupar. Markdown com uma lista curta por secção. Só evidência do audit — se não há perguntas livres, di-lo honestamente e omite o bloco.`;
 }
 
 const SKILL_FILES = {
